@@ -1,0 +1,1321 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>采购商城 - 订单管理</title>
+  <script src="https://cdn.jsdelivr.net/npm/vue@3/dist/vue.global.prod.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #1890ff;
+      --primary-hover: #40a9ff;
+      --sidebar-bg: #001529;
+      --sidebar-text: rgba(255,255,255,0.85);
+      --sidebar-active: #1890ff;
+    }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Inter', 'Segoe UI', sans-serif; }
+    * { box-sizing: border-box; }
+    .order-detail-card { padding: 1rem 1.25rem; border: 1px solid #e5e7eb; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div class="flex min-h-screen bg-gray-50">
+      <!-- 左侧导航栏 -->
+      <aside class="w-56 bg-[#001529] flex-shrink-0 flex flex-col">
+        <div class="h-16 flex items-center gap-2 px-4 border-b border-white/10">
+          <div class="w-9 h-9 rounded-lg bg-[var(--primary)] flex items-center justify-center text-white font-bold text-lg">采</div>
+          <span class="text-white font-semibold text-base">采购商城</span>
+        </div>
+        <nav class="flex-1 py-4 overflow-y-auto">
+          <a href="#" class="flex items-center gap-3 px-4 py-2.5 text-[var(--sidebar-text)] hover:bg-white/10 transition-colors" :class="currentMenu === 'home' ? 'bg-white/10 text-white' : ''" @click.prevent="currentMenu='home'">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+            首页
+          </a>
+          <div class="mt-1">
+            <button class="w-full flex items-center justify-between px-4 py-2.5 text-[var(--sidebar-text)] hover:bg-white/10 transition-colors" @click="menuExpand.product = !menuExpand.product">
+              <span class="flex items-center gap-3">商品管理</span>
+              <svg class="w-4 h-4 transition-transform" :class="menuExpand.product ? 'rotate-90' : ''" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/></svg>
+            </button>
+          </div>
+          <div class="mt-1">
+            <button class="w-full flex items-center justify-between px-4 py-2.5 text-[var(--sidebar-text)] hover:bg-white/10 transition-colors" @click="menuExpand.order = !menuExpand.order">
+              <span class="flex items-center gap-3">订单管理</span>
+              <svg class="w-4 h-4 transition-transform" :class="menuExpand.order ? 'rotate-90' : ''" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/></svg>
+            </button>
+            <div v-show="menuExpand.order" class="bg-black/20">
+              <a href="#" class="block px-4 py-2 pl-12 text-sm text-gray-400 hover:text-white" @click.prevent>全部订单</a>
+              <a href="#" class="block px-4 py-2 pl-12 text-sm bg-[var(--primary)] text-white" @click.prevent="currentMenu='order-query'">订单查询</a>
+            </div>
+          </div>
+          <div class="mt-1">
+            <button class="w-full flex items-center justify-between px-4 py-2.5 text-[var(--sidebar-text)] hover:bg-white/10 transition-colors" @click="menuExpand.system = !menuExpand.system">
+              <span class="flex items-center gap-3">系统管理</span>
+              <svg class="w-4 h-4 transition-transform" :class="menuExpand.system ? 'rotate-90' : ''" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/></svg>
+            </button>
+          </div>
+        </nav>
+      </aside>
+
+      <!-- 主内容区 -->
+      <main class="flex-1 flex flex-col min-w-0">
+        <!-- 顶部栏 -->
+        <header class="h-14 bg-white border-b border-gray-200 flex items-center justify-between px-6 flex-shrink-0">
+          <div class="text-sm text-gray-500">
+            <span>订单管理</span>
+            <span class="mx-1">/</span>
+            <span class="text-gray-900" v-if="view === 'list'">订单查询</span>
+            <span class="text-gray-900" v-else>订单详情</span>
+          </div>
+          <div class="flex items-center gap-4">
+            <button class="p-2 text-gray-500 hover:text-gray-700 rounded cursor-pointer" aria-label="搜索">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            </button>
+            <button class="p-2 text-gray-500 hover:text-gray-700 rounded cursor-pointer" aria-label="通知">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+            </button>
+            <button class="p-2 text-gray-500 hover:text-gray-700 rounded cursor-pointer flex items-center gap-2" aria-label="用户">
+              <div class="w-8 h-8 rounded-full bg-gray-300"></div>
+              <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+            </button>
+          </div>
+        </header>
+
+        <div class="flex-1 overflow-auto p-6">
+          <!-- 订单查询列表页 -->
+          <div v-show="view === 'list'" class="space-y-4">
+            <!-- Tab -->
+            <div class="flex gap-0 border-b border-gray-200 -mb-px">
+              <button v-for="tab in orderTabs" :key="tab.value"
+                class="px-4 py-2.5 text-sm font-medium cursor-pointer transition-colors"
+                :class="activeTab === tab.value ? 'text-[var(--primary)] border-b-2 border-[var(--primary)]' : 'text-gray-600 hover:text-gray-900'"
+                @click="activeTab = tab.value">
+                {{ tab.label }}
+              </button>
+            </div>
+
+            <!-- 筛选表单 -->
+            <div class="bg-white rounded-lg border border-gray-200 p-4">
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                <div>
+                  <label class="block text-sm text-gray-600 mb-1">订单编号</label>
+                  <input type="text" v-model.trim="filterOrderNo" placeholder="请输入" class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-100 focus:border-blue-500 outline-none">
+                </div>
+                <div>
+                  <label class="block text-sm text-gray-600 mb-1">下单时间</label>
+                  <div class="flex items-center gap-1">
+                    <input type="date" v-model="filterOrderDateStart" class="flex-1 px-3 py-2 border border-gray-300 rounded text-sm">
+                    <span class="text-gray-400">至</span>
+                    <input type="date" v-model="filterOrderDateEnd" class="flex-1 px-3 py-2 border border-gray-300 rounded text-sm">
+                  </div>
+                </div>
+                <div>
+                  <label class="block text-sm text-gray-600 mb-1">支付完成时间</label>
+                  <div class="flex items-center gap-1">
+                    <input type="date" v-model="filterPayDateStart" class="flex-1 px-3 py-2 border border-gray-300 rounded text-sm">
+                    <span class="text-gray-400">至</span>
+                    <input type="date" v-model="filterPayDateEnd" class="flex-1 px-3 py-2 border border-gray-300 rounded text-sm">
+                  </div>
+                </div>
+                <div>
+                  <label class="block text-sm text-gray-600 mb-1">买家ID</label>
+                  <input type="text" v-model.trim="filterBuyerId" placeholder="请输入买家ID" class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-100 focus:border-blue-500 outline-none">
+                </div>
+                <div>
+                  <label class="block text-sm text-gray-600 mb-1">买家名称</label>
+                  <input type="text" v-model.trim="filterBuyerName" placeholder="请输入" class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-100 focus:border-blue-500 outline-none">
+                </div>
+                <div>
+                  <label class="block text-sm text-gray-600 mb-1">商品名称</label>
+                  <input type="text" v-model.trim="filterProductName" placeholder="请输入" class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-100 focus:border-blue-500 outline-none">
+                </div>
+                <div>
+                  <label class="block text-sm text-gray-600 mb-1">商品类型</label>
+                  <select v-model="filterProductType" class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-100 focus:border-blue-500 outline-none bg-white">
+                    <option value="">请选择</option>
+                    <option value="码牌">码牌</option>
+                    <option value="云音箱">云音箱</option>
+                    <option value="智能POS">智能POS</option>
+                    <option value="电子发票服务">电子发票服务</option>
+                    <option value="SaaS软件">SaaS软件</option>
+                    <option value="云打印机">云打印机</option>
+                    <option value="扫码王">扫码王</option>
+                    <option value="电子码牌">电子码牌</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-sm text-gray-600 mb-1">品牌</label>
+                  <select v-model="filterBrand" class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-100 focus:border-blue-500 outline-none bg-white">
+                    <option value="">请选择品牌</option>
+                    <option value="盛意旺自营">盛意旺自营</option>
+                    <option value="华智融">华智融</option>
+                    <option value="商米">商米</option>
+                    <option value="联迪">联迪</option>
+                    <option value="升腾">升腾</option>
+                    <option value="天喻">天喻</option>
+                    <option value="魔方">魔方</option>
+                    <option value="博实结">博实结</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-sm text-gray-600 mb-1">快递单号</label>
+                  <input type="text" v-model.trim="filterExpressNo" placeholder="请输入快递单号" class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-100 focus:border-blue-500 outline-none">
+                </div>
+                <div>
+                  <label class="block text-sm text-gray-600 mb-1">订单来源</label>
+                  <select v-model="filterOrderSource" class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-100 focus:border-blue-500 outline-none bg-white">
+                    <option value="">请选择</option>
+                    <option value="D平台">D平台</option>
+                    <option value="盛意旺app">盛意旺app</option>
+                    <option value="商家服务小程序">商家服务小程序</option>
+                  </select>
+                </div>
+                <div class="flex items-end gap-2">
+                  <button class="px-4 py-2 bg-[var(--primary)] text-white rounded text-sm font-medium hover:bg-[var(--primary-hover)] cursor-pointer transition-colors">查询</button>
+                  <button class="px-4 py-2 border border-[var(--primary)] text-[var(--primary)] rounded text-sm font-medium hover:bg-blue-50 cursor-pointer transition-colors">重置</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- 订单导出、物流导入 -->
+            <div class="flex flex-wrap items-end gap-x-4 gap-y-2 mb-4">
+              <div class="flex flex-col gap-1">
+                <div class="flex gap-2">
+                  <button type="button" class="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded text-sm font-medium hover:bg-gray-50 cursor-pointer transition-colors" @click="handleOrderExport">订单导出</button>
+                  <label class="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded text-sm font-medium hover:bg-gray-50 cursor-pointer transition-colors inline-block">
+                    <input type="file" accept=".xlsx,.xls" class="hidden" @change="onLogisticsFileChange">物流导入
+                  </label>
+                </div>
+                <p class="text-xs text-gray-500 max-w-md leading-relaxed">根据查询条件进行导出，需至少选择一个查询条件</p>
+              </div>
+            </div>
+
+            <!-- 订单列表表头 -->
+            <div class="bg-gray-50 rounded-t-lg border border-b-0 border-gray-200 px-4 py-3 grid grid-cols-12 gap-4 text-sm font-medium text-gray-600">
+              <div class="col-span-5">商品信息</div>
+              <div class="col-span-2">单价数量</div>
+              <div class="col-span-1">订单状态</div>
+              <div class="col-span-2">实付款</div>
+              <div class="col-span-2 text-right">操作</div>
+            </div>
+            <!-- 订单列表（按状态筛选） -->
+            <div class="space-y-0 border border-gray-200 rounded-b-lg overflow-hidden">
+              <div v-for="order in filteredOrderList" :key="order.id" class="bg-white border-b border-gray-100 last:border-b-0">
+                <!-- 订单头部：订单号、下单时间、买家信息(可展开)、D平台 -->
+                <div class="px-4 py-2.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm bg-white">
+                  <span>订单号: <a href="#" class="text-[var(--primary)] hover:underline cursor-pointer" @click.prevent="openDetail(order)">{{ order.orderNo }}</a></span>
+                  <span class="text-gray-500">下单时间: {{ order.orderTime }}</span>
+                  <span class="flex items-center gap-1">
+                    <span>买家信息: <a href="#" class="text-[var(--primary)] hover:underline cursor-pointer" @click.prevent="toggleBuyerDetail(order.id)">{{ order.buyerId }} {{ order.buyerName }}</a></span>
+                    <button type="button" class="p-0.5 text-gray-400 hover:text-gray-600 cursor-pointer" :class="expandedBuyerId === order.id ? 'rotate-90' : ''" @click="toggleBuyerDetail(order.id)" aria-label="展开买家详情">
+                      <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/></svg>
+                    </button>
+                  </span>
+                  <span class="ml-auto px-2 py-0.5 rounded bg-gray-100 text-gray-600 text-xs">{{ order.platform || 'D平台' }}</span>
+                </div>
+                <!-- 买家详情卡片（展开时显示） -->
+                <div v-if="expandedBuyerId === order.id" class="px-4 py-3 bg-gray-50 border-b border-gray-100 text-sm grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-2">
+                  <p><span class="text-gray-500">商户类型：</span>{{ order.merchantType || '企业' }}</p>
+                  <p><span class="text-gray-500">商户号：</span>{{ order.buyerId }}</p>
+                  <p><span class="text-gray-500">商户名称：</span>{{ order.buyerName }}</p>
+                  <p><span class="text-gray-500">操作员ID：</span>{{ order.operatorId || '-' }}</p>
+                  <p><span class="text-gray-500">操作员姓名：</span>{{ order.operatorName || '-' }}</p>
+                  <p><span class="text-gray-500">所属代理商：</span>{{ order.agentName || '-' }}</p>
+                  <p><span class="text-gray-500">所属门店号：</span>{{ order.storeId || '-' }}</p>
+                  <p><span class="text-gray-500">所属门店名称：</span>{{ order.storeName || '-' }}</p>
+                </div>
+                <!-- 与表头对齐：商品信息 | 单价数量 | 订单状态 | 实付款 | 操作 -->
+                <div class="px-4 py-3 grid grid-cols-12 gap-4 items-start text-sm">
+                  <div class="col-span-5 flex gap-3 min-w-0">
+                    <div class="w-16 h-16 rounded border border-gray-200 bg-gray-100 flex-shrink-0 flex items-center justify-center text-gray-400">
+                      <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14"/></svg>
+                    </div>
+                    <div class="min-w-0">
+                      <p class="font-medium text-gray-900 truncate">{{ order.productName }}</p>
+                      <p class="text-xs text-gray-500 mt-0.5">{{ order.brand || '品牌' }} {{ order.productType ? ' · ' + order.productType : '' }}</p>
+                    </div>
+                  </div>
+                  <div class="col-span-2 flex flex-col gap-0.5">
+                    <p><span class="text-gray-400 line-through">¥{{ order.originalPrice }}</span> <span class="text-[var(--primary)] font-medium">¥{{ order.price }}</span></p>
+                    <p class="text-gray-500">x{{ order.quantity }}</p>
+                  </div>
+                  <div class="col-span-1">
+                    <span class="inline-block px-2 py-0.5 rounded text-xs font-medium" :class="order.status === 'pending_pay' ? 'bg-red-50 text-red-600' : order.status === 'closed' ? 'bg-gray-100 text-gray-600' : 'bg-blue-50 text-[var(--primary)]'">{{ order.statusText }}</span>
+                  </div>
+                  <div class="col-span-2 flex flex-col items-start text-right">
+                    <p class="font-medium text-gray-900">¥{{ order.total }}</p>
+                    <p class="text-xs text-gray-500">=¥{{ order.originalPrice }} x {{ order.quantity }}</p>
+                    <p v-if="order.discount" class="text-xs text-gray-500">优惠 {{ order.discount }}</p>
+                    <p v-if="order.shippingFee" class="text-xs text-gray-500">运费 {{ order.shippingFee }}</p>
+                  </div>
+                  <div class="col-span-2 flex flex-col items-end gap-1">
+                    <a href="#" class="text-[var(--primary)] hover:underline cursor-pointer" @click.prevent="openDetail(order)">订单详情</a>
+                    <button v-if="order.status === 'pending_ship'" class="px-3 py-1.5 bg-[var(--primary)] text-white rounded text-xs cursor-pointer hover:bg-[var(--primary-hover)]" @click="openShipDialog(order)">立即发货</button>
+                  </div>
+                </div>
+                <div class="border-t border-gray-100 px-4 py-2 text-sm text-gray-500 bg-gray-50/50">
+                  订单备注: {{ order.remark || '无' }}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 订单详情页（移动端 / iOS 风格：无衬线、浅灰分割线、统一内边距、轻微阴影） -->
+          <div v-show="view === 'detail'" class="space-y-4 pb-6">
+            <button class="text-[var(--primary)] hover:underline text-sm cursor-pointer mb-2" @click="view = 'list'">← 返回订单列表</button>
+
+            <!-- 订单详情卡片：头部 + 表头 + 商品行 + 订单备注（替换范围为订单备注以上内容） -->
+            <div class="w-full min-w-0 border border-gray-200 bg-white shadow-sm font-sans rounded-lg overflow-hidden">
+              <!-- 1. 订单头部 (Header) -->
+              <div class="p-4 border-b border-gray-100">
+                <div class="flex items-center justify-between mb-3">
+                  <div class="flex items-center">
+                    <div class="w-6 h-6 rounded-full flex items-center justify-center text-white mr-2 flex-shrink-0" :class="detailOrder.status === 'shipped' || detailOrder.status === 'completed' ? 'bg-blue-500' : (detailOrder.status === 'pending_ship' ? 'bg-amber-500' : 'bg-gray-400')">
+                      <svg v-if="detailOrder.status === 'shipped' || detailOrder.status === 'completed'" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                      <span v-else class="text-xs font-bold">{{ detailOrder.statusText && detailOrder.statusText[0] }}</span>
+                    </div>
+                    <span class="font-bold text-gray-800 text-lg">{{ detailOrder.statusText }}</span>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <span class="px-3 py-1.5 rounded border border-gray-200 bg-gray-100 text-gray-900 text-sm">{{ detailOrder.platform || detailOrder.orderSource || 'D平台' }}</span>
+                    <button v-if="detailOrder.status === 'ship_failed'" type="button" class="px-4 py-2 bg-amber-500 text-white rounded text-sm font-medium hover:bg-amber-600 cursor-pointer" @click="showReshipDialog = true">补发</button>
+                    <button v-else-if="detailOrder.status === 'pending_ship'" class="px-4 py-2 bg-[var(--primary)] text-white rounded text-sm font-medium hover:bg-[var(--primary-hover)] cursor-pointer" @click="openShipDialog(detailOrder)">立即发货</button>
+                  </div>
+                </div>
+                <div class="flex flex-wrap items-center text-sm text-gray-500 gap-6">
+                  <span>订单号: <a href="#" class="text-[var(--primary)] hover:underline cursor-pointer">{{ detailOrder.orderNo }}</a></span>
+                  <span>下单时间: {{ detailOrder.orderTime }}</span>
+                  <span class="flex items-center gap-1">
+                    买家信息: <a href="#" class="text-[var(--primary)] hover:underline cursor-pointer" @click.prevent="detailBuyerExpanded = !detailBuyerExpanded">{{ detailOrder.buyerId }} {{ detailOrder.buyerName }}</a>
+                    <button type="button" class="p-0.5 text-gray-400 hover:text-gray-600 cursor-pointer" :class="detailBuyerExpanded ? 'rotate-180' : ''" @click="detailBuyerExpanded = !detailBuyerExpanded" aria-label="展开买家详情">
+                      <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+                    </button>
+                  </span>
+                </div>
+              </div>
+
+              <!-- 买家信息卡片（展开时显示） -->
+              <div v-if="detailBuyerExpanded" class="px-4 py-3 bg-gray-50 border-b border-gray-100 text-sm grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-2 text-gray-700">
+                <p><span class="text-gray-500">商户类型：</span>{{ detailOrder.merchantType || '企业' }}</p>
+                <p><span class="text-gray-500">商户号：</span>{{ detailOrder.buyerId }}</p>
+                <p><span class="text-gray-500">商户名称：</span>{{ detailOrder.buyerName }}</p>
+                <p><span class="text-gray-500">操作员ID：</span>{{ detailOrder.operatorId || '-' }}</p>
+                <p><span class="text-gray-500">操作员姓名：</span>{{ detailOrder.operatorName || '-' }}</p>
+                <p><span class="text-gray-500">所属代理商：</span>{{ detailOrder.agentName || '-' }}</p>
+                <p><span class="text-gray-500">所属门店号：</span>{{ detailOrder.storeId || '-' }}</p>
+                <p><span class="text-gray-500">所属门店名称：</span>{{ detailOrder.storeName || '-' }}</p>
+              </div>
+
+              <!-- 2. 数据表头 (Table Header) -->
+              <div class="grid grid-cols-12 gap-4 px-4 py-2 bg-gray-50 text-sm text-gray-600 border-b border-gray-200">
+                <div class="col-span-5">商品信息</div>
+                <div class="col-span-3">单价/数量</div>
+                <div class="col-span-2">订单状态</div>
+                <div class="col-span-2 text-right">实付款</div>
+              </div>
+
+              <!-- 3. 商品数据行 (Table Body) -->
+              <div class="grid grid-cols-12 gap-4 px-4 py-4 items-start border-b border-gray-100">
+                <div class="col-span-5 flex gap-4">
+                  <div class="w-20 h-20 flex-shrink-0 border border-gray-200 rounded p-1 bg-white flex items-center justify-center text-gray-400 text-xs">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14"/></svg>
+                  </div>
+                  <div class="flex flex-col text-sm min-w-0">
+                    <span class="text-gray-800 mb-1">{{ detailOrder.productName }}</span>
+                    <span class="text-gray-400 text-xs">{{ detailOrder.brand || '盛意旺自营' }} {{ detailOrder.productType || '码牌' }}</span>
+                  </div>
+                </div>
+                <div class="col-span-3 flex flex-col text-sm text-gray-800">
+                  <div>
+                    <span>¥{{ detailOrder.price }}</span>
+                    <span class="text-gray-400 line-through ml-2 text-xs">¥{{ detailOrder.originalPrice }}</span>
+                  </div>
+                  <div class="text-gray-500 mt-1">x{{ detailOrder.quantity }}</div>
+                </div>
+                <div class="col-span-2 text-sm text-gray-800">
+                  {{ detailOrder.statusText }}
+                </div>
+                <div class="col-span-2 flex flex-col items-end text-sm text-right space-y-1">
+                  <div class="w-full flex justify-between items-baseline gap-2"><span class="text-gray-600">实付款</span><span class="font-medium text-gray-800">￥{{ detailOrder.total }}</span></div>
+                  <div class="w-full flex justify-between items-baseline gap-2"><span class="text-gray-600">商品总价</span><span class="text-gray-800">=￥{{ detailOrder.originalPrice }}x{{ detailOrder.quantity }}</span></div>
+                  <div class="w-full flex justify-between items-baseline gap-2"><span class="text-gray-600">优惠</span><span class="text-gray-800">{{ detailOrder.discount || '—' }}</span></div>
+                  <div class="w-full flex justify-between items-baseline gap-2"><span class="text-gray-600">运费</span><span class="text-gray-800">{{ detailOrder.shippingFee || '+￥6.00' }}</span></div>
+                </div>
+              </div>
+
+              <!-- 4. 订单备注 (Footer) -->
+              <div class="p-4 text-sm text-gray-700">
+                <span>订单备注: {{ detailOrder.remark || '无' }}</span>
+              </div>
+            </div>
+
+            <!-- 收货信息 + 开票信息：同一行 -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <div class="bg-white rounded-lg border border-gray-200 p-4">
+                <div class="flex items-center justify-between mb-3">
+                  <h3 class="font-medium text-gray-900">收货信息</h3>
+                  <div class="flex items-center gap-2">
+                    <button type="button" class="text-[var(--primary)] text-sm cursor-pointer hover:underline" @click="openEditAddressDialog">修改</button>
+                    <button type="button" class="text-gray-500 text-sm cursor-pointer hover:text-gray-700" @click="showAddressHistoryDialog = true">修改历史</button>
+                  </div>
+                </div>
+                <p class="text-sm text-gray-600">收货人: {{ detailOrder.recipient }}</p>
+                <p class="text-sm text-gray-600">地址: {{ detailOrder.address }}</p>
+                <p class="text-sm text-gray-600">电话: {{ detailOrder.recipientPhone }}</p>
+              </div>
+              <div class="bg-white rounded-lg border border-gray-200 p-4">
+                <div class="flex items-center justify-between mb-3">
+                  <h3 class="font-medium text-gray-900">开票信息</h3>
+                  <button v-if="(detailOrder.invoiceStatus || '开票成功') === '开票成功'" type="button" class="text-[var(--primary)] text-sm cursor-pointer hover:underline flex items-center gap-1" @click="downloadInvoice">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>下载
+                  </button>
+                </div>
+                <p class="text-sm text-gray-600">发票抬头: {{ detailOrder.invoiceTitle }}</p>
+                <p class="text-sm text-gray-600">社会统一信用代码: {{ detailOrder.creditCode }}</p>
+                <p class="text-sm text-gray-600">发票类型: {{ detailOrder.invoiceType || '单位' }}</p>
+                <p class="text-sm text-gray-600">发票内容: {{ detailOrder.invoiceContent || '数码介质' }}</p>
+                <p class="text-sm">发票状态: <span :class="(detailOrder.invoiceStatus || '开票成功') === '开票成功' ? 'text-green-600' : (detailOrder.invoiceStatus === '开票失败' ? 'text-red-600' : 'text-gray-900')">{{ detailOrder.invoiceStatus || '开票成功' }}</span></p>
+              </div>
+            </div>
+
+            <!-- 优惠信息 + 支付信息 + 退款信息：同一行 -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+              <div class="bg-white rounded-lg border border-gray-200 p-4">
+                <div class="flex items-center justify-between mb-3">
+                  <h3 class="font-medium text-gray-900">优惠信息</h3>
+                  <div v-if="couponLocked(detailOrder)" class="flex items-center gap-1">
+                    <template v-if="couponShowVerify(detailOrder)">
+                      <button type="button" class="px-2 py-1 text-[var(--primary)] text-xs border border-[var(--primary)] rounded hover:bg-blue-50 cursor-pointer" @click="couponAction('核销')">核销</button>
+                    </template>
+                    <template v-if="couponShowUnlockVoid(detailOrder)">
+                      <button type="button" class="px-2 py-1 text-gray-600 text-xs border border-gray-300 rounded hover:bg-gray-50 cursor-pointer" @click="couponAction('解锁')">解锁</button>
+                      <button type="button" class="px-2 py-1 text-red-600 text-xs border border-red-300 rounded hover:bg-red-50 cursor-pointer" @click="couponAction('作废')">作废</button>
+                    </template>
+                  </div>
+                </div>
+                <p class="text-sm text-gray-600">代金券编号：{{ detailOrder.couponCode || 'V1058811286078836736' }}</p>
+                <p class="text-sm text-gray-600">代金券名称：{{ detailOrder.couponName || '测试2分钱券' }}</p>
+                <p class="text-sm text-gray-600">代金券类型：{{ detailOrder.couponType || '立减优惠代金券' }}</p>
+                <p class="text-sm text-gray-600">券面值：{{ detailOrder.couponAmount || '0.02' }}</p>
+                <p class="text-sm">核销状态：<span :class="(detailOrder.couponStatus || '已核销') === '已核销' ? 'text-green-600' : 'text-gray-900'">{{ detailOrder.couponStatus || '已核销' }}</span></p>
+                <p class="text-sm text-gray-600">核销时间：{{ detailOrder.couponVerifyTime || '2026-02-27 17:38:27' }}</p>
+              </div>
+              <div class="bg-white rounded-lg border border-gray-200 p-4">
+                <div class="flex items-center justify-between mb-3">
+                  <h3 class="font-medium text-gray-900">支付信息</h3>
+                  <button v-if="detailOrder.status !== 'pending_pay' && detailOrder.status !== 'closed'" type="button" class="text-[var(--primary)] text-sm cursor-pointer hover:underline" @click="openRefundDialog">退款</button>
+                </div>
+                <p class="text-sm text-gray-600">支付单号: {{ detailOrder.paymentNo }}</p>
+                <p class="text-sm text-gray-600">支付时间: {{ detailOrder.paymentTime }}</p>
+                <p class="text-sm text-gray-600">支付方式: {{ detailOrder.paymentMethod || '微信账密合约' }}</p>
+                <p class="text-sm text-gray-600">支付状态: {{ detailOrder.paymentStatus || '支付成功' }}</p>
+              </div>
+              <div class="bg-white rounded-lg border border-gray-200 p-4">
+                <h3 class="font-medium text-gray-900 mb-2">退款信息</h3>
+                <div class="max-h-48 overflow-y-auto space-y-2">
+                  <div v-for="(refund, idx) in detailRefundList" :key="idx" class="border border-gray-100 rounded p-2">
+                    <button type="button" class="w-full flex items-center justify-between text-left text-sm cursor-pointer" @click="toggleRefundExpand(idx)">
+                      <span class="text-gray-600">退款 {{ idx + 1 }}：{{ refund.refundNo }}</span>
+                      <svg class="w-4 h-4 text-gray-400 flex-shrink-0" :class="expandedRefundIndex === idx ? 'rotate-180' : ''" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+                    </button>
+                    <div v-show="expandedRefundIndex === idx" class="mt-2 text-sm text-gray-600 space-y-0.5">
+                      <p>退款单号：{{ refund.refundNo }}</p>
+                      <p>退款时间：{{ refund.refundTime }}</p>
+                      <p>退款状态：{{ refund.refundStatus }}：{{ refund.amount }}</p>
+                      <p>退款原因：{{ refund.reason }}</p>
+                      <p>退款发起人：{{ refund.initiator || '—' }}</p>
+                      <p>退款渠道：{{ refund.channel || '—' }}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 发货信息：商品编码改为物流进度 -->
+            <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
+              <h3 class="font-medium text-gray-900 p-4 border-b border-gray-200">发货信息</h3>
+              <table class="w-full text-sm">
+                <thead class="bg-gray-50">
+                  <tr>
+                    <th class="px-4 py-3 text-left font-medium text-gray-600">序号</th>
+                    <th class="px-4 py-3 text-left font-medium text-gray-600">物流公司</th>
+                    <th class="px-4 py-3 text-left font-medium text-gray-600">物流单号</th>
+                    <th class="px-4 py-3 text-left font-medium text-gray-600">物流进度</th>
+                    <th class="px-4 py-3 text-left font-medium text-gray-600">商品序列号</th>
+                    <th class="px-4 py-3 text-left font-medium text-gray-600">发货数量</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="(row, ri) in detailShipmentRows" :key="ri">
+                    <td class="px-4 py-3 border-t border-gray-100">{{ ri + 1 }}</td>
+                    <td class="px-4 py-3 border-t border-gray-100">{{ row.company }}</td>
+                    <td class="px-4 py-3 border-t border-gray-100">{{ row.trackingNo }}</td>
+                    <td class="px-4 py-3 border-t border-gray-100">{{ row.progress }}</td>
+                    <td class="px-4 py-3 border-t border-gray-100">
+                      <div class="flex flex-wrap items-center gap-2">
+                        <span>{{ row.serials && row.serials.length ? row.serials.join('、') : '—' }}</span>
+                        <button
+                          v-if="showStockInForRow(row)"
+                          type="button"
+                          class="shrink-0 px-2 py-0.5 text-xs font-medium text-white bg-[var(--primary)] rounded hover:bg-[var(--primary-hover)] cursor-pointer"
+                          @click="oneClickStockIn(row)"
+                        >一键入库</button>
+                      </div>
+                    </td>
+                    <td class="px-4 py-3 border-t border-gray-100">{{ row.qty }}</td>
+                  </tr>
+                  <tr v-if="!detailShipmentRows.length">
+                    <td colspan="6" class="px-4 py-8 text-center text-gray-400">暂无数据</td>
+                  </tr>
+                </tbody>
+              </table>
+              <div v-if="detailOrder.logisticsProgress" class="px-4 py-3 border-t border-gray-100 bg-gray-50 text-sm text-gray-600">
+                最新物流：{{ detailOrder.logisticsProgress }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <!-- 退款弹窗 -->
+    <Teleport to="body">
+      <div v-if="showRefundDialog" class="fixed inset-0 z-50 flex items-center justify-center">
+        <div class="absolute inset-0 bg-black/50" @click="showRefundDialog = false"></div>
+        <div class="relative bg-white rounded-lg shadow-xl w-full max-w-md p-6 m-4">
+          <h2 class="text-lg font-semibold text-gray-900 mb-4">发起退款</h2>
+          <div class="mb-4 p-3 bg-amber-50 border border-amber-200 rounded text-sm">
+            <p class="text-gray-700">剩余可退余额：<span class="font-semibold text-amber-700">¥{{ refundableBalance }}</span></p>
+            <p class="text-xs text-gray-500 mt-1">剩余可退余额 = 实付总金额 - 已退款金额</p>
+            <p v-if="refundableBalance <= 0" class="text-red-600 text-xs mt-1">可退余额为 0，不允许发起退款</p>
+          </div>
+          <div class="space-y-4">
+            <div>
+              <label class="block text-sm text-gray-600 mb-1">退款金额</label>
+              <input type="number" step="0.01" v-model="refundForm.amount" placeholder="请输入退款金额" class="w-full px-3 py-2 border border-gray-300 rounded text-sm" :disabled="refundableBalance <= 0">
+            </div>
+            <div>
+              <label class="block text-sm text-gray-600 mb-1">退款原因</label>
+              <input type="text" v-model="refundForm.reason" placeholder="请输入退款原因" class="w-full px-3 py-2 border border-gray-300 rounded text-sm">
+            </div>
+          </div>
+          <div class="flex justify-end gap-2 mt-6">
+            <button class="px-4 py-2 border border-gray-300 text-gray-600 rounded text-sm cursor-pointer hover:bg-gray-50" @click="showRefundDialog = false">取消</button>
+            <button class="px-4 py-2 rounded text-sm font-medium cursor-pointer" :class="refundableBalance <= 0 ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'bg-[var(--primary)] text-white hover:bg-[var(--primary-hover)]'" :disabled="refundableBalance <= 0" @click="refundableBalance <= 0 ? null : confirmRefund()">确认退款</button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
+
+    <!-- 修改历史弹窗 -->
+    <Teleport to="body">
+      <div v-if="showAddressHistoryDialog" class="fixed inset-0 z-50 flex items-center justify-center">
+        <div class="absolute inset-0 bg-black/50" @click="showAddressHistoryDialog = false"></div>
+        <div class="relative bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[85vh] overflow-auto m-4">
+          <div class="flex items-center justify-between p-4 border-b border-gray-200">
+            <h2 class="text-lg font-semibold text-gray-900">修改历史</h2>
+            <button class="p-2 text-gray-500 hover:text-gray-700 rounded cursor-pointer" @click="showAddressHistoryDialog = false" aria-label="关闭">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+          </div>
+          <div class="p-4">
+            <table class="w-full text-sm">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th class="px-4 py-2 text-left font-medium text-gray-600">修改时间</th>
+                  <th class="px-4 py-2 text-left font-medium text-gray-600">修改前收货信息</th>
+                  <th class="px-4 py-2 text-left font-medium text-gray-600">修改后收货信息</th>
+                  <th class="px-4 py-2 text-left font-medium text-gray-600">修改人</th>
+                  <th class="px-4 py-2 text-left font-medium text-gray-600">修改结果</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="(record, i) in addressHistory" :key="i" class="border-t border-gray-100">
+                  <td class="px-4 py-2 text-gray-600">{{ record.time }}</td>
+                  <td class="px-4 py-2 text-gray-600">{{ record.before }}</td>
+                  <td class="px-4 py-2 text-gray-600">{{ record.after }}</td>
+                  <td class="px-4 py-2 text-gray-600">{{ record.operator }}</td>
+                  <td class="px-4 py-2 text-gray-600">{{ record.result }}</td>
+                </tr>
+                <tr v-if="!addressHistory.length">
+                  <td colspan="5" class="px-4 py-8 text-center text-gray-400">暂无修改记录</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </Teleport>
+
+    <!-- 补发弹窗 -->
+    <Teleport to="body">
+      <div v-if="showReshipDialog" class="fixed inset-0 z-50 flex items-center justify-center">
+        <div class="absolute inset-0 bg-black/50" @click="showReshipDialog = false"></div>
+        <div class="relative bg-white rounded-lg shadow-xl w-full max-w-md p-6 m-4">
+          <h2 class="text-lg font-semibold text-gray-900 mb-4">补发</h2>
+          <p class="text-sm text-gray-600 mb-2">系统将根据订单商品类型自动更新订单状态：</p>
+          <div class="mb-4 p-3 bg-gray-50 rounded-lg text-sm space-y-1">
+            <p><span class="text-gray-500">商品类型：</span>{{ reshipProductKindLabel }}</p>
+            <p><span class="text-gray-500">将更新为：</span><span class="font-semibold text-[var(--primary)]">{{ reshipNextStatusLabel }}</span></p>
+          </div>
+          <p class="text-xs text-gray-500 mb-4">实物商品补发成功后为「已发货」；虚拟商品为「交易成功」。</p>
+          <div class="flex justify-end gap-2">
+            <button class="px-4 py-2 border border-gray-300 text-gray-600 rounded text-sm cursor-pointer hover:bg-gray-50" @click="showReshipDialog = false">取消</button>
+            <button class="px-4 py-2 bg-[var(--primary)] text-white rounded text-sm font-medium cursor-pointer hover:bg-[var(--primary-hover)]" @click="confirmReship">确定</button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
+
+    <!-- 修改收货信息弹窗 -->
+    <Teleport to="body">
+      <div v-if="showEditAddressDialog" class="fixed inset-0 z-50 flex items-center justify-center">
+        <div class="absolute inset-0 bg-black/50" @click="showEditAddressDialog = false"></div>
+        <div class="relative bg-white rounded-lg shadow-xl w-full max-w-md p-6 m-4">
+          <h2 class="text-lg font-semibold text-gray-900 mb-4">修改收货信息</h2>
+          <div class="mb-4 p-3 bg-gray-50 rounded text-sm">
+            <p class="text-gray-600">当前收货人：{{ addressForm.currentName }}</p>
+            <p class="text-gray-600">当前地址：{{ addressForm.currentAddress }}</p>
+            <p class="text-gray-600">当前电话：{{ addressForm.currentPhone }}</p>
+          </div>
+          <div class="space-y-4">
+            <div>
+              <label class="block text-sm text-gray-600 mb-1">收货人姓名</label>
+              <input type="text" v-model="addressForm.name" placeholder="请输入收货人姓名" class="w-full px-3 py-2 border border-gray-300 rounded text-sm">
+            </div>
+            <div>
+              <label class="block text-sm text-gray-600 mb-1">收货地址</label>
+              <input type="text" v-model="addressForm.address" placeholder="请输入收货地址" class="w-full px-3 py-2 border border-gray-300 rounded text-sm">
+            </div>
+            <div>
+              <label class="block text-sm text-gray-600 mb-1">联系电话</label>
+              <input type="text" v-model="addressForm.phone" placeholder="请输入联系电话" class="w-full px-3 py-2 border border-gray-300 rounded text-sm">
+            </div>
+          </div>
+          <div class="flex justify-end gap-2 mt-6">
+            <button class="px-4 py-2 border border-gray-300 text-gray-600 rounded text-sm cursor-pointer hover:bg-gray-50" @click="showEditAddressDialog = false">取消</button>
+            <button class="px-4 py-2 bg-[var(--primary)] text-white rounded text-sm font-medium cursor-pointer hover:bg-[var(--primary-hover)]" @click="saveAddress">保存</button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
+
+    <!-- 发货弹窗 -->
+    <Teleport to="body">
+      <div v-if="showShipDialog" class="fixed inset-0 z-50 flex items-center justify-center">
+        <div class="absolute inset-0 bg-black/50" @click="showShipDialog = false"></div>
+        <div class="relative bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-auto m-4">
+          <div class="flex items-center justify-between p-4 border-b border-gray-200">
+            <h2 class="text-lg font-semibold text-gray-900">发货</h2>
+            <button class="p-2 text-gray-500 hover:text-gray-700 rounded cursor-pointer" @click="showShipDialog = false" aria-label="关闭">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+          </div>
+          <div class="p-4 space-y-4">
+            <div class="flex gap-4 p-4 bg-gray-50 rounded-lg">
+              <div class="flex-1">
+                <h3 class="font-medium text-gray-900 mb-2">收货信息</h3>
+                <p class="text-sm text-gray-600">收货人: {{ shipOrder.recipient }}</p>
+                <p class="text-sm text-gray-600">地址: {{ shipOrder.address }}</p>
+                <p class="text-sm text-gray-600">电话: {{ shipOrder.recipientPhone }}</p>
+              </div>
+              <div class="w-20 h-20 rounded border border-gray-200 bg-gray-100 flex-shrink-0"></div>
+            </div>
+            <div>
+              <h3 class="font-medium text-gray-900 mb-2">商品信息</h3>
+              <table class="w-full text-sm border border-gray-200 rounded overflow-hidden">
+                <thead class="bg-gray-50">
+                  <tr>
+                    <th class="px-4 py-2 text-left font-medium text-gray-600">产品/品类</th>
+                    <th class="px-4 py-2 text-left font-medium text-gray-600">商品序列号</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr class="border-t border-gray-200">
+                    <td class="px-4 py-2">{{ shipOrder.productName }}</td>
+                    <td class="px-4 py-2">{{ shipOrder.productSku || '-' }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div>
+              <h3 class="font-medium text-gray-900 mb-2">添加物流信息</h3>
+              <table class="w-full text-sm border border-gray-200 rounded overflow-hidden">
+                <thead class="bg-gray-50">
+                  <tr>
+                    <th class="px-4 py-2 text-left font-medium text-gray-600">序号</th>
+                    <th class="px-4 py-2 text-left font-medium text-gray-600">物流公司</th>
+                    <th class="px-4 py-2 text-left font-medium text-gray-600">物流单号</th>
+                    <th class="px-4 py-2 text-left font-medium text-gray-600">发货数量</th>
+                    <th class="px-4 py-2 text-left font-medium text-gray-600">操作</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td colspan="5" class="px-4 py-8 text-center text-gray-400">暂无数据</td>
+                  </tr>
+                </tbody>
+              </table>
+              <button class="mt-2 px-4 py-2 border border-dashed border-gray-300 text-gray-600 rounded text-sm hover:bg-gray-50 cursor-pointer flex items-center gap-1">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                添加物流
+              </button>
+            </div>
+          </div>
+          <div class="flex justify-end gap-2 p-4 border-t border-gray-200">
+            <button class="px-4 py-2 border border-gray-300 text-gray-600 rounded text-sm cursor-pointer hover:bg-gray-50" @click="showShipDialog = false">取消</button>
+            <button class="px-4 py-2 bg-[var(--primary)] text-white rounded text-sm font-medium cursor-pointer hover:bg-[var(--primary-hover)]" @click="showShipDialog = false">确定</button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
+
+    <!-- 右下角浮动按钮 -->
+    <div class="fixed bottom-6 right-6 flex flex-col gap-2 z-40">
+      <button class="w-10 h-10 rounded-full bg-white shadow-lg border border-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-50 cursor-pointer" aria-label="消息">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+      </button>
+      <button class="w-10 h-10 rounded-full bg-white shadow-lg border border-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-50 cursor-pointer" aria-label="设置">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <script>
+    const { createApp, ref, reactive, computed } = Vue;
+
+    const defaultRefundList = [
+      { refundNo: 'R202603061519119554450913394292', refundTime: '2026-03-06 15:19:12', refundStatus: '退款成功', amount: '9.00', reason: '测试', initiator: '张三', channel: '后台' },
+      { refundNo: 'R202603061521119554450913394293', refundTime: '2026-03-06 15:21:12', refundStatus: '退款成功', amount: '1.00', reason: '测试', initiator: '李四', channel: 'D平台' }
+    ];
+
+    createApp({
+      setup() {
+        const view = ref('list');
+        const currentMenu = ref('order-query');
+        const activeTab = ref('all');
+        const showShipDialog = ref(false);
+        const showRefundDialog = ref(false);
+        const showEditAddressDialog = ref(false);
+        const showAddressHistoryDialog = ref(false);
+        const showReshipDialog = ref(false);
+        const expandedBuyerId = ref(null);
+        const detailBuyerExpanded = ref(false);
+        const expandedRefundIndex = ref(0);
+        const menuExpand = reactive({ product: false, order: true, system: false });
+
+        const addressHistory = ref([
+          { time: '2026-03-01 10:20:00', before: '张三 / 北京市朝阳区xx路1号 / 13800138000', after: '李四 / 上海市浦东新区xx路2号 / 13900139000', operator: '管理员', result: '修改成功' }
+        ]);
+
+        const toDateTimeLocal = (d) => {
+          const pad = n => String(n).padStart(2, '0');
+          return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + 'T' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+        };
+        const getDefaultExportStart = () => {
+          const d = new Date();
+          d.setDate(d.getDate() - 1);
+          d.setHours(0, 0, 0, 0);
+          return toDateTimeLocal(d);
+        };
+        const getDefaultExportEnd = () => {
+          const d = new Date();
+          d.setHours(23, 59, 0, 0);
+          return toDateTimeLocal(d);
+        };
+        const exportStartDate = ref(getDefaultExportStart());
+        const exportEndDate = ref(getDefaultExportEnd());
+        const exportStatus = ref('pending_ship');
+        const filterOrderSource = ref('');
+        const filterOrderNo = ref('');
+        const filterOrderDateStart = ref('');
+        const filterOrderDateEnd = ref('');
+        const filterPayDateStart = ref('');
+        const filterPayDateEnd = ref('');
+        const filterBuyerId = ref('');
+        const filterBuyerName = ref('');
+        const filterProductName = ref('');
+        const filterProductType = ref('');
+        const filterBrand = ref('');
+        const filterExpressNo = ref('');
+
+        const refundForm = reactive({ amount: '', reason: '' });
+        const addressForm = reactive({
+          currentName: '', currentAddress: '', currentPhone: '',
+          name: '', address: '', phone: ''
+        });
+
+        const orderTabs = [
+          { label: '全部订单', value: 'all' },
+          { label: '待付款', value: 'pending_pay' },
+          { label: '待发货', value: 'pending_ship' },
+          { label: '已发货', value: 'shipped' },
+          { label: '交易完成', value: 'completed' },
+          { label: '交易关闭', value: 'closed' },
+          { label: '发货失败', value: 'ship_failed' }
+        ];
+
+        const orderList = ref([
+          {
+            id: 1,
+            orderNo: 'PO202602121030214368804921452931',
+            orderTime: '2026-02-12 10:30:21',
+            buyerName: '上海夸父信息技术有限公司',
+            buyerId: '93762223',
+            productName: '商品名称商品名称商品名称',
+            productDesc: '',
+            brand: '盛意旺自营',
+            productType: '码牌',
+            originalPrice: '9.90',
+            price: '10.00',
+            quantity: 5,
+            total: '35.50',
+            productTotal: '=¥9.90 x 5',
+            discount: '- ¥20.00',
+            shippingFee: '+¥6.00',
+            adjustment: '',
+            status: 'pending_pay',
+            statusText: '待支付',
+            remark: '无',
+            platform: 'D平台',
+            productCategory: '实物商品',
+            recipient: '小王',
+            address: '福建省泉州市晋江市南区百捷国际中心202006',
+            recipientPhone: '15559552688',
+            spec: '1.85*2.00',
+            invoiceTitle: '上海夸父信息技术有限公司',
+            creditCode: '91350583MA2XRM8843',
+            paymentNo: 'PA2026031014560756246051620925916',
+            paymentTime: '2026-03-10 14:58:18',
+            productSku: '',
+            merchantType: '企业',
+            operatorId: 'OP001',
+            operatorName: '张三',
+            agentName: '华东代理',
+            storeId: 'S10001',
+            storeName: '上海浦东店',
+            refundList: defaultRefundList
+          },
+          {
+            id: 2,
+            orderNo: 'PO2026031014531484046051620925916',
+            orderTime: '2026-03-10 14:53:15',
+            buyerName: '泉州市腾辉科技有限公司',
+            buyerId: '46051688',
+            productName: '收银喇叭',
+            productDesc: '新奇特科技 品牌',
+            brand: '商米',
+            productType: '云音箱',
+            originalPrice: '1.90',
+            price: '2.00',
+            quantity: 200,
+            total: '404.00',
+            productTotal: '=¥1.90 x 200',
+            discount: '',
+            shippingFee: '+¥8.00',
+            adjustment: '+¥8.00 - ¥404.00',
+            status: 'closed',
+            statusText: '订单关闭',
+            remark: '无',
+            platform: '盛意旺app',
+            couponStatus: '已锁定',
+            productCategory: '实物商品',
+            recipient: '小王',
+            address: '福建省泉州市晋江市南区百捷国际中心202006',
+            recipientPhone: '15559552688',
+            spec: '1.85*2.00',
+            invoiceTitle: '泉州市腾辉科技有限公司',
+            creditCode: '91350583MA2XRM8843',
+            paymentNo: 'PA2026031014560756246051620925916',
+            paymentTime: '2026-03-10 14:58:18',
+            productSku: '',
+            refundList: []
+          },
+          {
+            id: 3,
+            orderNo: 'PO202603101230402134226150268624',
+            orderTime: '2026-03-10 12:30:40',
+            buyerName: '宝达创(天津)网络科技有限公司',
+            buyerId: '42261902',
+            productName: '碰一碰即立牌',
+            productDesc: '',
+            brand: '魔方',
+            productType: '电子码牌',
+            originalPrice: '0.50',
+            price: '8.00',
+            quantity: 100,
+            total: '113.00',
+            productTotal: '=¥0.50 x 100',
+            discount: '-¥8.00',
+            shippingFee: '+¥8.00',
+            adjustment: '+¥8.00 - ¥113.00',
+            status: 'closed',
+            statusText: '订单关闭',
+            remark: '无',
+            platform: '商家服务小程序',
+            productCategory: '实物商品',
+            couponStatus: '已锁定',
+            recipient: '',
+            address: '',
+            recipientPhone: '',
+            spec: '',
+            invoiceTitle: '',
+            creditCode: '',
+            paymentNo: '',
+            paymentTime: '',
+            productSku: ''
+          },
+          {
+            id: 4,
+            orderNo: 'PO202603101048198793164854537413',
+            orderTime: '2026-03-10 10:48:20',
+            buyerName: '泰州市融带塑科技有限公司',
+            buyerId: '31648845',
+            productName: '以旧换新服务(京东特价版)',
+            productDesc: '',
+            brand: '博实结',
+            productType: '智能POS',
+            originalPrice: '540.00',
+            price: '349.00',
+            quantity: 1,
+            total: '349.00',
+            productTotal: '=¥540.00 x 1',
+            discount: '',
+            shippingFee: '',
+            adjustment: '+¥349.00',
+            status: 'shipped',
+            statusText: '已发货',
+            remark: '无',
+            platform: 'D平台',
+            productCategory: '实物商品',
+            productKind: 'physical',
+            expressNo: 'SF1234567890',
+            recipient: '小王',
+            address: '泰州市建州市江区202006',
+            recipientPhone: '15558552609',
+            spec: '-',
+            invoiceTitle: '泰州市融带塑科技有限公司',
+            creditCode: '91350583MA2XRM8843',
+            paymentNo: 'PA202833101456075624605168909037',
+            paymentTime: '2026-03-10 14:58:18',
+            productSku: '',
+            phone: '40051609',
+            refundList: defaultRefundList,
+            logisticsProgress: '【深圳市】快件已发出',
+            couponStatus: '已锁定',
+            shipmentRows: [
+              { company: '顺丰速运', trackingNo: 'SF1234567890', progress: '运输中', serials: ['SN20260310001', 'SN20260310002'], qty: 2 }
+            ]
+          },
+          {
+            id: 5,
+            orderNo: 'PO202603111200000000000000000001',
+            orderTime: '2026-03-11 12:00:00',
+            buyerName: '测试公司（发货失败）',
+            buyerId: '99999999',
+            productName: '测试商品',
+            brand: '升腾',
+            productType: '扫码王',
+            originalPrice: '10.00',
+            price: '10.00',
+            quantity: 1,
+            total: '10.00',
+            status: 'ship_failed',
+            statusText: '发货失败',
+            remark: '无',
+            platform: 'D平台',
+            recipient: '测试',
+            address: '测试地址',
+            recipientPhone: '13800000000',
+            invoiceTitle: '测试公司',
+            creditCode: '',
+            invoiceStatus: '开票成功',
+            couponStatus: '已锁定',
+            productCategory: '实物商品',
+            productKind: 'physical',
+            refundList: []
+          },
+          {
+            id: 7,
+            orderNo: 'PO202603111500000000000000000002',
+            orderTime: '2026-03-11 15:00:00',
+            buyerName: '虚拟商品测试公司',
+            buyerId: '77777777',
+            productName: '电子卡券包',
+            brand: '天喻',
+            productType: 'SaaS软件',
+            originalPrice: '50.00',
+            price: '50.00',
+            quantity: 1,
+            total: '50.00',
+            status: 'ship_failed',
+            statusText: '发货失败',
+            remark: '无',
+            platform: 'D平台',
+            productCategory: '虚拟商品',
+            productKind: 'virtual',
+            recipient: '测试',
+            address: '—',
+            recipientPhone: '13800000001',
+            invoiceTitle: '虚拟商品测试公司',
+            creditCode: '',
+            refundList: []
+          }
+        ]);
+
+        const exportTimeInvalid = computed(() => {
+          const s = exportStartDate.value;
+          const e = exportEndDate.value;
+          if (!s || !e) return false;
+          return e < s;
+        });
+
+        const hasListQueryCondition = computed(() => {
+          return !!(
+            filterOrderNo.value.trim() ||
+            filterOrderDateStart.value ||
+            filterOrderDateEnd.value ||
+            filterPayDateStart.value ||
+            filterPayDateEnd.value ||
+            filterBuyerId.value.trim() ||
+            filterBuyerName.value.trim() ||
+            filterProductName.value.trim() ||
+            filterProductType.value ||
+            filterBrand.value ||
+            filterExpressNo.value.trim() ||
+            filterOrderSource.value
+          );
+        });
+
+        const parseOrderDatePart = (orderTimeStr) => {
+          if (!orderTimeStr) return null;
+          const day = orderTimeStr.slice(0, 10);
+          const d = new Date(day.replace(/-/g, '/'));
+          return isNaN(d.getTime()) ? null : d;
+        };
+        const parseDateInput = (s) => {
+          if (!s) return null;
+          const d = new Date(s.replace(/-/g, '/'));
+          return isNaN(d.getTime()) ? null : d;
+        };
+        const parseExportDateTime = (s) => {
+          if (!s) return null;
+          const normalized = s.includes('T') ? s.replace('T', ' ') : s;
+          const d = new Date(normalized.replace(/-/g, '/'));
+          return isNaN(d.getTime()) ? null : d;
+        };
+
+        const applyListFilters = (list) => {
+          let out = list.slice();
+          const t = (v) => (v || '').trim();
+          if (t(filterOrderNo.value)) out = out.filter(o => (o.orderNo || '').includes(t(filterOrderNo.value)));
+          if (t(filterBuyerId.value)) out = out.filter(o => (o.buyerId || '').includes(t(filterBuyerId.value)));
+          if (t(filterBuyerName.value)) out = out.filter(o => (o.buyerName || '').includes(t(filterBuyerName.value)));
+          if (t(filterProductName.value)) out = out.filter(o => (o.productName || '').includes(t(filterProductName.value)));
+          if (filterProductType.value) out = out.filter(o => (o.productType || '') === filterProductType.value);
+          if (filterBrand.value) out = out.filter(o => (o.brand || '') === filterBrand.value);
+          if (t(filterExpressNo.value)) out = out.filter(o => (o.expressNo || '').includes(t(filterExpressNo.value)));
+          if (filterOrderSource.value) out = out.filter(o => (o.platform || o.orderSource || '') === filterOrderSource.value);
+
+          const ds = parseDateInput(filterOrderDateStart.value);
+          const de = parseDateInput(filterOrderDateEnd.value);
+          if (ds) out = out.filter(o => {
+            const od = parseOrderDatePart(o.orderTime);
+            return od && od >= ds;
+          });
+          if (de) {
+            const deEnd = new Date(de);
+            deEnd.setHours(23, 59, 59, 999);
+            out = out.filter(o => {
+              const od = parseOrderDatePart(o.orderTime);
+              return od && od <= deEnd;
+            });
+          }
+
+          const ps = parseDateInput(filterPayDateStart.value);
+          const pe = parseDateInput(filterPayDateEnd.value);
+          if (ps || pe) {
+            out = out.filter(o => {
+              const pd = parseOrderDatePart(o.paymentTime);
+              if (!pd) return false;
+              if (ps && pd < ps) return false;
+              if (pe) {
+                const peEnd = new Date(pe);
+                peEnd.setHours(23, 59, 59, 999);
+                if (pd > peEnd) return false;
+              }
+              return true;
+            });
+          }
+          return out;
+        };
+
+        const handleOrderExport = () => {
+          if (!hasListQueryCondition.value) {
+            alert('根据查询条件进行导出，需至少选择一个查询条件');
+            return;
+          }
+          doExportExcel();
+        };
+
+        const filteredOrderList = computed(() => {
+          let list = orderList.value;
+          if (activeTab.value !== 'all') list = list.filter(o => o.status === activeTab.value);
+          if (filterOrderSource.value) list = list.filter(o => (o.platform || o.orderSource || 'D平台') === filterOrderSource.value);
+          return list;
+        });
+
+        const detailRefundList = computed(() => {
+          const list = detailOrder.value.refundList || defaultRefundList;
+          return [...list].reverse();
+        });
+
+        const detailShipmentRows = computed(() => detailOrder.value.shipmentRows || []);
+
+        const couponLocked = (o) => {
+          const cs = o.couponStatus || '';
+          return cs === '锁定' || cs === '已锁定';
+        };
+        const couponShowVerify = (o) => {
+          if (!couponLocked(o)) return false;
+          const s = o.status;
+          return s === 'pending_ship' || s === 'shipped' || s === 'completed';
+        };
+        const couponShowUnlockVoid = (o) => {
+          if (!couponLocked(o)) return false;
+          return o.status === 'closed';
+        };
+
+        const reshipNextByKind = (order) => {
+          const kind = order.productKind || (order.productCategory === '虚拟商品' ? 'virtual' : 'physical');
+          if (kind === 'virtual') return { status: 'completed', statusText: '交易成功' };
+          return { status: 'shipped', statusText: '已发货' };
+        };
+        const reshipProductKindLabel = computed(() => {
+          const o = detailOrder.value;
+          const kind = o.productKind || (o.productCategory === '虚拟商品' ? 'virtual' : 'physical');
+          return kind === 'virtual' ? '虚拟商品' : '实物商品';
+        });
+        const reshipNextStatusLabel = computed(() => reshipNextByKind(detailOrder.value).statusText);
+
+        const showStockInForRow = (row) => {
+          const o = detailOrder.value;
+          const plat = o.platform || o.orderSource || '';
+          if (plat !== 'D平台') return false;
+          if (o.status !== 'shipped' && o.status !== 'completed') return false;
+          return row.serials && row.serials.length > 0;
+        };
+
+        const oneClickStockIn = (row) => {
+          const sns = (row.serials || []).join('、');
+          alert('已将以下商品序列号一键入库（演示）：\n' + sns);
+        };
+
+        const patchOrderInList = (id, patch) => {
+          const idx = orderList.value.findIndex(o => o.id === id);
+          if (idx >= 0) orderList.value[idx] = { ...orderList.value[idx], ...patch };
+        };
+
+        const refundableBalance = computed(() => {
+          const total = parseFloat(detailOrder.value.total || 0) || 0;
+          const list = detailOrder.value.refundList || [];
+          const refunded = list.reduce((sum, r) => sum + (parseFloat(r.amount || 0) || 0), 0);
+          const balance = total - refunded;
+          return (balance < 0 ? 0 : balance).toFixed(2);
+        });
+
+        const detailOrder = ref({});
+        const shipOrder = ref({});
+
+        const toggleBuyerDetail = (orderId) => {
+          expandedBuyerId.value = expandedBuyerId.value === orderId ? null : orderId;
+        };
+
+        const openDetail = (order) => {
+          detailOrder.value = { ...order, refundList: order.refundList || defaultRefundList };
+          detailBuyerExpanded.value = false;
+          expandedRefundIndex.value = 0;
+          view.value = 'detail';
+        };
+
+        const toggleRefundExpand = (idx) => {
+          expandedRefundIndex.value = expandedRefundIndex.value === idx ? -1 : idx;
+        };
+
+        const downloadInvoice = () => {
+          const blob = new Blob(['PDF placeholder'], { type: 'application/pdf' });
+          const a = document.createElement('a');
+          a.href = URL.createObjectURL(blob);
+          a.download = '发票_' + (detailOrder.value.orderNo || '') + '.pdf';
+          a.click();
+          URL.revokeObjectURL(a.href);
+        };
+
+        const couponAction = (action) => {
+          let patch = {};
+          if (action === '解锁') patch = { couponStatus: '可用' };
+          else if (action === '作废') patch = { couponStatus: '作废' };
+          else if (action === '核销') patch = { couponStatus: '已核销', couponVerifyTime: new Date().toISOString().slice(0, 19).replace('T', ' ') };
+          detailOrder.value = { ...detailOrder.value, ...patch };
+          patchOrderInList(detailOrder.value.id, patch);
+          alert('已' + action + '（演示）');
+        };
+
+        const confirmReship = () => {
+          const next = reshipNextByKind(detailOrder.value);
+          const id = detailOrder.value.id;
+          detailOrder.value = { ...detailOrder.value, ...next };
+          patchOrderInList(id, next);
+          showReshipDialog.value = false;
+          alert('补发成功，订单状态已更新为「' + next.statusText + '」（演示）');
+        };
+
+        const openShipDialog = (order) => {
+          shipOrder.value = { ...order, productSku: order.productSku || '盛意旺订单' };
+          showShipDialog.value = true;
+        };
+
+        const doExportExcel = () => {
+          if (exportTimeInvalid.value) {
+            alert('导出时间范围无效：结束时间不能早于开始时间');
+            return;
+          }
+          if (!hasListQueryCondition.value) {
+            alert('根据查询条件进行导出，需至少选择一个查询条件');
+            return;
+          }
+          let matched = applyListFilters(orderList.value);
+          const t0 = parseExportDateTime(exportStartDate.value);
+          const t1 = parseExportDateTime(exportEndDate.value);
+          if (t0 || t1) {
+            matched = matched.filter(o => {
+              const ot = parseExportDateTime(o.orderTime);
+              if (!ot) return false;
+              if (t0 && ot < t0) return false;
+              if (t1 && ot > t1) return false;
+              return true;
+            });
+          }
+          const status = exportStatus.value;
+          if (status !== 'all') matched = matched.filter(o => o.status === status);
+          const blob = new Blob(['\ufeff订单导出（下单时间：' + (exportStartDate.value || '') + ' 至 ' + (exportEndDate.value || '') + '，状态：' + exportStatus.value + '，已按列表查询条件筛选）'], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+          const a = document.createElement('a');
+          a.href = URL.createObjectURL(blob);
+          a.download = '订单导出_' + new Date().toISOString().slice(0,10) + '.xlsx';
+          a.click();
+          URL.revokeObjectURL(a.href);
+          alert('导出成功，文件已下载。\n共导出 ' + matched.length + ' 条订单。');
+        };
+
+        const onLogisticsFileChange = (e) => {
+          const file = e.target && e.target.files[0];
+          if (file) alert('已选择文件：' + file.name + '，实际项目中可在此解析 Excel 并上传。');
+          e.target.value = '';
+        };
+
+        const openEditAddressDialog = () => {
+          const o = detailOrder.value;
+          addressForm.currentName = o.recipient || '';
+          addressForm.currentAddress = o.address || '';
+          addressForm.currentPhone = o.recipientPhone || '';
+          addressForm.name = o.recipient || '';
+          addressForm.address = o.address || '';
+          addressForm.phone = o.recipientPhone || '';
+          showEditAddressDialog.value = true;
+        };
+
+        const saveAddress = () => {
+          const before = addressForm.currentName + ' / ' + addressForm.currentAddress + ' / ' + addressForm.currentPhone;
+          const after = addressForm.name + ' / ' + addressForm.address + ' / ' + addressForm.phone;
+          addressHistory.value = [{ time: new Date().toLocaleString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' }).replace(/\//g, '-'), before, after, operator: '当前用户', result: '修改成功' }, ...addressHistory.value];
+          detailOrder.value = { ...detailOrder.value, recipient: addressForm.name, address: addressForm.address, recipientPhone: addressForm.phone };
+          showEditAddressDialog.value = false;
+        };
+
+        const openRefundDialog = () => {
+          refundForm.amount = '';
+          refundForm.reason = '';
+          showRefundDialog.value = true;
+        };
+
+        const confirmRefund = () => {
+          if (!refundForm.amount || !refundForm.reason) {
+            alert('请填写退款金额和退款原因');
+            return;
+          }
+          alert('已发起退款（演示）');
+          showRefundDialog.value = false;
+          refundForm.amount = '';
+          refundForm.reason = '';
+        };
+
+        return {
+          view,
+          currentMenu,
+          activeTab,
+          orderTabs,
+          orderList,
+          filteredOrderList,
+          detailOrder,
+          shipOrder,
+          showShipDialog,
+          showRefundDialog,
+          showEditAddressDialog,
+          showAddressHistoryDialog,
+          showReshipDialog,
+          expandedBuyerId,
+          detailBuyerExpanded,
+          expandedRefundIndex,
+          reshipProductKindLabel,
+          reshipNextStatusLabel,
+          addressHistory,
+          detailRefundList,
+          refundableBalance,
+          menuExpand,
+          exportStartDate,
+          exportEndDate,
+          exportStatus,
+          exportTimeInvalid,
+          hasListQueryCondition,
+          filterOrderSource,
+          filterOrderNo,
+          filterOrderDateStart,
+          filterOrderDateEnd,
+          filterPayDateStart,
+          filterPayDateEnd,
+          filterBuyerId,
+          filterBuyerName,
+          filterProductName,
+          filterProductType,
+          filterBrand,
+          filterExpressNo,
+          handleOrderExport,
+          detailShipmentRows,
+          couponLocked,
+          couponShowVerify,
+          couponShowUnlockVoid,
+          showStockInForRow,
+          oneClickStockIn,
+          refundForm,
+          addressForm,
+          defaultRefundList,
+          toggleBuyerDetail,
+          openDetail,
+          openShipDialog,
+          onLogisticsFileChange,
+          openEditAddressDialog,
+          openRefundDialog,
+          saveAddress,
+          confirmRefund,
+          toggleRefundExpand,
+          downloadInvoice,
+          couponAction,
+          confirmReship
+        };
+      }
+    }).mount('#app');
+  </script>
+</body>
+</html>
