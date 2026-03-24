@@ -454,14 +454,27 @@
                     <td class="px-4 py-3 border-t border-gray-100">{{ row.trackingNo }}</td>
                     <td class="px-4 py-3 border-t border-gray-100">{{ row.progress }}</td>
                     <td class="px-4 py-3 border-t border-gray-100">
-                      <div class="flex flex-wrap items-center gap-2">
-                        <span>{{ row.serials && row.serials.length ? row.serials.join('、') : '—' }}</span>
-                        <button
-                          v-if="showStockInForRow(row)"
-                          type="button"
-                          class="shrink-0 px-2 py-0.5 text-xs font-medium text-white bg-[var(--primary)] rounded hover:bg-[var(--primary-hover)] cursor-pointer"
-                          @click="oneClickStockIn(row)"
-                        >一键入库</button>
+                      <div class="space-y-1">
+                        <!-- 字符串型 serials（旧格式） -->
+                        <template v-if="row.serials && row.serials.length && typeof row.serials[0] === 'string'">
+                          <div class="flex flex-wrap items-center gap-2">
+                            <span class="text-sm">{{ row.serials.join('、') }}</span>
+                            <button v-if="showStockInForRow(row)" type="button" class="shrink-0 px-2 py-0.5 text-xs font-medium text-white bg-[var(--primary)] rounded hover:bg-[var(--primary-hover)] cursor-pointer" @click="oneClickStockIn(row)">一键入库</button>
+                          </div>
+                        </template>
+                        <!-- 对象型 serials（带 bindStatus） -->
+                        <template v-else-if="row.serials && row.serials.length && typeof row.serials[0] === 'object'">
+                          <div v-for="(sn, si) in row.serials" :key="si" class="flex items-center gap-2 flex-wrap">
+                            <span class="font-mono text-sm" :class="sn.bindStatus === 'failed' ? 'text-red-600' : 'text-gray-800'">{{ sn.sn }}</span>
+                            <span v-if="sn.bindStatus === 'success'" class="text-xs text-green-600">绑定成功</span>
+                            <template v-if="sn.bindStatus === 'failed'">
+                              <span class="text-xs text-red-600 font-medium">绑定失败：{{ sn.failReason }}</span>
+                              <button type="button" class="px-2 py-0.5 text-xs border border-red-300 text-red-600 rounded hover:bg-red-50 cursor-pointer" @click="openSnRebindDialog(sn, row, detailOrder)">重试</button>
+                            </template>
+                          </div>
+                        </template>
+                        <span v-else class="text-gray-400">—</span>
+                        <button v-if="showStockInForRow(row) && row.serials && typeof row.serials[0] === 'object'" type="button" class="mt-1 px-2 py-0.5 text-xs font-medium text-white bg-[var(--primary)] rounded hover:bg-[var(--primary-hover)] cursor-pointer" @click="oneClickStockIn(row)">一键入库</button>
                       </div>
                     </td>
                     <td class="px-4 py-3 border-t border-gray-100">{{ row.qty }}</td>
@@ -614,51 +627,52 @@
             </button>
           </div>
           <div class="p-4 space-y-4">
-            <div class="flex gap-4 p-4 bg-gray-50 rounded-lg">
-              <div class="flex-1">
-                <h3 class="font-medium text-gray-900 mb-2">收货信息</h3>
-                <p class="text-sm text-gray-600">收货人: {{ shipOrder.recipient }}</p>
-                <p class="text-sm text-gray-600">地址: {{ shipOrder.address }}</p>
-                <p class="text-sm text-gray-600">电话: {{ shipOrder.recipientPhone }}</p>
+            <!-- 收货信息 -->
+            <div class="p-4 bg-gray-50 rounded-lg">
+              <h3 class="font-medium text-gray-900 mb-2">收货信息</h3>
+              <div class="grid grid-cols-3 gap-2 text-sm text-gray-600">
+                <p>收货人: {{ shipOrder.recipient }}</p>
+                <p>电话: {{ shipOrder.recipientPhone }}</p>
+                <p class="col-span-3">地址: {{ shipOrder.address }}</p>
               </div>
-              <div class="w-20 h-20 rounded border border-gray-200 bg-gray-100 flex-shrink-0"></div>
             </div>
+            <!-- 商品信息 -->
             <div>
               <h3 class="font-medium text-gray-900 mb-2">商品信息</h3>
-              <table class="w-full text-sm border border-gray-200 rounded overflow-hidden">
-                <thead class="bg-gray-50">
-                  <tr>
-                    <th class="px-4 py-2 text-left font-medium text-gray-600">产品/品类</th>
-                    <th class="px-4 py-2 text-left font-medium text-gray-600">商品序列号</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr class="border-t border-gray-200">
-                    <td class="px-4 py-2">{{ shipOrder.productName }}</td>
-                    <td class="px-4 py-2">{{ shipOrder.productSku || '-' }}</td>
-                  </tr>
-                </tbody>
-              </table>
+              <div class="text-sm text-gray-600 p-3 border border-gray-200 rounded">
+                <span class="font-medium text-gray-900">{{ shipOrder.productName }}</span>
+                <span class="ml-2 text-gray-400">x{{ shipOrder.quantity }}</span>
+              </div>
             </div>
+            <!-- 物流信息 -->
             <div>
-              <h3 class="font-medium text-gray-900 mb-2">添加物流信息</h3>
-              <table class="w-full text-sm border border-gray-200 rounded overflow-hidden">
-                <thead class="bg-gray-50">
-                  <tr>
-                    <th class="px-4 py-2 text-left font-medium text-gray-600">序号</th>
-                    <th class="px-4 py-2 text-left font-medium text-gray-600">物流公司</th>
-                    <th class="px-4 py-2 text-left font-medium text-gray-600">物流单号</th>
-                    <th class="px-4 py-2 text-left font-medium text-gray-600">发货数量</th>
-                    <th class="px-4 py-2 text-left font-medium text-gray-600">操作</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td colspan="5" class="px-4 py-8 text-center text-gray-400">暂无数据</td>
-                  </tr>
-                </tbody>
-              </table>
-              <button class="mt-2 px-4 py-2 border border-dashed border-gray-300 text-gray-600 rounded text-sm hover:bg-gray-50 cursor-pointer flex items-center gap-1">
+              <h3 class="font-medium text-gray-900 mb-2">物流信息
+                <span class="text-red-500 text-xs ml-1">*至少添加一条</span>
+              </h3>
+              <div v-if="shipLogistics.length" class="space-y-3 mb-3">
+                <div v-for="(row, i) in shipLogistics" :key="i" class="grid grid-cols-12 gap-2 items-center p-3 border border-gray-200 rounded-lg bg-gray-50">
+                  <div class="col-span-1 text-sm text-gray-400 text-center">{{ i + 1 }}</div>
+                  <div class="col-span-4">
+                    <label class="block text-xs text-gray-500 mb-1">物流公司</label>
+                    <input type="text" v-model="row.company" placeholder="如：顺丰速运" class="w-full px-2 py-1.5 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-blue-400 outline-none">
+                  </div>
+                  <div class="col-span-4">
+                    <label class="block text-xs text-gray-500 mb-1">物流单号</label>
+                    <input type="text" v-model="row.trackingNo" placeholder="请输入快递单号" class="w-full px-2 py-1.5 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-blue-400 outline-none">
+                  </div>
+                  <div class="col-span-2">
+                    <label class="block text-xs text-gray-500 mb-1">发货数量</label>
+                    <input type="number" v-model.number="row.qty" min="1" class="w-full px-2 py-1.5 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-blue-400 outline-none">
+                  </div>
+                  <div class="col-span-1 flex items-end justify-center pb-0.5">
+                    <button type="button" class="p-1.5 text-gray-400 hover:text-red-500 cursor-pointer rounded" @click="removeShipLogisticsRow(i)" title="删除">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <p v-if="!shipLogistics.length" class="text-sm text-gray-400 text-center py-4 border border-dashed border-gray-200 rounded mb-3">暂无物流信息，请点击下方添加</p>
+              <button type="button" class="px-4 py-2 border border-dashed border-gray-300 text-gray-600 rounded text-sm hover:bg-gray-50 cursor-pointer flex items-center gap-1" @click="addShipLogisticsRow">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
                 添加物流
               </button>
@@ -666,7 +680,40 @@
           </div>
           <div class="flex justify-end gap-2 p-4 border-t border-gray-200">
             <button class="px-4 py-2 border border-gray-300 text-gray-600 rounded text-sm cursor-pointer hover:bg-gray-50" @click="showShipDialog = false">取消</button>
-            <button class="px-4 py-2 bg-[var(--primary)] text-white rounded text-sm font-medium cursor-pointer hover:bg-[var(--primary-hover)]" @click="showShipDialog = false">确定</button>
+            <button class="px-4 py-2 bg-[var(--primary)] text-white rounded text-sm font-medium cursor-pointer hover:bg-[var(--primary-hover)]" @click="confirmShip">确认发货</button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
+
+    <!-- SN 重新绑定弹窗 -->
+    <Teleport to="body">
+      <div v-if="showSnRebindDialog" class="fixed inset-0 z-50 flex items-center justify-center">
+        <div class="absolute inset-0 bg-black/50" @click="showSnRebindDialog = false"></div>
+        <div class="relative bg-white rounded-lg shadow-xl w-full max-w-md p-6 m-4">
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="text-lg font-semibold text-gray-900">重新绑定设备</h2>
+            <button class="p-1.5 text-gray-400 hover:text-gray-600 cursor-pointer rounded" @click="showSnRebindDialog = false">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+          </div>
+          <div class="space-y-4">
+            <div>
+              <label class="block text-sm text-gray-600 mb-1">设备 SN 号</label>
+              <input type="text" v-model="snRebindForm.sn" class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-100 focus:border-blue-500 outline-none font-mono">
+              <p class="text-xs text-gray-400 mt-1">可直接修改 SN 号后重新绑定</p>
+            </div>
+            <!-- 绑定结果 -->
+            <div v-if="snRebindResult" class="p-3 rounded-lg" :class="snRebindResult.success ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'">
+              <p class="text-sm font-medium" :class="snRebindResult.success ? 'text-green-800' : 'text-red-800'">
+                {{ snRebindResult.success ? '✓ 绑定成功' : '✗ 绑定失败' }}
+              </p>
+              <p class="text-sm mt-0.5" :class="snRebindResult.success ? 'text-green-700' : 'text-red-700'">{{ snRebindResult.message }}</p>
+            </div>
+          </div>
+          <div class="flex justify-end gap-2 mt-6">
+            <button class="px-4 py-2 border border-gray-300 text-gray-600 rounded text-sm cursor-pointer hover:bg-gray-50" @click="showSnRebindDialog = false">关闭</button>
+            <button v-if="!snRebindResult || !snRebindResult.success" class="px-4 py-2 bg-[var(--primary)] text-white rounded text-sm font-medium cursor-pointer hover:bg-[var(--primary-hover)]" @click="confirmSnRebind">重新绑定</button>
           </div>
         </div>
       </div>
@@ -697,6 +744,7 @@
         const currentMenu = ref('order-query');
         const activeTab = ref('all');
         const showShipDialog = ref(false);
+        const showSnRebindDialog = ref(false);
         const showRefundDialog = ref(false);
         const showEditAddressDialog = ref(false);
         const showAddressHistoryDialog = ref(false);
@@ -741,6 +789,9 @@
         const filterBrand = ref('');
         const filterExpressNo = ref('');
 
+        const shipLogistics = ref([]);
+        const snRebindForm = reactive({ sn: '', _snRef: null, _rowRef: null, _orderRef: null });
+        const snRebindResult = ref(null);
         const refundForm = reactive({ amount: '', reason: '' });
         const addressForm = reactive({
           currentName: '', currentAddress: '', currentPhone: '',
@@ -962,6 +1013,143 @@
             invoiceTitle: '虚拟商品测试公司',
             creditCode: '',
             refundList: []
+          },
+          {
+            id: 8,
+            orderNo: 'PO202603120900000000000000000008',
+            orderTime: '2026-03-12 09:00:00',
+            buyerName: '广州鼎盛科技有限公司',
+            buyerId: '55566677',
+            productName: '智能POS机Pro',
+            brand: '商米',
+            productType: '智能POS',
+            originalPrice: '1280.00',
+            price: '1200.00',
+            quantity: 2,
+            total: '2400.00',
+            productTotal: '=¥1200.00 x 2',
+            discount: '-¥160.00',
+            shippingFee: '+¥20.00',
+            adjustment: '',
+            status: 'pending_ship',
+            statusText: '待发货',
+            remark: '请尽快发货',
+            platform: 'D平台',
+            productCategory: '实物商品',
+            productKind: 'physical',
+            recipient: '赵六',
+            address: '广东省广州市天河区体育西路123号',
+            recipientPhone: '13912345678',
+            spec: '标准版',
+            invoiceTitle: '广州鼎盛科技有限公司',
+            creditCode: '91440101MA5GXX0001',
+            paymentNo: 'PA202603120900000055566677000001',
+            paymentTime: '2026-03-12 09:05:00',
+            productSku: '',
+            merchantType: '企业',
+            operatorId: 'OP008',
+            operatorName: '赵六',
+            agentName: '华南代理',
+            storeId: 'S20008',
+            storeName: '广州天河店',
+            refundList: []
+          },
+          {
+            id: 9,
+            orderNo: 'PO202603101600000000000000000009',
+            orderTime: '2026-03-10 16:00:00',
+            buyerName: '成都锦程信息技术有限公司',
+            buyerId: '66677788',
+            productName: '云打印机X300',
+            brand: '盛意旺自营',
+            productType: '云打印机',
+            originalPrice: '680.00',
+            price: '650.00',
+            quantity: 5,
+            total: '3250.00',
+            productTotal: '=¥650.00 x 5',
+            discount: '-¥150.00',
+            shippingFee: '+¥30.00',
+            adjustment: '',
+            status: 'completed',
+            statusText: '交易完成',
+            remark: '无',
+            platform: '盛意旺app',
+            productCategory: '实物商品',
+            productKind: 'physical',
+            recipient: '王五',
+            address: '四川省成都市武侯区天府大道南段1666号',
+            recipientPhone: '18800112233',
+            spec: '标准版',
+            invoiceTitle: '成都锦程信息技术有限公司',
+            creditCode: '91510107MA62ABCDEF',
+            paymentNo: 'PA202603101600000066677788000002',
+            paymentTime: '2026-03-10 16:10:00',
+            productSku: '',
+            merchantType: '企业',
+            operatorId: 'OP009',
+            operatorName: '王五',
+            agentName: '西南代理',
+            storeId: 'S30009',
+            storeName: '成都武侯店',
+            refundList: [],
+            shipmentRows: [
+              { company: '京东物流', trackingNo: 'JD2026031012345678', progress: '已签收', serials: ['SN20260310AA001', 'SN20260310AA002', 'SN20260310AA003', 'SN20260310AA004', 'SN20260310AA005'], qty: 5 }
+            ]
+          },
+          {
+            id: 10,
+            orderNo: 'PO202603121000000000000000000010',
+            orderTime: '2026-03-12 10:00:00',
+            buyerName: '深圳汇联科技有限公司',
+            buyerId: '88899900',
+            productName: '扫码枪Pro',
+            brand: '博实结',
+            productType: '扫码王',
+            originalPrice: '320.00',
+            price: '300.00',
+            quantity: 3,
+            total: '900.00',
+            productTotal: '=¥300.00 x 3',
+            discount: '-¥60.00',
+            shippingFee: '+¥15.00',
+            adjustment: '',
+            status: 'ship_failed',
+            statusText: '发货失败',
+            remark: '无',
+            platform: '商家服务小程序',
+            productCategory: '实物商品',
+            productKind: 'physical',
+            recipient: '李明',
+            address: '广东省深圳市南山区科技园南路88号',
+            recipientPhone: '13612345678',
+            spec: '标准版',
+            invoiceTitle: '深圳汇联科技有限公司',
+            creditCode: '91440300MA5GYYY002',
+            paymentNo: 'PA202603121000000088899900000003',
+            paymentTime: '2026-03-12 10:05:00',
+            productSku: '',
+            merchantType: '企业',
+            operatorId: 'OP010',
+            operatorName: '李明',
+            agentName: '华南代理',
+            storeId: 'S40010',
+            storeName: '深圳南山店',
+            refundList: [],
+            shipmentRows: [
+              {
+                company: '顺丰速运',
+                trackingNo: 'SF2026031298765432',
+                progress: '已发出',
+                serials: [
+                  { sn: 'SN20260312HJ001', bindStatus: 'success' },
+                  { sn: 'SN20260312HJ002', bindStatus: 'success' },
+                  { sn: 'SN20260312HJ003', bindStatus: 'failed', failReason: '设备已被其他商户绑定' }
+                ],
+                qty: 3,
+                hasSnError: true
+              }
+            ]
           }
         ]);
 
@@ -1174,7 +1362,84 @@
 
         const openShipDialog = (order) => {
           shipOrder.value = { ...order, productSku: order.productSku || '盛意旺订单' };
+          shipLogistics.value = [];
           showShipDialog.value = true;
+        };
+
+        const addShipLogisticsRow = () => {
+          shipLogistics.value.push({ company: '', trackingNo: '', qty: 1 });
+        };
+
+        const removeShipLogisticsRow = (i) => {
+          shipLogistics.value.splice(i, 1);
+        };
+
+        const confirmShip = () => {
+          if (!shipLogistics.value.length) {
+            alert('请至少添加一条物流信息');
+            return;
+          }
+          const invalid = shipLogistics.value.find(r => !r.company.trim() || !r.trackingNo.trim() || !r.qty);
+          if (invalid) {
+            alert('请填写完整的物流公司、物流单号和发货数量');
+            return;
+          }
+          const now = new Date().toISOString().slice(0, 19).replace('T', ' ');
+          const newRows = shipLogistics.value.map(r => ({
+            company: r.company,
+            trackingNo: r.trackingNo,
+            progress: '已发出',
+            serials: [],
+            qty: r.qty
+          }));
+          const patch = {
+            status: 'shipped',
+            statusText: '已发货',
+            shipmentRows: newRows,
+            logisticsProgress: newRows[0].company + ' ' + newRows[0].trackingNo + ' 已发出'
+          };
+          detailOrder.value = { ...detailOrder.value, ...patch };
+          patchOrderInList(shipOrder.value.id, patch);
+          showShipDialog.value = false;
+          alert('发货成功，订单状态已更新为「已发货」');
+        };
+
+        const openSnRebindDialog = (snObj, row, order) => {
+          snRebindForm.sn = snObj.sn;
+          snRebindForm._snRef = snObj;
+          snRebindForm._rowRef = row;
+          snRebindForm._orderRef = order;
+          snRebindResult.value = null;
+          showSnRebindDialog.value = true;
+        };
+
+        const confirmSnRebind = () => {
+          const sn = snRebindForm.sn.trim();
+          if (!sn) { alert('请输入设备 SN 号'); return; }
+          // 模拟绑定：新 SN 与原失败 SN 不同则成功，相同则失败
+          const original = snRebindForm._snRef.sn;
+          const success = sn !== original;
+          if (success) {
+            snRebindResult.value = { success: true, message: 'SN ' + sn + ' 绑定成功，订单状态已更新' };
+            // 更新 SN 对象
+            snRebindForm._snRef.sn = sn;
+            snRebindForm._snRef.bindStatus = 'success';
+            snRebindForm._snRef.failReason = '';
+            // 检查是否所有 SN 都绑定成功
+            const row = snRebindForm._rowRef;
+            if (row && row.serials) {
+              row.hasSnError = row.serials.some(s => s.bindStatus === 'failed');
+            }
+            // 若无绑定失败的 SN，更新订单状态为已发货
+            const allOk = !row.hasSnError;
+            if (allOk) {
+              const patch = { status: 'shipped', statusText: '已发货' };
+              detailOrder.value = { ...detailOrder.value, ...patch };
+              patchOrderInList(detailOrder.value.id, patch);
+            }
+          } else {
+            snRebindResult.value = { success: false, message: '该 SN 号与失败记录相同，绑定仍失败，请修改后重试' };
+          }
         };
 
         const doExportExcel = () => {
@@ -1261,6 +1526,7 @@
           detailOrder,
           shipOrder,
           showShipDialog,
+          showSnRebindDialog,
           showRefundDialog,
           showEditAddressDialog,
           showAddressHistoryDialog,
@@ -1304,6 +1570,14 @@
           toggleBuyerDetail,
           openDetail,
           openShipDialog,
+          shipLogistics,
+          addShipLogisticsRow,
+          removeShipLogisticsRow,
+          confirmShip,
+          openSnRebindDialog,
+          snRebindForm,
+          snRebindResult,
+          confirmSnRebind,
           onLogisticsFileChange,
           openEditAddressDialog,
           openRefundDialog,
