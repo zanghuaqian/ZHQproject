@@ -1,0 +1,2780 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>确认订单 - 盛意旺采购商城</title>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', 'Helvetica Neue', Arial, sans-serif;
+      font-size: 13px;
+      color: #333;
+      background: #f0f2f5;
+      overflow: hidden;
+    }
+
+    /* ═══ 整体布局 ═══ */
+    .page-layout {
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* ═══ 左侧边栏 ═══ */
+    .sidebar {
+      width: 120px;
+      background: #001529;
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+    .sidebar::-webkit-scrollbar { width: 3px; }
+    .sidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); }
+
+    .sb-logo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 12px;
+      background: rgba(0,0,0,0.25);
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      flex-shrink: 0;
+      min-height: 50px;
+    }
+    .sb-logo-icon {
+      width: 26px; height: 26px;
+      background: #1677ff; border-radius: 4px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .sb-logo-text { line-height: 1.3; }
+    .sb-logo-name { font-size: 13px; font-weight: 700; color: #fff; letter-spacing: 0.5px; }
+    .sb-logo-sub  { font-size: 10px; color: rgba(255,255,255,0.45); }
+
+    .sb-group-title {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 7px 12px 3px;
+      font-size: 11px;
+      color: rgba(255,255,255,0.35);
+      font-weight: 500;
+      letter-spacing: 0.4px;
+      user-select: none; cursor: pointer;
+    }
+    .sb-group-title:hover { color: rgba(255,255,255,0.6); }
+
+    /* ── 2列网格（无图标，纯文字） ── */
+    .sb-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1px;
+      padding: 2px 4px 4px;
+    }
+    .sb-item {
+      display: flex; align-items: center; justify-content: center;
+      padding: 8px 4px;
+      border-radius: 3px;
+      cursor: pointer;
+      text-align: center;
+      transition: background 0.15s;
+    }
+    .sb-item:hover  { background: rgba(255,255,255,0.08); }
+    .sb-item.active { background: #1677ff; }
+    .sb-item .si-label {
+      font-size: 11px;
+      color: rgba(255,255,255,0.6);
+      line-height: 1.4;
+    }
+    .sb-item.active .si-label { color: #fff; }
+
+    /* ── 单行项目（无图标，纯文字） ── */
+    .sb-row {
+      display: flex; align-items: center;
+      padding: 8px 12px;
+      font-size: 12px;
+      color: rgba(255,255,255,0.6);
+      cursor: pointer;
+      border-radius: 3px;
+      margin: 1px 4px;
+      transition: background 0.15s;
+    }
+    .sb-row:hover  { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.9); }
+    .sb-row.active { background: #1677ff; color: #fff; }
+
+    .sb-divider { height: 1px; background: rgba(255,255,255,0.06); margin: 3px 10px; }
+
+    /* ═══ 右侧主区 ═══ */
+    .page-right {
+      flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0;
+    }
+
+    /* ── 顶部 Header ── */
+    .header {
+      height: 50px;
+      background: #001529;
+      display: flex; align-items: center;
+      padding: 0 16px;
+      flex-shrink: 0;
+      position: relative; z-index: 50;
+    }
+    .hd-brand {
+      display: flex; align-items: center; gap: 8px;
+      padding-right: 14px;
+      border-right: 1px solid rgba(255,255,255,0.12);
+      flex-shrink: 0;
+    }
+    .hd-brand-icon {
+      width: 28px; height: 28px;
+      background: #1677ff; border-radius: 5px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .hd-brand-name { font-size: 15px; font-weight: 700; color: #fff; letter-spacing: 1px; }
+    .hd-platform {
+      font-size: 12px; color: rgba(255,255,255,0.65);
+      padding-left: 14px; flex-shrink: 0;
+    }
+    .hd-search {
+      flex: 1; max-width: 260px;
+      margin: 0 20px 0 auto;
+      position: relative;
+    }
+    .hd-search input {
+      width: 100%; height: 28px;
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 3px;
+      padding: 0 10px 0 28px;
+      font-size: 12px; color: rgba(255,255,255,0.7);
+      outline: none; transition: border 0.2s;
+    }
+    .hd-search input::placeholder { color: rgba(255,255,255,0.3); }
+    .hd-search input:focus { border-color: #4096ff; }
+    .hd-search .s-icon {
+      position: absolute; left: 8px; top: 50%; transform: translateY(-50%);
+      color: rgba(255,255,255,0.35); line-height: 0;
+    }
+    .hd-right {
+      display: flex; align-items: center; gap: 4px; flex-shrink: 0;
+    }
+    .hd-btn {
+      display: flex; align-items: center; gap: 4px;
+      padding: 5px 8px; border-radius: 3px;
+      color: rgba(255,255,255,0.75); font-size: 12px;
+      cursor: pointer; transition: background 0.15s;
+    }
+    .hd-btn:hover { background: rgba(255,255,255,0.08); color: #fff; }
+    .hd-avatar {
+      width: 22px; height: 22px; border-radius: 50%;
+      background: #1677ff;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 10px; font-weight: 700; color: #fff;
+    }
+    .hd-chevron { font-size: 9px; color: rgba(255,255,255,0.4); margin-left: 1px; }
+
+    /* ═══ 主内容区 ═══ */
+    .main-content {
+      flex: 1; overflow-y: auto; overflow-x: hidden;
+      padding: 14px 14px 20px;
+    }
+    .main-content::-webkit-scrollbar { width: 5px; }
+    .main-content::-webkit-scrollbar-thumb { background: #d0d0d0; border-radius: 3px; }
+
+    /* ── 通用卡片 ── */
+    .card {
+      background: #fff;
+      border: 1px solid #e8e8e8;
+      border-radius: 3px;
+      margin-bottom: 10px;
+    }
+    .card-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 14px 9px;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .card-title { font-size: 13px; font-weight: 600; color: #262626; }
+    .card-link  { font-size: 12px; color: #1677ff; cursor: pointer; text-decoration: none; }
+    .card-link:hover { color: #4096ff; }
+
+    /* ── 收货地址 ── */
+    .addr-body { padding: 10px 14px 12px; }
+    .addr-row {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .addr-row:last-child { margin-bottom: 0; }
+    .addr-card {
+      border: 1px solid #e0e0e0; border-radius: 3px;
+      padding: 9px 11px;
+      cursor: pointer;
+      transition: border-color 0.2s, box-shadow 0.15s;
+      min-height: 82px; background: #fff; position: relative;
+    }
+    .addr-card:hover { border-color: #91caff; box-shadow: 0 0 0 2px rgba(22,119,255,0.08); }
+    .addr-card.selected { border-color: #1677ff; box-shadow: 0 0 0 2px rgba(22,119,255,0.12); }
+    .addr-card.selected::after {
+      content: '';
+      position: absolute; right: 0; bottom: 0;
+      border-style: solid; border-width: 0 0 18px 18px;
+      border-color: transparent transparent #1677ff transparent;
+    }
+    .addr-card.selected::before {
+      content: '✓';
+      position: absolute; right: 2px; bottom: 1px;
+      font-size: 9px; color: #fff; z-index: 1;
+    }
+    .ac-name {
+      font-size: 12px; font-weight: 600; color: #262626;
+      display: flex; align-items: center; flex-wrap: wrap; gap: 4px;
+      margin-bottom: 4px;
+    }
+    .ac-phone   { font-weight: 400; color: #555; }
+    .ac-default { display: inline-block; background: #1677ff; color: #fff; font-size: 10px; line-height: 1; padding: 2px 4px; border-radius: 2px; }
+    .ac-region  { font-size: 11px; color: #666; line-height: 1.5; }
+    .ac-detail  { font-size: 11px; color: #666; line-height: 1.5; }
+    .ac-tag     { display: inline-block; background: #f5f5f5; color: #888; font-size: 10px; padding: 1px 5px; border-radius: 2px; margin-top: 4px; }
+
+    /* ── 支付方式 ── */
+    .pay-body    { padding: 10px 14px; }
+    .pay-options { display: flex; gap: 10px; flex-wrap: wrap; }
+    .pay-opt {
+      position: relative;
+      display: flex; align-items: center; gap: 6px;
+      padding: 5px 14px;
+      border: 1px solid #d9d9d9; border-radius: 3px;
+      font-size: 12px; color: #555;
+      cursor: pointer; background: #fff;
+      transition: all 0.15s;
+      min-width: 88px;
+    }
+    .pay-opt:hover   { border-color: #1677ff; color: #1677ff; }
+    .pay-opt.selected { border-color: #1677ff; color: #1677ff; background: rgba(22,119,255,0.04); }
+
+    /* NEW 角标 */
+    .pay-new-badge {
+      position: absolute;
+      top: -8px; right: -8px;
+      background: #f5222d; color: #fff;
+      font-size: 10px; font-weight: 700;
+      padding: 1px 5px;
+      border-radius: 8px;
+      line-height: 1.5;
+      letter-spacing: 0.3px;
+      pointer-events: none;
+    }
+
+    /* ── 商品表格 ── */
+    .goods-table { width: 100%; border-collapse: collapse; }
+    .goods-table thead tr { background: #fafafa; }
+    .goods-table th {
+      padding: 9px 12px; text-align: left;
+      font-size: 12px; font-weight: 500; color: #666;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .goods-table th:first-child { padding-left: 14px; }
+    .goods-table th.right, .goods-table td.right { text-align: right; padding-right: 14px; }
+    .goods-table td {
+      padding: 12px; font-size: 12px; color: #333;
+      border-bottom: 1px solid #f8f8f8; vertical-align: middle;
+    }
+    .goods-table td:first-child { padding-left: 14px; }
+
+    .g-product   { display: flex; align-items: center; gap: 10px; }
+    .g-thumb     { width: 50px; height: 50px; border-radius: 3px; overflow: hidden; border: 1px solid #e8e8e8; background: #1a1a1a; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .g-info-name { font-size: 13px; font-weight: 500; color: #262626; margin-bottom: 3px; }
+    .g-info-meta { font-size: 11px; color: #aaa; }
+    .g-spec      { font-size: 12px; color: #555; line-height: 1.8; }
+    .g-price-cur { font-size: 13px; color: #333; font-weight: 500; }
+    .g-price-ori { font-size: 11px; color: #bbb; text-decoration: line-through; margin-left: 3px; }
+
+    .qty-wrap    { display: inline-flex; align-items: center; border: 1px solid #d9d9d9; border-radius: 2px; }
+    .qty-btn     { width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 300; color: #666; background: #fafafa; cursor: pointer; border: none; transition: background 0.12s; user-select: none; }
+    .qty-btn:first-child { border-right: 1px solid #d9d9d9; }
+    .qty-btn:last-child  { border-left:  1px solid #d9d9d9; }
+    .qty-btn:hover { background: #f0f0f0; color: #1677ff; }
+    .qty-val     { width: 32px; height: 26px; text-align: center; border: none; outline: none; font-size: 13px; color: #333; background: #fff; }
+
+    .g-subtotal      { text-align: right; }
+    .g-sub-price     { display: block; font-size: 14px; font-weight: 600; color: #f5222d; }
+    .g-sub-discount  { font-size: 11px; color: #f5222d; margin-top: 2px; }
+
+    /* ── 备注 & 发票 ── */
+    .order-bottom { border-top: 1px solid #f0f0f0; padding: 10px 14px; }
+    .ob-row1      { display: flex; gap: 20px; align-items: flex-start; }
+    .ob-remark    { flex: 1; }
+    .ob-label     { font-size: 12px; color: #555; font-weight: 500; margin-bottom: 5px; }
+    .ob-textarea  { width: 100%; height: 62px; border: 1px solid #d9d9d9; border-radius: 2px; padding: 7px 9px; font-size: 12px; color: #555; resize: none; outline: none; font-family: inherit; transition: border 0.2s; }
+    .ob-textarea::placeholder { color: #c0c0c0; }
+    .ob-textarea:focus { border-color: #1677ff; box-shadow: 0 0 0 2px rgba(22,119,255,0.08); }
+    .ob-invoice      { min-width: 200px; }
+    .ob-invoice-opts { display: flex; gap: 14px; align-items: center; margin-top: 2px; }
+    .ob-invoice-opt  { display: flex; align-items: center; gap: 5px; font-size: 12px; color: #555; cursor: pointer; }
+    .radio-dot       { width: 14px; height: 14px; border-radius: 50%; border: 2px solid #d9d9d9; background: #fff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: border 0.15s; }
+    .radio-dot.on    { border-color: #1677ff; }
+    .radio-dot.on::after { content: ''; width: 6px; height: 6px; background: #1677ff; border-radius: 50%; }
+
+    .ob-summary      { display: flex; justify-content: flex-end; align-items: center; gap: 16px; padding-top: 10px; margin-top: 10px; border-top: 1px solid #f5f5f5; }
+    .ob-total-label  { font-size: 13px; color: #333; }
+    .ob-total-amount { font-size: 20px; font-weight: 700; color: #f5222d; line-height: 1; }
+    .btn-order       { background: #1677ff; color: #fff; border: none; border-radius: 2px; padding: 9px 22px; font-size: 14px; font-weight: 500; cursor: pointer; transition: background 0.2s; }
+    .btn-order:hover  { background: #4096ff; }
+    .btn-order:active { background: #0958d9; }
+
+    /* ════════════════════════════════════════
+       银行转账结果页样式（收紧居中留白：shell + 双栏）
+    ════════════════════════════════════════ */
+    .bank-page {
+      padding: 12px 20px 28px;
+      box-sizing: border-box;
+      background:
+        radial-gradient(ellipse 90% 55% at 50% -15%, rgba(22,119,255,0.07), transparent 52%),
+        #f0f2f5;
+      min-height: calc(100vh - 50px - 28px);
+    }
+    .bank-shell {
+      max-width: 920px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    /* 顶部：付款金额 + 付款倒计时，上下结构 */
+    .bp-top-card {
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 0;
+      background: #fff;
+      border: 1px solid #e8e8e8;
+      border-radius: 8px;
+      padding: 18px 22px 20px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+    }
+    .bp-top-amount {
+      text-align: center;
+      padding-bottom: 14px;
+    }
+    .bp-top-countdown {
+      text-align: center;
+      border-top: 1px solid #f0f0f0;
+      padding-top: 14px;
+      margin-top: 2px;
+    }
+    .bp-top-countdown .bp-cd-hint {
+      font-size: 11px;
+      color: #bfbfbf;
+      margin-top: 4px;
+    }
+
+    /* 顶部金额 */
+    .bp-amount-card {
+      background: #fff; border: 1px solid #e8e8e8; border-radius: 3px;
+      padding: 20px 20px 16px; text-align: center; margin-bottom: 10px;
+    }
+    .bp-amount-label { font-size: 13px; color: #888; margin-bottom: 8px; }
+    .bp-amount-value { font-size: 32px; font-weight: 700; color: #f5222d; line-height: 1; }
+    .bp-amount-unit  { font-size: 20px; margin-right: 2px; }
+
+    /* 倒计时 */
+    .bp-countdown-wrap {
+      display: flex; align-items: center; justify-content: center;
+      gap: 8px; margin-top: 0;
+      flex-wrap: wrap;
+    }
+    .bp-top-countdown .bp-countdown-wrap { margin-top: 6px; }
+    .bp-cd-label { font-size: 12px; color: #888; }
+    .bp-cd-time  { font-size: 18px; font-weight: 700; color: #1677ff; font-variant-numeric: tabular-nums; letter-spacing: 1px; }
+    .bp-cd-expire { font-size: 12px; color: #aaa; }
+
+    .bank-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: 12px;
+      align-items: stretch;
+    }
+    .bank-grid .bp-account-card,
+    .bank-grid .bp-guide-card {
+      margin-bottom: 0;
+      height: 100%;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+    }
+    .bank-grid .bp-guide-card {
+      display: flex;
+      flex-direction: column;
+    }
+    .bank-grid .bp-guide-body {
+      flex: 1;
+    }
+    .bank-grid .bp-guide-warn {
+      margin-top: 0;
+    }
+    .bank-shell .stepbar {
+      margin-bottom: 0;
+    }
+
+    /* 收款账户卡片 */
+    .bp-account-card {
+      background: #fff; border: 1px solid #e8e8e8; border-radius: 3px;
+      margin-bottom: 10px; overflow: hidden;
+    }
+    .bp-account-header {
+      padding: 10px 14px 9px;
+      border-bottom: 1px solid #f0f0f0;
+      font-size: 13px; font-weight: 600; color: #262626;
+    }
+    .bp-account-body { padding: 4px 0; }
+    .bp-account-row {
+      display: flex; align-items: center;
+      padding: 10px 14px;
+      border-bottom: 1px solid #f8f8f8;
+      gap: 12px;
+    }
+    .bp-account-row:last-child { border-bottom: none; }
+    .bp-acc-key   { font-size: 12px; color: #888; width: 36px; flex-shrink: 0; }
+    .bp-acc-val   { font-size: 13px; color: #262626; flex: 1; word-break: break-all; font-weight: 500; }
+    .bp-copy-btn  {
+      display: flex; align-items: center; gap: 4px;
+      font-size: 12px; color: #1677ff; cursor: pointer;
+      padding: 3px 8px; border: 1px solid #1677ff; border-radius: 2px;
+      background: transparent; white-space: nowrap;
+      transition: all 0.15s; flex-shrink: 0;
+    }
+    .bp-copy-btn:hover { background: #e6f4ff; }
+    .bp-copy-btn.copied { color: #52c41a; border-color: #52c41a; }
+    .bp-memo-tip {
+      padding: 0 14px 10px;
+      margin-top: -6px;
+      font-size: 12px;
+      color: #f5222d;
+      font-weight: 600;
+    }
+
+    /* 转账指引卡片 */
+    .bp-guide-card {
+      background: #fff; border: 1px solid #e8e8e8; border-radius: 3px;
+      margin-bottom: 10px;
+    }
+    .bp-guide-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 14px 9px;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .bp-guide-header-title { font-size: 13px; font-weight: 600; color: #262626; }
+    .btn-guide {
+      display: flex; align-items: center; gap: 5px;
+      padding: 5px 14px;
+      background: #fff; border: 1px solid #1677ff;
+      border-radius: 2px; color: #1677ff; font-size: 12px; cursor: pointer;
+      transition: all 0.15s;
+    }
+    .btn-guide:hover { background: #e6f4ff; }
+    .bp-guide-body { padding: 12px 14px; }
+    .bp-guide-steps { list-style: none; }
+    .bp-guide-step  {
+      display: flex; gap: 10px;
+      padding: 8px 0;
+      border-bottom: 1px solid #f5f5f5;
+      font-size: 12px; color: #555; line-height: 1.6;
+    }
+    .bp-guide-step:last-child { border-bottom: none; }
+    .bp-step-num {
+      width: 18px; height: 18px; border-radius: 50%;
+      background: #1677ff; color: #fff;
+      font-size: 11px; font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; margin-top: 1px;
+    }
+    .bp-guide-warn {
+      background: #fffbe6; border: 1px solid #ffe58f;
+      border-radius: 3px; padding: 10px 12px;
+      margin-top: 10px;
+    }
+    .bp-guide-warn-title { font-size: 12px; font-weight: 600; color: #d48806; margin-bottom: 6px; }
+    .bp-guide-warn-item  { font-size: 12px; color: #595959; line-height: 1.7; padding-left: 2px; }
+    .bp-guide-warn-item + .bp-guide-warn-item { margin-top: 10px; }
+    .bp-guide-bank-highlight {
+      display: inline-block;
+      margin-left: 4px;
+      color: #1677ff;
+      font-weight: 700;
+      background: rgba(22,119,255,0.1);
+      border: 1px solid rgba(22,119,255,0.35);
+      padding: 2px 10px;
+      border-radius: 4px;
+      line-height: 1.5;
+    }
+
+    /* 确认按钮区 */
+    .bp-action-area {
+      background: #fff; border: 1px solid #e8e8e8; border-radius: 8px;
+      padding: 16px 18px; text-align: center;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+    }
+    .bp-action-buttons {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      align-items: stretch;
+      gap: 10px;
+      width: 100%;
+    }
+    .btn-confirmed {
+      width: 100%; max-width: none;
+      background: #1677ff; color: #fff;
+      border: none; border-radius: 4px;
+      padding: 13px 10px; font-size: 14px; font-weight: 600;
+      cursor: pointer; transition: background 0.2s;
+    }
+    .btn-confirmed:hover  { background: #4096ff; }
+    .btn-confirmed:active { background: #0958d9; }
+    .bp-action-hint {
+      margin-top: 8px;
+      font-size: 12px; color: #aaa; line-height: 1.6;
+    }
+    .btn-cancel-pay {
+      width: 100%;
+      max-width: none;
+      background: #fff;
+      color: #666;
+      border: 1px solid #d9d9d9;
+      border-radius: 4px;
+      padding: 13px 10px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s, border-color 0.2s, color 0.2s;
+    }
+    .btn-cancel-pay:hover { background: #fafafa; border-color: #bfbfbf; color: #333; }
+
+    @media (max-width: 880px) {
+      .bank-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    @media (max-width: 720px) {
+      .bp-action-buttons {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* ════════════════════════════════════════
+       步骤条（付款信息 / 银行转账）
+    ════════════════════════════════════════ */
+    .stepbar{
+      background:#fff;
+      border:1px solid #e8e8e8;
+      border-radius:6px;
+      padding: 12px 16px;
+      margin: 0 0 12px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap: 14px;
+    }
+    .stepitem{
+      display:flex;
+      align-items:center;
+      gap: 10px;
+      color:#999;
+      font-size:12px;
+      font-weight:600;
+      white-space: nowrap;
+    }
+    .stepitem .dot{
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background:#f0f0f0;
+      color:#999;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:12px;
+      font-weight:800;
+    }
+    .stepitem.active{ color:#1677ff; }
+    .stepitem.active .dot{ background:#1677ff; color:#fff; }
+    .stepsep{
+      height: 1px;
+      width: 56px;
+      background: #eaeaea;
+    }
+
+    /* ════════════════════════════════════════
+       填写付款方账户信息页（双栏：说明区 + 表单，避免窄表单两侧空洞）
+    ════════════════════════════════════════ */
+    .payer-wrap {
+      padding: 12px 20px 28px;
+      min-height: calc(100vh - 50px - 28px);
+      display: flex;
+      flex-direction: column;
+      box-sizing: border-box;
+      background:
+        radial-gradient(ellipse 90% 55% at 50% -15%, rgba(22,119,255,0.07), transparent 52%),
+        #f0f2f5;
+    }
+    .payer-shell{
+      width: 100%;
+      max-width: 920px;
+      margin: 0 auto;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .payer-card {
+      background:#fff;
+      border:1px solid #e8e8e8;
+      border-radius:8px;
+      overflow:hidden;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+    }
+    .payer-card-inner {
+      display: grid;
+      grid-template-columns: minmax(240px, 300px) minmax(0, 1fr);
+      align-items: stretch;
+      min-height: 0;
+      flex: 1;
+    }
+    .payer-aside {
+      padding: 24px 22px 24px 26px;
+      background: linear-gradient(180deg, #fafcff 0%, #f5f8fc 100%);
+      border-right: 1px solid #eef0f3;
+    }
+    .payer-aside-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: #262626;
+      margin: 0 0 10px;
+      line-height: 1.45;
+      letter-spacing: 0.2px;
+    }
+    .payer-aside-lead {
+      font-size: 12px;
+      color: #8c8c8c;
+      line-height: 1.75;
+      margin: 0 0 14px;
+    }
+    .payer-aside-tips {
+      margin: 0;
+      padding-left: 18px;
+      font-size: 12px;
+      color: #595959;
+      line-height: 1.85;
+    }
+    .payer-aside-tips li { margin-bottom: 7px; }
+    .payer-card-bd {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      padding: 24px 28px 22px;
+      min-width: 0;
+    }
+    .payer-form{
+      width: 100%;
+      max-width: none;
+      margin: 0;
+      padding: 0;
+    }
+    .payer-row{
+      display:flex;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 6px;
+      margin-bottom: 16px;
+    }
+    .payer-row:last-of-type { margin-bottom: 0; }
+    .payer-label {
+      width: auto;
+      text-align: left;
+      font-size: 12px;
+      color: #595959;
+      font-weight: 500;
+      flex-shrink: 0;
+    }
+    .payer-label.req::before{ content:'*'; color:#f5222d; margin-right: 4px; }
+    .payer-field { position: relative; flex: 1; min-width: 0; }
+    .payer-input, .payer-select {
+      width: 100%;
+      height: 36px;
+      border: 1px solid #d9d9d9;
+      border-radius: 4px;
+      padding: 0 11px;
+      font-size: 13px;
+      outline: none;
+      background:#fff;
+      color:#333;
+    }
+    .payer-input:focus, .payer-select:focus { border-color:#1677ff; box-shadow: 0 0 0 2px rgba(22,119,255,0.08); }
+    .payer-input.selectlike{
+      padding-right: 32px;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none'%3E%3Cpath d='M7 10l5 5 5-5' stroke='%23999' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 10px center;
+    }
+
+    .payer-inline-actions { display:flex; align-items:center; gap:10px; flex-wrap: wrap; }
+    .payer-inline-actions .payer-input { flex: 1; min-width: 200px; }
+    .payer-textbtn {
+      border: none;
+      background: transparent;
+      color: #1677ff;
+      font-size: 12px;
+      cursor: pointer;
+      padding: 0;
+      white-space: nowrap;
+    }
+    .payer-textbtn:hover { text-decoration: underline; }
+
+    /* 历史付款方 Popover */
+    .payer-pop {
+      position: absolute;
+      top: 42px;
+      right: 0;
+      width: 320px;
+      background: #fff;
+      border: 1px solid #e8e8e8;
+      border-radius: 6px;
+      box-shadow: 0 12px 28px rgba(0,0,0,0.12);
+      padding: 8px 0;
+      z-index: 999;
+      display: none;
+    }
+    .payer-pop.show { display: block; }
+    .payer-pop-item {
+      padding: 8px 12px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .payer-pop-item:hover { background: #f5f7fa; }
+    .payer-pop-name { font-size: 13px; font-weight: 600; color: #333; }
+    .payer-pop-sub  { font-size: 12px; color: #666; }
+
+    /* 银行模糊查询下拉 */
+    .bank-dd {
+      position: absolute;
+      top: 42px;
+      left: 0;
+      right: 0;
+      background:#fff;
+      border:1px solid #e8e8e8;
+      border-radius: 6px;
+      box-shadow: 0 12px 28px rgba(0,0,0,0.12);
+      max-height: 220px;
+      overflow: auto;
+      padding: 6px 0;
+      z-index: 999;
+      display: none;
+    }
+    .bank-dd.show { display:block; }
+    .bank-opt {
+      padding: 8px 12px;
+      font-size: 12px;
+      color: #333;
+      cursor: pointer;
+    }
+    .bank-opt:hover { background:#f5f7fa; color:#1677ff; }
+    .bank-empty { padding: 10px 12px; font-size: 12px; color:#999; }
+
+    .payer-actions {
+      display:flex;
+      justify-content: flex-end;
+      gap: 12px;
+      margin: 22px 0 0;
+      padding-top: 18px;
+      border-top: 1px solid #f0f0f0;
+      flex-wrap: wrap;
+    }
+    .payer-btn {
+      height: 36px;
+      padding: 0 28px;
+      border-radius: 4px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid transparent;
+      min-width: 120px;
+    }
+    .payer-btn.primary{ min-width: 160px; }
+
+    /* 单选横排 */
+    .payer-radio{
+      display:flex;
+      align-items:center;
+      gap: 20px;
+      min-height: 36px;
+      padding: 4px 2px;
+      font-size: 13px;
+      color:#333;
+    }
+    .payer-radio label{ display:flex; align-items:center; gap: 6px; cursor:pointer; }
+    .payer-radio input{ accent-color: #1677ff; }
+    .payer-btn.primary { background:#1677ff; color:#fff; }
+    .payer-btn.primary:hover { background:#4096ff; }
+    .payer-btn.ghost { background:#fff; color:#666; border-color:#d9d9d9; }
+    .payer-btn.ghost:hover { background:#fafafa; border-color:#bfbfbf; color:#333; }
+
+    @media (max-width: 860px) {
+      .payer-card-inner {
+        grid-template-columns: 1fr;
+      }
+      .payer-aside {
+        border-right: none;
+        border-bottom: 1px solid #eef0f3;
+        padding-bottom: 20px;
+      }
+      .payer-actions {
+        justify-content: stretch;
+      }
+      .payer-actions .payer-btn {
+        flex: 1;
+        min-width: 0;
+      }
+    }
+
+    /* ════════════════════════════════════════
+       订单详情页样式（参考截图）
+    ════════════════════════════════════════ */
+    .od-wrap{padding:0 0 10px;background:#f5f6f8;}
+    .od-top-tabs{display:flex;background:#fff;border:1px solid #e8e8e8;border-radius:3px;margin-bottom:10px;overflow:hidden}
+    .od-top-tab{height:36px;display:flex;align-items:center;padding:0 14px;font-size:13px;color:#666;border-right:1px solid #f0f0f0;cursor:pointer;user-select:none}
+    .od-top-tab:last-child{border-right:none}
+    .od-top-tab.active{color:#1677ff;background:#f6fbff;font-weight:600}
+    .od-top-tab-x{margin-left:6px;color:#bbb}
+
+    .od-breadcrumb{
+      background:#fff;
+      border:1px solid #e8e8e8;
+      border-radius:3px;
+      padding:10px 14px;
+      margin-bottom:10px;
+      font-size:12px;
+      color:#666;
+    }
+    .od-breadcrumb strong{color:#262626;font-weight:600}
+
+    .od-title{font-size:14px;font-weight:600;color:#262626;margin:4px 0 12px 2px}
+    .od-card{background:#fff;border:1px solid #e8e8e8;border-radius:3px;margin-bottom:10px;overflow:hidden}
+    .od-card-pad{padding:14px 16px}
+    .od-card-hd{display:flex;align-items:center;gap:8px;padding:12px 14px;border-bottom:1px solid #f0f0f0}
+    .od-card-hd-tight{padding:10px 12px}
+
+    .od-hd-flex{justify-content:space-between;align-items:flex-start}
+    .od-hd-left{display:flex;align-items:center;gap:8px}
+    .od-hd-right{display:flex;flex-direction:column;align-items:flex-end;gap:8px}
+    .od-hd-right-line{font-size:12px;color:#888}
+    .od-pay-time{font-weight:700;color:#1677ff;font-variant-numeric:tabular-nums;letter-spacing:1px}
+    .od-pay-amount{font-weight:700;color:#f5222d}
+
+    /* 待支付：状态 + 金额/倒计时 + 按钮 单行紧凑 */
+    .od-pending-top{
+      border-bottom:1px solid #f0f0f0;
+      background: linear-gradient(180deg, #fafbfd 0%, #fff 100%);
+    }
+    .od-pending-row{
+      display:grid;
+      grid-template-columns:auto minmax(0,1fr) auto;
+      align-items:center;
+      gap:12px 18px;
+      padding:14px 14px 16px;
+    }
+    .od-pending-meta{
+      display:flex;
+      align-items:stretch;
+      justify-content:center;
+      flex-wrap:wrap;
+      gap:12px 20px;
+      line-height:1.3;
+    }
+    .od-pending-block{
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      gap:6px;
+      min-width: 120px;
+    }
+    .od-pending-k{
+      font-size:12px;
+      color:#8c8c8c;
+      font-weight:500;
+      letter-spacing:0.3px;
+    }
+    .od-pending-meta .od-pay-amount{
+      font-size:26px;
+      font-weight:800;
+      color:#f5222d;
+      line-height:1.15;
+      letter-spacing:0.5px;
+    }
+    .od-pending-meta .od-pay-time{
+      font-size:26px;
+      font-weight:800;
+      color:#1677ff;
+      line-height:1.15;
+      letter-spacing:0.5px;
+      font-variant-numeric:tabular-nums;
+    }
+    .od-pending-vsep{
+      width:1px;
+      align-self:stretch;
+      min-height:48px;
+      background:linear-gradient(180deg,transparent,#e8e8e8 15%,#e8e8e8 85%,transparent);
+      flex-shrink:0;
+    }
+    .od-pending-sep{
+      color:#d9d9d9;
+      user-select:none;
+    }
+    .od-refresh-btn{
+      background:#1677ff;color:#fff;border:none;border-radius:4px;
+      padding:6px 12px;
+      font-size:12px;
+      font-weight:600;
+      cursor:pointer;
+      min-width:0;
+      white-space:nowrap;
+      flex-shrink:0;
+    }
+    .od-refresh-btn:hover{background:#4096ff}
+    .od-order-bank-grid{
+      padding:10px 12px 12px;
+      margin:0;
+      gap:10px;
+    }
+    .od-order-bank-grid .bp-account-card,
+    .od-order-bank-grid .bp-guide-card{
+      margin-bottom:0;
+      border-radius:8px;
+      box-shadow:0 1px 6px rgba(0,0,0,0.04);
+    }
+    .od-order-bank-grid .bp-account-row{
+      padding:8px 12px;
+    }
+    .od-order-bank-grid .bp-guide-step{
+      padding:6px 0;
+    }
+    .od-order-bank-grid .bp-guide-body{
+      padding:10px 12px;
+    }
+    .od-order-bank-grid .bp-account-header,
+    .od-order-bank-grid .bp-guide-header{
+      padding:8px 12px 7px;
+    }
+    @media (max-width:900px){
+      .od-order-bank-grid{
+        grid-template-columns:1fr;
+      }
+    }
+    @media (max-width:720px){
+      .od-pending-row{
+        grid-template-columns:1fr;
+        justify-items:stretch;
+      }
+      .od-pending-meta{
+        flex-direction:column;
+        align-items:stretch;
+      }
+      .od-pending-vsep{ display:none; }
+      .od-pending-block{ align-items:flex-start; }
+      .od-pending-meta .od-pay-amount,
+      .od-pending-meta .od-pay-time{ font-size:22px; }
+      .od-refresh-btn{
+        width:100%;
+        padding:8px 12px;
+      }
+    }
+
+    .od-status-dot{width:18px;height:18px;border-radius:50%;background:#1677ff;position:relative}
+    .od-status-dot::after{content:'';position:absolute;left:5px;top:4px;width:8px;height:8px;border:2px solid #fff;border-top:none;border-left:none;transform:rotate(45deg)}
+    .od-status-text{font-size:14px;font-weight:600;color:#262626}
+
+    .od-meta{display:flex;flex-wrap:wrap;gap:14px;padding:8px 12px;background:#fafafa;border-bottom:1px solid #f5f5f5}
+    .od-meta-item{font-size:12px;color:#555}
+    .od-meta-k{color:#999}
+    .od-link{color:#1677ff;cursor:pointer}
+    .od-link:hover{text-decoration:underline}
+
+    .od-table{width:100%}
+    .od-tr{display:flex;align-items:stretch;border-bottom:1px solid #f8f8f8}
+    .od-tr:last-child{border-bottom:none}
+    .od-th{background:#fafafa;color:#888;font-size:12px}
+    .od-td{padding:12px 12px;font-size:12px;color:#333;display:flex;align-items:center}
+    .w-info{width:44%}.w-price{width:18%}.w-state{width:15%}.w-pay{width:23%;justify-content:flex-end}
+    .ta-r{text-align:right}
+    .od-good{display:flex;align-items:center;gap:10px}
+    .od-thumb{width:48px;height:48px;border-radius:3px;border:1px solid #e8e8e8;background:#111;display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0}
+    .od-good-name{font-size:12px;font-weight:600;color:#333;margin-bottom:3px}
+    .od-good-sub{font-size:11px;color:#999}
+    .od-old{color:#ccc;text-decoration:line-through;font-size:11px;margin-left:3px}
+    .od-x{margin-top:4px;color:#999}
+    .od-pay-main{font-size:14px;font-weight:700;color:#f5222d;line-height:1}
+    .od-pay-sub{margin-top:4px;font-size:11px;color:#f5222d;white-space:nowrap}
+    .od-remark{padding:10px 14px;font-size:12px;color:#555}
+    .od-sec-title{font-size:13px;font-weight:600;color:#262626;margin-bottom:8px}
+    .od-kv{font-size:12px;color:#555;line-height:2.2}
+    .od-kv .k{color:#999;display:inline-block;min-width:52px}
+    .od-empty{padding:28px 0;text-align:center;color:#bbb;font-size:13px}
+
+    /* 待发货：收货信息 + 支付信息 双卡片 */
+    .od-ship-pay-grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:12px;
+      margin-bottom:10px;
+    }
+    .od-info-card{
+      background:#fff;
+      border:1px solid #e8e8e8;
+      border-radius:8px;
+      padding:14px 16px;
+      box-shadow:0 1px 4px rgba(0,0,0,0.03);
+    }
+    .od-info-card .od-sec-title{
+      margin-bottom:10px;
+      padding-bottom:8px;
+      border-bottom:1px solid #f5f5f5;
+      font-size:14px;
+    }
+    @media (max-width:860px){
+      .od-ship-pay-grid{ grid-template-columns:1fr; }
+    }
+
+    /* 物流信息表：表头六列均分 */
+    .od-table-logistics .od-logistics-head{
+      display:grid;
+      grid-template-columns:repeat(6,minmax(0,1fr));
+      width:100%;
+    }
+    .od-table-logistics .od-logistics-head .od-td{
+      width:auto;
+      flex:none;
+      justify-content:center;
+      text-align:center;
+      padding:10px 6px;
+      font-size:11px;
+      word-break:break-all;
+    }
+
+    /* ════════════════════════════════════════
+       转账指引 弹层 Modal
+    ════════════════════════════════════════ */
+    .modal-mask {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 1000;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .modal-mask.hidden { display: none; }
+    .modal-box {
+      background: #fff;
+      border-radius: 6px;
+      width: 420px;
+      max-height: 86vh;
+      display: flex; flex-direction: column;
+      overflow: hidden;
+      box-shadow: 0 12px 48px rgba(0,0,0,0.2);
+    }
+    .modal-head {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 18px;
+      border-bottom: 1px solid #f0f0f0;
+      font-size: 15px; font-weight: 600; color: #262626;
+      flex-shrink: 0;
+    }
+    .modal-close {
+      width: 24px; height: 24px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; color: #999; font-size: 16px; background: transparent; border: none;
+      transition: background 0.15s;
+    }
+    .modal-close:hover { background: #f5f5f5; color: #333; }
+    .modal-body { flex: 1; overflow-y: auto; padding: 16px 18px 18px; }
+    .modal-body::-webkit-scrollbar { width: 4px; }
+    .modal-body::-webkit-scrollbar-thumb { background: #d0d0d0; border-radius: 2px; }
+
+    /* Modal 步骤 */
+    .guide-step-block { margin-bottom: 20px; }
+    .guide-step-block:last-child { margin-bottom: 0; }
+    .gsb-header { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 10px; }
+    .gsb-num {
+      width: 22px; height: 22px; border-radius: 50%;
+      background: #1677ff; color: #fff;
+      font-size: 12px; font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .gsb-title  { font-size: 13px; font-weight: 600; color: #262626; padding-top: 2px; line-height: 1.5; }
+    .gsb-desc   { font-size: 12px; color: #666; line-height: 1.7; margin-left: 32px; margin-bottom: 10px; }
+    .gsb-highlight {
+      background: #f0f7ff; border-left: 3px solid #1677ff;
+      padding: 8px 12px; border-radius: 0 3px 3px 0;
+      margin-left: 32px; margin-bottom: 8px;
+    }
+    .gsb-highlight-row { display: flex; align-items: center; gap: 8px; padding: 3px 0; }
+    .gsb-hl-key { font-size: 11px; color: #888; width: 32px; flex-shrink: 0; }
+    .gsb-hl-val { font-size: 12px; color: #1677ff; font-weight: 600; flex: 1; word-break: break-all; }
+    .gsb-hl-copy { font-size: 11px; color: #1677ff; cursor: pointer; border: 1px solid #91caff; padding: 1px 6px; border-radius: 2px; white-space: nowrap; transition: background 0.12s; background: transparent; }
+    .gsb-hl-copy:hover { background: #e6f4ff; }
+
+    /* 手机截图模拟 */
+    .phone-mock {
+      width: 160px; height: 280px;
+      border: 2px solid #d0d0d0; border-radius: 16px;
+      background: #f5f5f5;
+      margin: 0 auto 8px;
+      overflow: hidden; position: relative;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+    }
+    .phone-mock-bar {
+      height: 20px; background: #1677ff;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 10px; color: rgba(255,255,255,0.9);
+    }
+    .phone-mock-body { padding: 8px; }
+    .pm-field {
+      background: #fff; border: 1px solid #e0e0e0; border-radius: 4px;
+      padding: 6px 8px; margin-bottom: 5px;
+    }
+    .pm-field-label { font-size: 9px; color: #999; }
+    .pm-field-value { font-size: 10px; color: #333; font-weight: 500; }
+    .pm-btn {
+      width: 100%; background: #1677ff; color: #fff;
+      border: none; border-radius: 4px; padding: 6px;
+      font-size: 11px; text-align: center; margin-top: 6px;
+    }
+    .pm-search-bar {
+      display: flex; align-items: center; gap: 4px;
+      background: #f0f0f0; border-radius: 12px; padding: 4px 8px;
+      margin-bottom: 6px;
+    }
+    .pm-search-bar span { font-size: 10px; color: #999; }
+    .pm-list-item {
+      background: #fff; border-radius: 4px; padding: 6px 8px;
+      margin-bottom: 4px; border-left: 3px solid transparent;
+    }
+    .pm-list-item.active { border-left-color: #1677ff; background: #f0f7ff; }
+    .pm-list-item-text { font-size: 9px; color: #333; line-height: 1.5; }
+
+    .modal-step-divider { height: 1px; background: #f0f0f0; margin: 4px 0 16px; }
+
+    /* ════════════════════════════════════════
+       右侧半屏抽屉（Figma 指引）
+    ════════════════════════════════════════ */
+    .guide-drawer-mask{
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.35);
+      z-index: 1200;
+      display: none;
+    }
+    .guide-drawer-mask.show{ display:block; }
+    .guide-drawer{
+      position: fixed;
+      top: 0;
+      right: 0;
+      height: 100vh;
+      width: 50vw;
+      min-width: 520px;
+      max-width: 860px;
+      background: #fff;
+      z-index: 1201;
+      box-shadow: -12px 0 40px rgba(0,0,0,0.18);
+      transform: translateX(100%);
+      transition: transform 220ms ease;
+      display: flex;
+      flex-direction: column;
+    }
+    .guide-drawer.open{ transform: translateX(0); }
+    .guide-drawer-head{
+      height: 52px;
+      padding: 0 16px;
+      border-bottom: 1px solid #f0f0f0;
+      display:flex;
+      align-items:center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+    .guide-drawer-title{ font-size: 14px; font-weight: 700; color:#262626; }
+    .guide-drawer-close{
+      width: 30px;
+      height: 30px;
+      border-radius: 6px;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      font-size: 18px;
+      color: #999;
+      transition: background 0.15s, color 0.15s;
+    }
+    .guide-drawer-close:hover{ background:#f5f5f5; color:#333; }
+    .guide-drawer-body{
+      flex: 1;
+      overflow: auto;
+    }
+    .guide-iframe{
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+
+    /* ════════════════════════════════════════
+       转账指引（Figma MCP 绘制版）
+    ════════════════════════════════════════ */
+    .guide-figma{
+      height: 100%;
+      background: #f6f7f9;
+      padding: 16px 14px 18px;
+    }
+    .gf-wrap{
+      max-width: 760px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .gf-tabs{
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 4px;
+    }
+    .gf-tab{
+      height: 34px;
+      padding: 0 16px;
+      border-radius: 999px;
+      border: 1px solid #d9d9d9;
+      background: #fff;
+      color: #666;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all .15s ease;
+    }
+    .gf-tab:hover{ border-color: #91caff; color: #1677ff; }
+    .gf-tab.active{
+      background: #1677ff;
+      border-color: #1677ff;
+      color: #fff;
+      box-shadow: 0 6px 16px rgba(22,119,255,0.18);
+    }
+    .gf-panel{ display: none; }
+    .gf-panel.active{ display: block; }
+    .gf-step{
+      background: #fff;
+      border: 1px solid #eef0f2;
+      border-radius: 12px;
+      padding: 14px 14px 12px;
+      display: grid;
+      grid-template-columns: 1fr 260px;
+      gap: 14px;
+      align-items: start;
+    }
+    .gf-line{
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      color: #262626;
+      font-size: 13px;
+      font-weight: 600;
+      line-height: 1.55;
+      margin-bottom: 10px;
+    }
+    .gf-dot{
+      width: 22px;
+      height: 22px;
+      border-radius: 999px;
+      background: #ff4d4f;
+      color: #fff;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 800;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+    .gf-card{
+      border: 1px solid #f1f2f4;
+      background: #fff;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .gf-row{
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border-bottom: 1px solid #f5f5f5;
+    }
+    .gf-row:last-child{ border-bottom: none; }
+    .gf-k{
+      width: 44px;
+      color: #8c8c8c;
+      font-size: 12px;
+      flex-shrink: 0;
+    }
+    .gf-v{
+      flex: 1;
+      color: #262626;
+      font-size: 13px;
+      font-weight: 600;
+      word-break: break-all;
+    }
+    .gf-copy{
+      border: none;
+      background: transparent;
+      color: #1677ff;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      padding: 0;
+      white-space: nowrap;
+    }
+    .gf-copy:hover{ text-decoration: underline; }
+
+    .gf-phone{
+      width: 240px;
+      max-width: 100%;
+      min-height: 240px;
+      border-radius: 14px;
+      overflow: hidden;
+      position: relative;
+      background: #fff;
+      box-shadow: 0 10px 24px rgba(0,0,0,0.12);
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+    }
+    .gf-img{
+      width: 100%;
+      height: auto;
+      object-fit: contain;
+      display: block;
+    }
+    .gf-empty{
+      background: #fff;
+      border: 1px dashed #d9d9d9;
+      border-radius: 12px;
+      padding: 42px 16px;
+      text-align: center;
+      color: #999;
+      font-size: 13px;
+      line-height: 1.8;
+    }
+
+    @media (max-width: 740px){
+      .gf-step{ grid-template-columns: 1fr; }
+      .gf-phone{ margin-left: 0; width: 100%; max-width: 320px; }
+    }
+
+    @media (max-width: 980px){
+      .guide-drawer{ width: 92vw; min-width: 0; max-width: none; }
+    }
+
+    /* （已移除右侧浮动工具条样式） */
+  </style>
+</head>
+<body>
+<div class="page-layout">
+
+  <!-- ══════════ 左侧边栏（纯文字，无图标） ══════════ -->
+  <aside class="sidebar">
+    <div class="sb-logo">
+      <div class="sb-logo-icon">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+          <path d="M13 2L4.5 12.5H11L10 22L19.5 10.5H13L13 2Z" fill="white"/>
+        </svg>
+      </div>
+      <div class="sb-logo-text">
+        <div class="sb-logo-name">盛意旺</div>
+        <div class="sb-logo-sub">合作伙伴平台</div>
+      </div>
+    </div>
+
+    <!-- 常用 -->
+    <div class="sb-group-title">常用 <span style="font-size:9px;color:rgba(255,255,255,0.25);">▾</span></div>
+    <div class="sb-grid">
+      <div class="sb-item"><span class="si-label">收款机具管理</span></div>
+      <div class="sb-item active"><span class="si-label">商城首页</span></div>
+      <div class="sb-item"><span class="si-label">商户管理</span></div>
+      <div class="sb-item"><span class="si-label">企業商户查询</span></div>
+      <div class="sb-item"><span class="si-label">电票业务</span></div>
+      <div class="sb-item"><span class="si-label">火爆活动</span></div>
+    </div>
+    <div class="sb-row">宝贝中心</div>
+    <div class="sb-divider"></div>
+
+    <!-- 客户管理 -->
+    <div class="sb-group-title">客户管理 <span style="font-size:9px;color:rgba(255,255,255,0.25);">▾</span></div>
+    <div class="sb-grid">
+      <div class="sb-item"><span class="si-label">商户查询</span></div>
+      <div class="sb-item"><span class="si-label">商户认证</span></div>
+      <div class="sb-item"><span class="si-label">资质更新</span></div>
+      <div class="sb-item"><span class="si-label">总部商户/省份</span></div>
+    </div>
+    <div class="sb-divider"></div>
+
+    <!-- 门店管理 -->
+    <div class="sb-row">门店管理</div>
+    <div class="sb-divider"></div>
+
+    <!-- 进货管理 -->
+    <div class="sb-group-title">进货管理 <span style="font-size:9px;color:rgba(255,255,255,0.25);">▾</span></div>
+    <div class="sb-row">数据中心</div>
+    <div class="sb-divider"></div>
+
+    <!-- 实付数据 -->
+    <div class="sb-group-title">实付数据 <span style="font-size:9px;color:rgba(255,255,255,0.25);">▾</span></div>
+    <div class="sb-grid">
+      <div class="sb-item"><span class="si-label">支出查询</span></div>
+      <div class="sb-item"><span class="si-label">资金操作记录</span></div>
+    </div>
+    <div class="sb-row">支出记录</div>
+    <div class="sb-divider"></div>
+
+    <!-- 账单管理 -->
+    <div class="sb-group-title">账单管理 <span style="font-size:9px;color:rgba(255,255,255,0.25);">▾</span></div>
+    <div class="sb-grid">
+      <div class="sb-item"><span class="si-label">账单明细</span></div>
+      <div class="sb-item"><span class="si-label">资金账单</span></div>
+    </div>
+    <div class="sb-divider"></div>
+
+    <!-- 分佣管理 -->
+    <div class="sb-group-title">分佣管理 <span style="font-size:9px;color:rgba(255,255,255,0.25);">▾</span></div>
+    <div class="sb-row">佣金单件</div>
+    <div class="sb-divider"></div>
+
+    <!-- 风控管理 -->
+    <div class="sb-group-title">风控管理 <span style="font-size:9px;color:rgba(255,255,255,0.25);">▾</span></div>
+    <div class="sb-grid">
+      <div class="sb-item"><span class="si-label">客户管理</span></div>
+      <div class="sb-item"><span class="si-label">商户反查</span></div>
+    </div>
+    <div class="sb-divider"></div>
+
+    <!-- 平台投诉 -->
+    <div class="sb-row">平台投诉</div>
+    <div class="sb-group-title" style="padding-top:4px;">宝贝中心</div>
+    <div class="sb-divider"></div>
+
+    <div class="sb-row">收款机具管理</div>
+    <div class="sb-divider"></div>
+    <div class="sb-row">客户季度激发奖</div>
+    <div class="sb-divider"></div>
+    <div class="sb-row">直播支付</div>
+  </aside>
+
+  <!-- ══════════ 右侧主区 ══════════ -->
+  <div class="page-right">
+
+    <!-- 顶部导航栏（不参与刷新） -->
+    <header class="header">
+      <div class="hd-brand">
+        <div class="hd-brand-icon">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
+            <path d="M13 2L4.5 12.5H11L10 22L19.5 10.5H13L13 2Z" fill="white"/>
+          </svg>
+        </div>
+        <span class="hd-brand-name">盛意旺</span>
+      </div>
+      <span class="hd-platform">合作伙伴平台</span>
+
+      <div class="hd-search">
+        <span class="s-icon">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+            <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2"/>
+            <line x1="21" y1="21" x2="16.65" y2="16.65" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </span>
+        <input type="text" placeholder="搜索">
+      </div>
+
+      <div class="hd-right">
+        <div class="hd-btn">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M13.73 21a2 2 0 0 1-3.46 0" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+          消息
+        </div>
+        <!-- ③ 商户名称修正为"盛意旺门店" -->
+        <div class="hd-btn">
+          <div class="hd-avatar">盛</div>
+          <span>盛意旺门店...公(93756797)</span>
+          <span class="hd-chevron">▾</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- ── 主内容区（只有这里会被替换） ── -->
+    <div class="main-content" id="main-content">
+
+      <!-- ① 确认收货信息 -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">确认收货信息</span>
+          <a href="javascript:;" class="card-link">管理地址</a>
+        </div>
+        <div class="addr-body">
+          <div class="addr-row">
+            <div class="addr-card">
+              <div class="ac-name">张三 <span class="ac-phone">156****8811</span></div>
+              <div class="ac-region">广东省广州市海珠区</div>
+              <div class="ac-detail">桥洋中路357号</div>
+            </div>
+            <div class="addr-card">
+              <div class="ac-name">孙零 <span class="ac-phone">183****2199</span></div>
+              <div class="ac-region">上海市上海市松江新区</div>
+              <div class="ac-detail">北大路1765弄6号1802</div>
+            </div>
+            <div class="addr-card">
+              <div class="ac-name">孙零 <span class="ac-phone">183****2199</span></div>
+              <div class="ac-region">上海市上海市松江新区</div>
+              <div class="ac-detail">北大路1703弄6号1802</div>
+            </div>
+            <div class="addr-card">
+              <div class="ac-name">张三 <span class="ac-phone">156****5656</span></div>
+              <div class="ac-region">广东省广州市海珠区</div>
+              <div class="ac-detail">桥洋中路357号</div>
+            </div>
+            <div class="addr-card">
+              <div class="ac-name">张三 <span class="ac-phone">156****5656</span></div>
+              <div class="ac-region">广东省广州市海珠区</div>
+              <div class="ac-detail">桥洋中路357号</div>
+            </div>
+          </div>
+          <div class="addr-row">
+            <div class="addr-card">
+              <div class="ac-name">
+                测试104
+                <span class="ac-phone">183****2199</span>
+                <span class="ac-default">默认</span>
+              </div>
+              <div class="ac-region">山东省淄博市市辖区</div>
+              <span class="ac-tag">哦哦者</span>
+            </div>
+            <div class="addr-card">
+              <div class="ac-name">xcc <span class="ac-phone">183****2199</span></div>
+              <div class="ac-region">北京市北京市宣武区</div>
+              <div class="ac-detail">fff</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ② 选择支付方式 -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">选择支付方式</span>
+        </div>
+        <div class="pay-body">
+          <div class="pay-options">
+            <!-- 扫码支付 -->
+            <button class="pay-opt selected" id="pay-scan">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+                <rect x="3" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.5"/>
+                <rect x="5" y="5" width="3" height="3" fill="currentColor"/>
+                <rect x="14" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.5"/>
+                <rect x="16" y="5" width="3" height="3" fill="currentColor"/>
+                <rect x="3" y="14" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.5"/>
+                <rect x="5" y="16" width="3" height="3" fill="currentColor"/>
+                <rect x="14" y="14" width="3" height="3" fill="currentColor"/>
+                <rect x="19" y="14" width="2" height="2" fill="currentColor"/>
+                <rect x="14" y="19" width="3" height="2" fill="currentColor"/>
+                <rect x="19" y="19" width="2" height="2" fill="currentColor"/>
+              </svg>
+              扫码支付
+            </button>
+            <!-- ④ 银行转账（含 NEW 角标） -->
+            <button class="pay-opt" id="pay-bank">
+              <span class="pay-new-badge">NEW</span>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+                <rect x="2" y="5" width="20" height="14" rx="2" stroke="currentColor" stroke-width="1.5"/>
+                <line x1="2" y1="10" x2="22" y2="10" stroke="currentColor" stroke-width="1.5"/>
+                <line x1="6" y1="15" x2="10" y2="15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+              </svg>
+              银行转账
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ③ 确认商品信息 -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">确认商品信息</span>
+        </div>
+        <table class="goods-table">
+          <thead>
+            <tr>
+              <th style="width:42%">商品信息</th>
+              <th style="width:13%">规格</th>
+              <th style="width:15%">单价</th>
+              <th style="width:14%">数量</th>
+              <th class="right" style="width:16%">小计</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>
+                <div class="g-product">
+                  <div class="g-thumb">
+                    <svg width="38" height="38" viewBox="0 0 48 48" fill="none">
+                      <rect x="10" y="3" width="28" height="42" rx="4" fill="#1a1a1a" stroke="#333" stroke-width="1"/>
+                      <rect x="13" y="7" width="22" height="26" rx="2" fill="url(#scr2)"/>
+                      <circle cx="24" cy="39" r="3.5" fill="#2a2a2a" stroke="#444" stroke-width="0.5"/>
+                      <rect x="18" y="11" width="12" height="1.5" rx="0.75" fill="white" opacity="0.7"/>
+                      <rect x="18" y="14.5" width="8" height="1.5" rx="0.75" fill="white" opacity="0.45"/>
+                      <rect x="18" y="18" width="10" height="1.5" rx="0.75" fill="white" opacity="0.45"/>
+                      <rect x="13" y="35" width="22" height="1" fill="#222"/>
+                      <defs>
+                        <linearGradient id="scr2" x1="13" y1="7" x2="35" y2="33" gradientUnits="userSpaceOnUse">
+                          <stop offset="0%" stop-color="#1e88e5"/>
+                          <stop offset="100%" stop-color="#0d47a1"/>
+                        </linearGradient>
+                      </defs>
+                    </svg>
+                  </div>
+                  <div>
+                    <div class="g-info-name">赚一赚收款贴纸</div>
+                    <div class="g-info-meta">1台起订</div>
+                  </div>
+                </div>
+              </td>
+              <td><div class="g-spec">标准<br>白蓝</div></td>
+              <td>
+                <span class="g-price-cur">¥0.01</span>
+                <span class="g-price-ori">¥5.99</span>
+              </td>
+              <td>
+                <div class="qty-wrap">
+                  <button class="qty-btn" id="qty-minus">－</button>
+                  <input class="qty-val" id="qty-val" type="text" value="1" readonly>
+                  <button class="qty-btn" id="qty-plus">＋</button>
+                </div>
+              </td>
+              <td class="right">
+                <div class="g-subtotal">
+                  <span class="g-sub-price">¥0.01</span>
+                  <div class="g-sub-discount">+优惠¥0.00=¥0.01</div>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <!-- 备注 & 发票 -->
+        <div class="order-bottom">
+          <div class="ob-row1">
+            <div class="ob-remark">
+              <div class="ob-label">订单备注：</div>
+              <textarea class="ob-textarea" placeholder="请输入订单备注"></textarea>
+            </div>
+            <div class="ob-invoice">
+              <div class="ob-label">发票信息</div>
+              <div class="ob-invoice-opts">
+                <!-- ② 修正：选项1改为"需要发票" -->
+                <label class="ob-invoice-opt" id="inv-need">
+                  <div class="radio-dot" id="rd-need"></div>
+                  需要发票
+                </label>
+                <label class="ob-invoice-opt" id="inv-none">
+                  <div class="radio-dot on" id="rd-none"></div>
+                  不需要发票
+                </label>
+              </div>
+            </div>
+          </div>
+          <div class="ob-summary">
+            <span class="ob-total-label">应付总额：</span>
+            <span class="ob-total-amount">¥0.01</span>
+            <button class="btn-order" id="btn-order">提交订单</button>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /main-content -->
+  </div><!-- /page-right -->
+</div><!-- /page-layout -->
+
+<!-- （已移除右侧浮动工具条） -->
+
+<!-- ════ 转账指引 Modal ════ -->
+<div class="modal-mask hidden" id="guide-modal">
+  <div class="modal-box">
+    <div class="modal-head">
+      转账指引
+      <button class="modal-close" id="modal-close-btn">✕</button>
+    </div>
+    <div class="modal-body">
+
+      <!-- Step 1 -->
+      <div class="guide-step-block">
+        <div class="gsb-header">
+          <div class="gsb-num">1</div>
+          <div class="gsb-title">登录账户，进入转账界面，输入收款户名和账号</div>
+        </div>
+        <div class="gsb-highlight">
+          <div class="gsb-highlight-row">
+            <span class="gsb-hl-key">户名</span>
+            <span class="gsb-hl-val">上海盛畅网络科技有限公司</span>
+            <button class="gsb-hl-copy" onclick="copyText('上海盛畅网络科技有限公司', this)">复制</button>
+          </div>
+          <div class="gsb-highlight-row">
+            <span class="gsb-hl-key">账号</span>
+            <span class="gsb-hl-val">121909328810901</span>
+            <button class="gsb-hl-copy" onclick="copyText('121909328810901', this)">复制</button>
+          </div>
+        </div>
+        <!-- 手机截图模拟 -->
+        <div class="phone-mock" style="margin-left:32px; margin-top:8px;">
+          <div class="phone-mock-bar">转账</div>
+          <div class="phone-mock-body">
+            <div class="pm-field">
+              <div class="pm-field-label">户名</div>
+              <div class="pm-field-value">上海盛畅网络科技有限公司</div>
+            </div>
+            <div class="pm-field">
+              <div class="pm-field-label">账号</div>
+              <div class="pm-field-value">121909328810901</div>
+            </div>
+            <div class="pm-field" style="background:#f9f9f9;">
+              <div class="pm-field-label">银行</div>
+              <div class="pm-field-value" style="color:#bbb;">请选择银行</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-step-divider"></div>
+
+      <!-- Step 2 -->
+      <div class="guide-step-block">
+        <div class="gsb-header">
+          <div class="gsb-num">2</div>
+          <div class="gsb-title">银行一栏搜索"备付金"，选择"支付机构备付金集中存管账户"</div>
+        </div>
+        <div class="phone-mock" style="margin-left:32px;">
+          <div class="phone-mock-bar">选择银行</div>
+          <div class="phone-mock-body">
+            <div class="pm-search-bar">
+              <span>🔍 备付金</span>
+            </div>
+            <div class="pm-list-item active">
+              <div class="pm-list-item-text" style="color:#1677ff;font-weight:600;">支付机构备付金集中存管账户</div>
+              <div class="pm-list-item-text" style="color:#999;">中国人民银行</div>
+            </div>
+            <div class="pm-list-item">
+              <div class="pm-list-item-text">备付金专户</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-step-divider"></div>
+
+      <!-- Step 3 -->
+      <div class="guide-step-block">
+        <div class="gsb-header">
+          <div class="gsb-num">3</div>
+          <div class="gsb-title">输入转账金额，然后在"转账附言"中输入附言编号</div>
+        </div>
+        <div class="gsb-highlight">
+          <div class="gsb-highlight-row">
+            <span class="gsb-hl-key">金额</span>
+            <span class="gsb-hl-val">0.01</span>
+            <button class="gsb-hl-copy" onclick="copyText('0.01', this)">复制</button>
+          </div>
+          <div class="gsb-highlight-row">
+            <span class="gsb-hl-key">附言</span>
+            <span class="gsb-hl-val" style="font-size:11px;">DEZZ1686456364364363435</span>
+            <button class="gsb-hl-copy" onclick="copyText('DEZZ1686456364364363435', this)">复制</button>
+          </div>
+        </div>
+        <div class="phone-mock" style="margin-left:32px; margin-top:8px;">
+          <div class="phone-mock-bar">填写金额</div>
+          <div class="phone-mock-body">
+            <div class="pm-field">
+              <div class="pm-field-label">转账金额（元）</div>
+              <div class="pm-field-value" style="font-size:14px;font-weight:700;color:#f5222d;">0.01</div>
+            </div>
+            <div class="pm-field">
+              <div class="pm-field-label">转账附言</div>
+              <div class="pm-field-value" style="font-size:9px;">DEZZ1686456364364363435</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-step-divider"></div>
+
+      <!-- Step 4 -->
+      <div class="guide-step-block">
+        <div class="gsb-header">
+          <div class="gsb-num">4</div>
+          <div class="gsb-title">填写收款人信息，开户地选择上海，分支行选择"上海盛付通-备付金账户"</div>
+        </div>
+        <div class="gsb-highlight">
+          <div class="gsb-highlight-row">
+            <span class="gsb-hl-key">开户地</span>
+            <span class="gsb-hl-val">上海</span>
+          </div>
+          <div class="gsb-highlight-row">
+            <span class="gsb-hl-key">分支行</span>
+            <span class="gsb-hl-val">上海盛付通-备付金账户</span>
+          </div>
+        </div>
+        <div class="phone-mock" style="margin-left:32px; margin-top:8px;">
+          <div class="phone-mock-bar">收款人信息</div>
+          <div class="phone-mock-body">
+            <div class="pm-field">
+              <div class="pm-field-label">开户地</div>
+              <div class="pm-field-value">上海</div>
+            </div>
+            <div class="pm-field">
+              <div class="pm-field-label">分支行</div>
+              <div class="pm-field-value" style="font-size:9px;">上海盛付通-备付金账户</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-step-divider"></div>
+
+      <!-- Step 5 -->
+      <div class="guide-step-block">
+        <div class="gsb-header">
+          <div class="gsb-num">5</div>
+          <div class="gsb-title">确认信息无误，点击下一步，完成验证后提交转账</div>
+        </div>
+        <div class="phone-mock" style="margin-left:32px;">
+          <div class="phone-mock-bar">确认转账</div>
+          <div class="phone-mock-body">
+            <div class="pm-field" style="background:#f0f7ff;">
+              <div class="pm-field-label">收款方</div>
+              <div class="pm-field-value" style="font-size:9px;">上海盛畅网络科技有限公司</div>
+            </div>
+            <div class="pm-field" style="background:#f0f7ff;">
+              <div class="pm-field-label">转账金额</div>
+              <div class="pm-field-value" style="color:#f5222d;">¥ 0.01</div>
+            </div>
+            <div class="pm-btn">下一步</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ════ 右侧半屏抽屉（Figma 指引） ════ -->
+<div class="guide-drawer-mask" id="guide-drawer-mask"></div>
+<aside class="guide-drawer" id="guide-drawer" aria-label="转账指引抽屉">
+  <div class="guide-drawer-head">
+    <div class="guide-drawer-title">转账指引</div>
+    <button class="guide-drawer-close" id="guide-drawer-close" type="button">✕</button>
+  </div>
+  <div class="guide-drawer-body">
+    <div class="guide-figma" id="guide-figma">
+      <div class="gf-wrap">
+        <div class="gf-tabs" role="tablist" aria-label="转账方式">
+          <button class="gf-tab active" type="button" data-guide-tab="mobile">手机银行转账</button>
+          <button class="gf-tab" type="button" data-guide-tab="web">网页网银转账</button>
+        </div>
+
+        <div class="gf-panel active" data-guide-panel="mobile">
+          <div class="gf-step">
+            <div>
+              <div class="gf-line"><span class="gf-dot">1</span><span>粘贴收款人的户名及账号在手机银行转账页中填写收款人信息</span></div>
+              <div class="gf-card">
+                <div class="gf-row"><span class="gf-k">户名</span><span class="gf-v">上海盛畅网络科技有限公司</span><button class="gf-copy" type="button" onclick="copyText('上海盛畅网络科技有限公司', this)">复制</button></div>
+                <div class="gf-row"><span class="gf-k">账号</span><span class="gf-v">121909328810901</span><button class="gf-copy" type="button" onclick="copyText('121909328810901', this)">复制</button></div>
+              </div>
+            </div>
+            <div class="gf-phone" aria-label="步骤1配图">
+              <img class="gf-img" src="assets/transfer-guide-tabs/step1.png" alt="步骤1手机截图">
+            </div>
+          </div>
+
+          <div class="gf-step">
+            <div>
+              <div class="gf-line"><span class="gf-dot">2</span><span>银行一栏搜索“备付金”，选择“支付机构备付金集中存管账户”</span></div>
+              <div class="gf-card">
+                <div class="gf-row"><span class="gf-k">银行</span><span class="gf-v">支付机构备付金集中存管账户</span><button class="gf-copy" type="button" onclick="copyText('支付机构备付金集中存管账户', this)">复制</button></div>
+              </div>
+            </div>
+            <div class="gf-phone" aria-label="步骤2配图">
+              <img class="gf-img" src="assets/transfer-guide-tabs/step2.png" alt="步骤2手机截图">
+            </div>
+          </div>
+
+          <div class="gf-step">
+            <div>
+              <div class="gf-line"><span class="gf-dot">3</span><span>输入转账金额，并在“转账附言”中填写附言编号</span></div>
+              <div class="gf-card">
+                <div class="gf-row"><span class="gf-k">金额</span><span class="gf-v">0.01</span><button class="gf-copy" type="button" onclick="copyText('0.01', this)">复制</button></div>
+                <div class="gf-row"><span class="gf-k">附言</span><span class="gf-v" style="color:#1677ff;">DEZZ1686456364364363435</span><button class="gf-copy" type="button" onclick="copyText('DEZZ1686456364364363435', this)">复制</button></div>
+              </div>
+            </div>
+            <div class="gf-phone" aria-label="步骤3配图">
+              <img class="gf-img" src="assets/transfer-guide-tabs/step3.png" alt="步骤3手机截图">
+            </div>
+          </div>
+
+          <div class="gf-step">
+            <div>
+              <div class="gf-line"><span class="gf-dot">4</span><span>输入金额后需补充收款人信息。开户地选择上海，分支行选择“上海盛付通-备付金账户”</span></div>
+              <div class="gf-card">
+                <div class="gf-row"><span class="gf-k">开户地</span><span class="gf-v">上海</span><button class="gf-copy" type="button" onclick="copyText('上海', this)">复制</button></div>
+                <div class="gf-row"><span class="gf-k">分支行</span><span class="gf-v">上海盛付通-备付金账户</span><button class="gf-copy" type="button" onclick="copyText('上海盛付通-备付金账户', this)">复制</button></div>
+              </div>
+            </div>
+            <div class="gf-phone" aria-label="步骤4配图">
+              <img class="gf-img" src="assets/transfer-guide-tabs/step4.png" alt="步骤4手机截图">
+            </div>
+          </div>
+        </div>
+
+        <div class="gf-panel" data-guide-panel="web">
+          <div class="gf-step">
+            <div>
+              <div class="gf-line"><span class="gf-dot">1</span><span>粘贴收款人的户名及账号在手机银行转账页中填写收款人信息</span></div>
+              <div class="gf-card">
+                <div class="gf-row"><span class="gf-k">户名</span><span class="gf-v">上海盛畅网络科技有限公司</span><button class="gf-copy" type="button" onclick="copyText('上海盛畅网络科技有限公司', this)">复制</button></div>
+                <div class="gf-row"><span class="gf-k">账号</span><span class="gf-v">121909328810901</span><button class="gf-copy" type="button" onclick="copyText('121909328810901', this)">复制</button></div>
+              </div>
+            </div>
+            <div class="gf-phone" aria-label="网页网银步骤1配图">
+              <img class="gf-img" src="assets/transfer-guide-web/step1.png" alt="网页网银步骤1截图">
+            </div>
+          </div>
+
+          <div class="gf-step">
+            <div>
+              <div class="gf-line"><span class="gf-dot">2</span><span>银行一栏搜索“备付金”，选择“支付机构备付金集中存管账户”</span></div>
+              <div class="gf-card">
+                <div class="gf-row"><span class="gf-k">银行</span><span class="gf-v">支付机构备付金集中存管账户</span><button class="gf-copy" type="button" onclick="copyText('支付机构备付金集中存管账户', this)">复制</button></div>
+              </div>
+            </div>
+            <div class="gf-phone" aria-label="网页网银步骤2配图">
+              <img class="gf-img" src="assets/transfer-guide-web/step2-flat.png?v=3" alt="网页网银步骤2截图">
+            </div>
+          </div>
+
+          <div class="gf-step">
+            <div>
+              <div class="gf-line"><span class="gf-dot">3</span><span>输入转账金额，并在“转账附言”中填写附言编号</span></div>
+              <div class="gf-card">
+                <div class="gf-row"><span class="gf-k">金额</span><span class="gf-v">0.01</span><button class="gf-copy" type="button" onclick="copyText('0.01', this)">复制</button></div>
+                <div class="gf-row"><span class="gf-k">附言</span><span class="gf-v" style="color:#1677ff;">DEZZ1686456364364363435</span><button class="gf-copy" type="button" onclick="copyText('DEZZ1686456364364363435', this)">复制</button></div>
+              </div>
+            </div>
+            <div class="gf-phone" aria-label="网页网银步骤3配图">
+              <img class="gf-img" src="assets/transfer-guide-web/step3.png" alt="网页网银步骤3截图">
+            </div>
+          </div>
+
+          <div class="gf-step">
+            <div>
+              <div class="gf-line"><span class="gf-dot">4</span><span>输入金额后需补充收款人信息。开户地选择上海，分支行选择“上海盛付通-备付金账户”</span></div>
+              <div class="gf-card">
+                <div class="gf-row"><span class="gf-k">开户地</span><span class="gf-v">上海</span><button class="gf-copy" type="button" onclick="copyText('上海', this)">复制</button></div>
+                <div class="gf-row"><span class="gf-k">分支行</span><span class="gf-v">上海盛付通-备付金账户</span><button class="gf-copy" type="button" onclick="copyText('上海盛付通-备付金账户', this)">复制</button></div>
+              </div>
+            </div>
+            <div class="gf-phone" aria-label="网页网银步骤4配图">
+              <img class="gf-img" src="assets/transfer-guide-web/step4-flat.png?v=3" alt="网页网银步骤4截图">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<script>
+/* ══════════════════════════════════════════
+   通用交互
+══════════════════════════════════════════ */
+// 地址选择
+document.querySelectorAll('.addr-card').forEach(card => {
+  card.addEventListener('click', () => {
+    document.querySelectorAll('.addr-card').forEach(c => c.classList.remove('selected'));
+    card.classList.add('selected');
+  });
+});
+
+// 支付方式选择
+document.querySelectorAll('.pay-opt').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.pay-opt').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+  });
+});
+
+// 数量加减
+const qtyVal = document.getElementById('qty-val');
+document.getElementById('qty-minus').addEventListener('click', () => {
+  const v = parseInt(qtyVal.value) || 1;
+  if (v > 1) qtyVal.value = v - 1;
+});
+document.getElementById('qty-plus').addEventListener('click', () => {
+  qtyVal.value = (parseInt(qtyVal.value) || 1) + 1;
+});
+
+// 发票选项
+document.getElementById('inv-need').addEventListener('click', () => {
+  document.getElementById('rd-need').classList.add('on');
+  document.getElementById('rd-none').classList.remove('on');
+});
+document.getElementById('inv-none').addEventListener('click', () => {
+  document.getElementById('rd-none').classList.add('on');
+  document.getElementById('rd-need').classList.remove('on');
+});
+
+/* ══════════════════════════════════════════
+   ⑤ 提交订单：银行转账时替换主内容区
+══════════════════════════════════════════ */
+document.getElementById('btn-order').addEventListener('click', () => {
+  const isBankTransfer = document.getElementById('pay-bank').classList.contains('selected');
+  if (isBankTransfer) {
+    renderPayerInfoPage();
+  } else {
+    alert('订单提交成功！');
+  }
+});
+
+// 倒计时变量（银行转账：2小时）
+let cdTotal = 2 * 60 * 60; // 02:00:00
+let cdTimer = null;
+
+function renderBankTransferPage() {
+  const mc = document.getElementById('main-content');
+  const latestPayer = getPayerHistory()[0];
+  const payerBankDisplay = escapeHtml((latestPayer && latestPayer.bank) ? latestPayer.bank : '未选择付款银行');
+
+  mc.innerHTML = `
+    <div class="bank-page">
+      <div class="bank-shell">
+        <div class="stepbar">
+          <div class="stepitem"><span class="dot">1</span><span>填写付款账户信息</span></div>
+          <div class="stepsep"></div>
+          <div class="stepitem active"><span class="dot">2</span><span>银行转账</span></div>
+        </div>
+
+        <div class="bp-top-card">
+          <div class="bp-top-amount">
+            <div class="bp-amount-label">支付金额</div>
+            <div class="bp-amount-value"><span class="bp-amount-unit">¥</span><span id="bp-amount-num">0.01</span></div>
+          </div>
+          <div class="bp-top-countdown">
+            <div class="bp-amount-label" style="margin-bottom:6px;">支付倒计时</div>
+            <div class="bp-countdown-wrap">
+              <span class="bp-cd-label">仅剩</span>
+              <span class="bp-cd-time" id="bp-cd-time">02:00:00</span>
+              <span class="bp-cd-expire">过期</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="bank-grid">
+          <div class="bp-account-card">
+            <div class="bp-account-header">收款账户信息</div>
+            <div class="bp-account-body">
+              <div class="bp-account-row">
+                <span class="bp-acc-key">户名</span>
+                <span class="bp-acc-val">上海盛畅网络科技有限公司</span>
+                <button class="bp-copy-btn" onclick="copyText('上海盛畅网络科技有限公司', this)">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" stroke="currentColor" stroke-width="1.5"/></svg>
+                  复制
+                </button>
+              </div>
+              <div class="bp-account-row">
+                <span class="bp-acc-key">账号</span>
+                <span class="bp-acc-val">121909328810901</span>
+                <button class="bp-copy-btn" onclick="copyText('121909328810901', this)">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" stroke="currentColor" stroke-width="1.5"/></svg>
+                  复制
+                </button>
+              </div>
+              <div class="bp-account-row">
+                <span class="bp-acc-key">银行</span>
+                <span class="bp-acc-val">盛付通-备付金账户</span>
+                <button class="bp-copy-btn" onclick="copyText('盛付通-备付金账户', this)">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" stroke="currentColor" stroke-width="1.5"/></svg>
+                  复制
+                </button>
+              </div>
+              <div class="bp-account-row">
+                <span class="bp-acc-key">附言</span>
+                <span class="bp-acc-val" style="font-size:12px;color:#1677ff;">DEZZ1686456364364363435</span>
+                <button class="bp-copy-btn" onclick="copyText('DEZZ1686456364364363435', this)">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" stroke="currentColor" stroke-width="1.5"/></svg>
+                  复制
+                </button>
+              </div>
+              <div class="bp-memo-tip">附言必须填写正确且完整，否则无法支付成功</div>
+            </div>
+          </div>
+
+          <div class="bp-guide-card">
+            <div class="bp-guide-header">
+              <span class="bp-guide-header-title">转账指引</span>
+              <button class="btn-guide" onclick="openGuideDrawer()">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+                  <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.5"/>
+                  <line x1="12" y1="8" x2="12" y2="12" stroke="currentColor" stroke-width="1.5"/>
+                  <line x1="12" y1="16" x2="12.01" y2="16" stroke="currentColor" stroke-width="2"/>
+                </svg>
+                查看详细指引
+              </button>
+            </div>
+            <div class="bp-guide-body">
+              <div class="bp-guide-warn">
+                <div class="bp-guide-warn-title">⚠ 注意事项</div>
+                <div class="bp-guide-warn-item">请复制收款账户信息到对应网银操作</div>
+                <div class="bp-guide-warn-item">付款银行：<span class="bp-guide-bank-highlight">${payerBankDisplay}</span></div>
+              </div>
+              <ul class="bp-guide-steps" style="margin-top:10px;">
+                <li class="bp-guide-step">
+                  <span class="bp-step-num">1</span>
+                  <span>银行一栏请搜索"备付金"，选择<strong>支付机构备付金集中存管账户</strong></span>
+                </li>
+                <li class="bp-guide-step">
+                  <span class="bp-step-num">2</span>
+                  <span>输入金额后需补充收款人信息。开户地选择<strong>上海</strong>，分支行选择<strong>"上海盛付通-备付金账户"</strong></span>
+                </li>
+                <li class="bp-guide-step">
+                  <span class="bp-step-num">3</span>
+                  <span>复制附言编号到"转账附言"，请按以上要求完成付款，便于跟进转账记录</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <div class="bp-action-area">
+          <div class="bp-action-buttons">
+            <button class="btn-cancel-pay" onclick="renderPayerInfoPage(true)">上一步</button>
+            <button class="btn-confirmed" onclick="renderOrderDetailPage('pending_pay')">我已转账，查看转账结果</button>
+            <button class="btn-cancel-pay" onclick="renderOrderDetailPage('closed')">取消支付</button>
+          </div>
+          <div class="bp-action-hint">转账5-10分钟后自动更新结果，如未更新可点击按钮查询转账状态</div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  // 启动倒计时
+  startCountdown();
+}
+
+function startCountdown() {
+  if (cdTimer) clearInterval(cdTimer);
+  cdTotal = 2 * 60 * 60;
+  cdTimer = setInterval(() => {
+    if (cdTotal <= 0) {
+      clearInterval(cdTimer);
+      const el = document.getElementById('bp-cd-time');
+      if (el) el.textContent = '00:00:00';
+      return;
+    }
+    cdTotal--;
+    const el = document.getElementById('bp-cd-time');
+    if (el) el.textContent = formatTime(cdTotal);
+  }, 1000);
+}
+
+function formatTime(s) {
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const sec = s % 60;
+  return [h, m, sec].map(n => String(n).padStart(2, '0')).join(':');
+}
+
+/* （已移除旧版 renderOrderDetailPage：避免覆盖导致结构丢失） */
+
+/* ══════════════════════════════════════════
+   订单详情页 - 待支付 → 待发货（覆盖旧实现）
+══════════════════════════════════════════ */
+let odCdTotal = 2 * 60 * 60;
+let odCdTimer = null;
+
+// 确认订单页 DOM 快照（用于“重新选择支付方式”返回）
+const __confirmOrderSnapshot = { html: null };
+
+// 付款方信息历史（最近 5 条）
+const PAYER_HISTORY_KEY = 'payerHistoryV1';
+const BANKS = [
+  '中国工商银行','中国农业银行','中国银行','中国建设银行','交通银行','中国邮政储蓄银行',
+  '招商银行','中信银行','中国光大银行','华夏银行','中国民生银行','广发银行','兴业银行','浦发银行',
+  '平安银行','上海银行','北京银行','南京银行','宁波银行','杭州银行','江苏银行','浙商银行',
+  '渤海银行','恒丰银行','中国人民银行','农村商业银行','城市商业银行'
+];
+
+function getPayerHistory() {
+  try {
+    const raw = localStorage.getItem(PAYER_HISTORY_KEY);
+    const list = raw ? JSON.parse(raw) : [];
+    return Array.isArray(list) ? list : [];
+  } catch {
+    return [];
+  }
+}
+
+function savePayerHistory(item) {
+  const list = getPayerHistory();
+  const key = `${item.type}|${item.name}|${item.account}|${item.bank}`;
+  const deduped = [item, ...list.filter(x => `${x.type}|${x.name}|${x.account}|${x.bank}` !== key)];
+  localStorage.setItem(PAYER_HISTORY_KEY, JSON.stringify(deduped.slice(0, 5)));
+}
+
+function maskLast4(account) {
+  const s = String(account || '').replace(/\s+/g, '');
+  return s.length >= 4 ? s.slice(-4) : s;
+}
+
+function ensureConfirmSnapshot() {
+  if (__confirmOrderSnapshot.html == null) {
+    const mc = document.getElementById('main-content');
+    if (mc) __confirmOrderSnapshot.html = mc.innerHTML;
+  }
+}
+
+function restoreConfirmOrderPage() {
+  const mc = document.getElementById('main-content');
+  if (!mc) return;
+  ensureConfirmSnapshot();
+  if (__confirmOrderSnapshot.html != null) mc.innerHTML = __confirmOrderSnapshot.html;
+  bindConfirmOrderEvents();
+}
+
+function bindConfirmOrderEvents() {
+  // 地址选择
+  document.querySelectorAll('.addr-card').forEach(card => {
+    card.addEventListener('click', () => {
+      document.querySelectorAll('.addr-card').forEach(c => c.classList.remove('selected'));
+      card.classList.add('selected');
+    });
+  });
+
+  // 支付方式选择
+  document.querySelectorAll('.pay-opt').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.pay-opt').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+    });
+  });
+
+  // 数量加减
+  const qtyVal = document.getElementById('qty-val');
+  const minus = document.getElementById('qty-minus');
+  const plus = document.getElementById('qty-plus');
+  if (qtyVal && minus && plus) {
+    minus.addEventListener('click', () => {
+      const v = parseInt(qtyVal.value) || 1;
+      if (v > 1) qtyVal.value = v - 1;
+    });
+    plus.addEventListener('click', () => {
+      qtyVal.value = (parseInt(qtyVal.value) || 1) + 1;
+    });
+  }
+
+  // 发票选项
+  const invNeed = document.getElementById('inv-need');
+  const invNone = document.getElementById('inv-none');
+  if (invNeed && invNone) {
+    invNeed.addEventListener('click', () => {
+      document.getElementById('rd-need')?.classList.add('on');
+      document.getElementById('rd-none')?.classList.remove('on');
+    });
+    invNone.addEventListener('click', () => {
+      document.getElementById('rd-none')?.classList.add('on');
+      document.getElementById('rd-need')?.classList.remove('on');
+    });
+  }
+
+  // 提交订单
+  const btnOrder = document.getElementById('btn-order');
+  if (btnOrder) {
+    btnOrder.addEventListener('click', () => {
+      const isBankTransfer = document.getElementById('pay-bank')?.classList.contains('selected');
+      if (isBankTransfer) {
+        renderPayerInfoPage();
+      } else {
+        alert('订单提交成功！');
+      }
+    });
+  }
+}
+
+function renderPayerInfoPage(prefillFromLatest = false) {
+  ensureConfirmSnapshot();
+  const mc = document.getElementById('main-content');
+  if (!mc) return;
+
+  const latest = getPayerHistory()[0];
+  const init = prefillFromLatest && latest ? latest : null;
+
+  mc.innerHTML = `
+    <div class="payer-wrap">
+      <div class="payer-shell">
+        <div class="stepbar">
+          <div class="stepitem active"><span class="dot">1</span><span>填写付款账户信息</span></div>
+          <div class="stepsep"></div>
+          <div class="stepitem"><span class="dot">2</span><span>银行转账</span></div>
+        </div>
+
+        <div class="payer-card">
+          <div class="payer-card-inner">
+            <aside class="payer-aside" aria-label="填写说明">
+              <h2 class="payer-aside-title">填写付款账户信息</h2>
+              <p class="payer-aside-lead">请填写与付款银行卡一致的户名、卡号与开户行，信息将用于核对转账，请确保准确无误。</p>
+              <ul class="payer-aside-tips">
+                <li>企业账户请填写对公户名全称，与银行开户许可证一致。</li>
+                <li>支持从「历史付款账户」快速带出曾用信息。</li>
+                <li>付款银行支持输入关键字模糊查询，便于快速定位。</li>
+              </ul>
+            </aside>
+            <div class="payer-card-bd">
+              <div class="payer-form">
+                <div class="payer-row">
+                  <div class="payer-label req">付款账户类型</div>
+                  <div class="payer-field">
+                    <div class="payer-radio" id="payer-type-radio">
+                      <label><input type="radio" name="payerTypeRadio" value="企业银行账户" checked>企业银行账户</label>
+                      <label><input type="radio" name="payerTypeRadio" value="个人银行卡">个人银行卡</label>
+                    </div>
+                    <select class="payer-select" id="payer-type" style="display:none;">
+                      <option value="个人银行卡">个人银行卡</option>
+                      <option value="企业银行账户">企业银行账户</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="payer-row">
+                  <div class="payer-label req">付款账户名称</div>
+                  <div class="payer-field" id="payer-name-field">
+                    <div class="payer-inline-actions">
+                      <input class="payer-input" id="payer-name" placeholder="请输入付款账户名称" />
+                      <button class="payer-textbtn" type="button" id="payer-history-btn">历史付款账户</button>
+                    </div>
+                    <div class="payer-pop" id="payer-history-pop"></div>
+                  </div>
+                </div>
+
+                <div class="payer-row">
+                  <div class="payer-label req">付款账户号</div>
+                  <div class="payer-field">
+                    <input class="payer-input" id="payer-account" placeholder="请输入银行卡号" inputmode="numeric" />
+                  </div>
+                </div>
+
+                <div class="payer-row">
+                  <div class="payer-label req">付款银行</div>
+                  <div class="payer-field" id="payer-bank-field">
+                    <input class="payer-input selectlike" id="payer-bank" placeholder="请选择银行（支持模糊查询）" autocomplete="off" />
+                    <div class="bank-dd" id="bank-dd"></div>
+                  </div>
+                </div>
+
+                <div class="payer-actions">
+                  <button class="payer-btn ghost" type="button" id="payer-back-paymethod">重新选择支付方式</button>
+                  <button class="payer-btn primary" type="button" id="payer-submit">下一步</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  if (init) {
+    document.getElementById('payer-type').value = init.type || '个人银行卡';
+    document.getElementById('payer-name').value = init.name || '';
+    document.getElementById('payer-account').value = init.account || '';
+    document.getElementById('payer-bank').value = init.bank || '';
+  }
+
+  // 单选同步到隐藏 select（复用原保存逻辑）
+  const radioWrap = document.getElementById('payer-type-radio');
+  const typeSelect = document.getElementById('payer-type');
+  function syncRadioToSelect() {
+    const v = document.querySelector('input[name=\"payerTypeRadio\"]:checked')?.value || '企业银行账户';
+    typeSelect.value = v;
+  }
+  radioWrap.addEventListener('change', syncRadioToSelect);
+  if (init?.type) {
+    const r = document.querySelector(`input[name=\"payerTypeRadio\"][value=\"${init.type}\"]`);
+    if (r) r.checked = true;
+  }
+  syncRadioToSelect();
+
+  const historyBtn = document.getElementById('payer-history-btn');
+  const pop = document.getElementById('payer-history-pop');
+  const nameField = document.getElementById('payer-name-field');
+  historyBtn.addEventListener('click', () => {
+    const list = getPayerHistory();
+    if (!list.length) {
+      pop.innerHTML = `<div class="bank-empty">暂无历史付款方</div>`;
+    } else {
+      pop.innerHTML = list.map((it) => `
+        <div class="payer-pop-item" data-json="${escapeAttr(encodeURIComponent(JSON.stringify(it)))}">
+          <div class="payer-pop-name">${escapeHtml(it.name || '')}</div>
+          <div class="payer-pop-sub">${escapeHtml(it.bank || '')}（尾号${escapeHtml(maskLast4(it.account))}）</div>
+        </div>
+      `).join('');
+    }
+    pop.classList.toggle('show');
+  });
+  pop.addEventListener('click', (e) => {
+    const item = e.target.closest('.payer-pop-item');
+    if (!item) return;
+    const json = decodeURIComponent(item.getAttribute('data-json') || '');
+    const it = JSON.parse(json);
+    document.getElementById('payer-type').value = it.type || '个人银行卡';
+    document.getElementById('payer-name').value = it.name || '';
+    document.getElementById('payer-account').value = it.account || '';
+    document.getElementById('payer-bank').value = it.bank || '';
+    pop.classList.remove('show');
+  });
+
+  const bankInput = document.getElementById('payer-bank');
+  const bankDd = document.getElementById('bank-dd');
+  const bankField = document.getElementById('payer-bank-field');
+  function renderBankOptions(keyword) {
+    const kw = (keyword || '').trim();
+    const list = BANKS.filter(b => !kw || b.includes(kw));
+    if (!list.length) {
+      bankDd.innerHTML = `<div class="bank-empty">未匹配到银行</div>`;
+      return;
+    }
+    bankDd.innerHTML = list.map(b => `<div class="bank-opt" data-bank="${escapeAttr(b)}">${escapeHtml(b)}</div>`).join('');
+  }
+  bankInput.addEventListener('focus', () => {
+    renderBankOptions(bankInput.value);
+    bankDd.classList.add('show');
+  });
+  bankInput.addEventListener('input', () => {
+    renderBankOptions(bankInput.value);
+    bankDd.classList.add('show');
+  });
+  bankDd.addEventListener('click', (e) => {
+    const opt = e.target.closest('.bank-opt');
+    if (!opt) return;
+    const b = opt.getAttribute('data-bank') || '';
+    bankInput.value = b;
+    bankDd.classList.remove('show');
+  });
+
+  document.addEventListener('click', (e) => {
+    if (!nameField.contains(e.target)) pop.classList.remove('show');
+    if (!bankField.contains(e.target)) bankDd.classList.remove('show');
+  }, { capture: true });
+
+  document.getElementById('payer-submit').addEventListener('click', () => {
+    const type = document.getElementById('payer-type').value;
+    const name = (document.getElementById('payer-name').value || '').trim();
+    const account = (document.getElementById('payer-account').value || '').trim();
+    const bank = (document.getElementById('payer-bank').value || '').trim();
+    if (!name || !account || !bank) {
+      alert('请完整填写付款方信息');
+      return;
+    }
+    savePayerHistory({ type, name, account, bank, ts: Date.now() });
+    renderBankTransferPage();
+  });
+  document.getElementById('payer-back-paymethod').addEventListener('click', () => {
+    restoreConfirmOrderPage();
+  });
+}
+
+function escapeHtml(s) {
+  return String(s ?? '').replace(/[&<>"']/g, (c) => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+  }[c]));
+}
+function escapeAttr(s) {
+  return escapeHtml(s).replace(/`/g, '&#96;');
+}
+
+function renderOrderDetailPage(state = 'pending_pay') {
+  if (cdTimer) { clearInterval(cdTimer); cdTimer = null; }
+  if (odCdTimer) { clearInterval(odCdTimer); odCdTimer = null; }
+
+  const isPendingPay = state === 'pending_pay';
+  const isClosed = state === 'closed';
+  const isToShip = state === 'to_ship';
+  const statusText = isClosed ? '订单关闭' : (isPendingPay ? '待支付' : '待发货');
+  const payerBankDisplay = escapeHtml(getPayerHistory()[0]?.bank || '未选择付款银行');
+
+  const mc = document.getElementById('main-content');
+  mc.innerHTML = `
+    <div class="od-wrap">
+      <div class="od-top-tabs">
+        <div class="od-top-tab">首页</div>
+        <div class="od-top-tab">结算</div>
+        <div class="od-top-tab">我的订单</div>
+        <div class="od-top-tab active">订单详情<span class="od-top-tab-x">×</span></div>
+      </div>
+
+      <div class="od-breadcrumb"><strong>订单详情</strong></div>
+
+      <div class="od-card">
+        ${isPendingPay ? `
+        <div class="od-pending-top">
+          <div class="od-pending-row">
+            <div class="od-hd-left">
+              <span class="od-status-dot"></span>
+              <span class="od-status-text">${statusText}</span>
+            </div>
+            <div class="od-pending-meta">
+              <div class="od-pending-block">
+                <span class="od-pending-k">待支付金额</span>
+                <span class="od-pay-amount">¥0.01</span>
+              </div>
+              <div class="od-pending-vsep" aria-hidden="true"></div>
+              <div class="od-pending-block">
+                <span class="od-pending-k">支付倒计时</span>
+                <span class="od-pay-time" id="od-cd-time">02:00:00</span>
+              </div>
+            </div>
+            <button type="button" class="od-refresh-btn" onclick="renderOrderDetailPage('to_ship')">我已转账，刷新订单状态</button>
+          </div>
+        </div>
+
+        <div class="bank-grid od-order-bank-grid">
+          <div class="bp-account-card">
+            <div class="bp-account-header">收款账户信息</div>
+            <div class="bp-account-body">
+              <div class="bp-account-row">
+                <span class="bp-acc-key">户名</span>
+                <span class="bp-acc-val">上海盛畅网络科技有限公司</span>
+                <button class="bp-copy-btn" onclick="copyText('上海盛畅网络科技有限公司', this)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" stroke="currentColor" stroke-width="1.5"/></svg>复制</button>
+              </div>
+              <div class="bp-account-row">
+                <span class="bp-acc-key">账号</span>
+                <span class="bp-acc-val">121909328810901</span>
+                <button class="bp-copy-btn" onclick="copyText('121909328810901', this)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" stroke="currentColor" stroke-width="1.5"/></svg>复制</button>
+              </div>
+              <div class="bp-account-row">
+                <span class="bp-acc-key">银行</span>
+                <span class="bp-acc-val">盛付通-备付金账户</span>
+                <button class="bp-copy-btn" onclick="copyText('盛付通-备付金账户', this)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" stroke="currentColor" stroke-width="1.5"/></svg>复制</button>
+              </div>
+              <div class="bp-account-row">
+                <span class="bp-acc-key">附言</span>
+                <span class="bp-acc-val" style="font-size:12px;color:#1677ff;">DEZZ1686456364364363435</span>
+                <button class="bp-copy-btn" onclick="copyText('DEZZ1686456364364363435', this)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" stroke="currentColor" stroke-width="1.5"/></svg>复制</button>
+              </div>
+              <div class="bp-memo-tip">附言必须填写正确且完整，否则无法支付成功</div>
+            </div>
+          </div>
+
+          <div class="bp-guide-card">
+            <div class="bp-guide-header">
+              <span class="bp-guide-header-title">转账指引</span>
+              <button type="button" class="btn-guide" onclick="openGuideDrawer()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.5"/><line x1="12" y1="8" x2="12" y2="12" stroke="currentColor" stroke-width="1.5"/><line x1="12" y1="16" x2="12.01" y2="16" stroke="currentColor" stroke-width="2"/></svg>查看详细指引</button>
+            </div>
+            <div class="bp-guide-body">
+              <div class="bp-guide-warn">
+                <div class="bp-guide-warn-title">⚠ 注意事项</div>
+                <div class="bp-guide-warn-item">请复制收款账户信息到对应网银操作</div>
+                <div class="bp-guide-warn-item">付款银行：<span class="bp-guide-bank-highlight">${payerBankDisplay}</span></div>
+              </div>
+              <ul class="bp-guide-steps" style="margin-top:8px;">
+                <li class="bp-guide-step"><span class="bp-step-num">1</span><span>银行一栏请搜索"备付金"，选择<strong>支付机构备付金集中存管账户</strong></span></li>
+                <li class="bp-guide-step"><span class="bp-step-num">2</span><span>输入金额后需补充收款人信息。开户地选择<strong>上海</strong>，分支行选择<strong>"上海盛付通-备付金账户"</strong></span></li>
+                <li class="bp-guide-step"><span class="bp-step-num">3</span><span>复制附言编号到"转账附言"，请按以上要求完成付款，便于跟进转账记录</span></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        ` : `
+        <div class="od-card-hd od-hd-flex od-card-hd-tight">
+          <div class="od-hd-left">
+            <span class="od-status-dot"></span>
+            <span class="od-status-text">${statusText}</span>
+          </div>
+        </div>
+        `}
+
+        <div class="od-meta">
+          <div class="od-meta-item"><span class="od-meta-k">订单号：</span>PO202604131641238859375679768238</div>
+          <div class="od-meta-item"><span class="od-meta-k">下单时间：</span>2026-04-13 16:41:24</div>
+          <div class="od-meta-item"><span class="od-meta-k">买家信息：</span><span class="od-link">海南掌门容时数码科技有限公司 93756797</span></div>
+        </div>
+
+        <div class="od-table">
+          <div class="od-tr od-th">
+            <div class="od-td w-info">商品信息</div>
+            <div class="od-td w-price">单价/数量</div>
+            <div class="od-td w-state">订单状态</div>
+            <div class="od-td w-pay ta-r">实付款</div>
+          </div>
+          <div class="od-tr">
+            <div class="od-td w-info">
+              <div class="od-good">
+                <div class="od-thumb"><svg width="34" height="34" viewBox="0 0 48 48" fill="none"><rect x="10" y="3" width="28" height="42" rx="4" fill="#1a1a1a" stroke="#333" stroke-width="1"/><rect x="13" y="7" width="22" height="26" rx="2" fill="#1565c0"/><circle cx="24" cy="39" r="3.5" fill="#2a2a2a" stroke="#444" stroke-width="0.5"/><rect x="18" y="11" width="12" height="1.5" rx="0.75" fill="white" opacity="0.7"/><rect x="18" y="14.5" width="8" height="1.5" rx="0.75" fill="white" opacity="0.4"/><rect x="18" y="18" width="10" height="1.5" rx="0.75" fill="white" opacity="0.4"/><rect x="13" y="35" width="22" height="1" fill="#222"/></svg></div>
+                <div><div class="od-good-name">赚一赚收款贴纸</div><div class="od-good-sub">白蓝　网络</div></div>
+              </div>
+            </div>
+            <div class="od-td w-price"><div>¥0.01 <span class="od-old">¥5.99</span></div><div class="od-x">×1</div></div>
+            <div class="od-td w-state">${statusText}</div>
+            <div class="od-td w-pay ta-r"><div class="od-pay-main">¥0.01</div><div class="od-pay-sub">+快递费¥0.03=¥0.04</div></div>
+          </div>
+        </div>
+
+        <div class="od-remark"><span class="od-meta-k">订单备注：</span></div>
+      </div>
+
+      ${isToShip ? `
+      <div class="od-ship-pay-grid">
+        <div class="od-info-card">
+          <div class="od-sec-title">收货信息</div>
+          <div class="od-kv"><span class="k">收货人：</span><span class="v">sunxia</span></div>
+          <div class="od-kv"><span class="k">地址：</span><span class="v">山东省济南市天桥区22</span></div>
+          <div class="od-kv"><span class="k">电话：</span><span class="v">183****2199</span></div>
+        </div>
+        <div class="od-info-card">
+          <div class="od-sec-title">支付信息</div>
+          <div class="od-kv"><span class="k">支付单号：</span><span class="v">PA202603241737590963164884592685</span></div>
+          <div class="od-kv"><span class="k">支付时间：</span><span class="v">2026-03-24 17:37:59</span></div>
+          <div class="od-kv"><span class="k">支付方式：</span><span class="v">大额支付</span></div>
+        </div>
+      </div>
+      ` : `
+      <div class="od-card od-card-pad">
+        <div class="od-sec-title">收货信息</div>
+        <div class="od-kv"><span class="k">收货人：</span><span class="v">张三</span></div>
+        <div class="od-kv"><span class="k">地址：</span><span class="v">广东省广州市海珠区新港中路397号</span></div>
+        <div class="od-kv"><span class="k">电话：</span><span class="v">156****8811</span></div>
+      </div>
+      `}
+
+      <div class="od-card">
+        <div class="od-table od-table-logistics">
+          <div class="od-tr od-th od-logistics-head">
+            <div class="od-td">库号</div><div class="od-td">物流公司</div><div class="od-td">物流单号</div><div class="od-td">物流进度</div><div class="od-td">商品序列号</div><div class="od-td">发货数量</div>
+          </div>
+          <div class="od-empty">暂无数据</div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  if (isPendingPay) startOrderCountdown();
+}
+
+function startOrderCountdown() {
+  odCdTotal = 2 * 60 * 60;
+  const sync = () => {
+    const t = formatTime(odCdTotal);
+    const el1 = document.getElementById('od-cd-time');
+    if (el1) el1.textContent = t;
+  };
+  sync();
+  odCdTimer = setInterval(() => {
+    if (odCdTotal <= 0) {
+      clearInterval(odCdTimer);
+      odCdTimer = null;
+      odCdTotal = 0;
+      sync();
+      return;
+    }
+    odCdTotal -= 1;
+    sync();
+  }, 1000);
+}
+
+/* ══════════════════════════════════════════
+   转账指引 Modal
+══════════════════════════════════════════ */
+function openGuideModal() {
+  document.getElementById('guide-modal').classList.remove('hidden');
+}
+document.getElementById('modal-close-btn').addEventListener('click', () => {
+  document.getElementById('guide-modal').classList.add('hidden');
+});
+document.getElementById('guide-modal').addEventListener('click', function(e) {
+  if (e.target === this) this.classList.add('hidden');
+});
+
+/* ══════════════════════════════════════════
+   右侧半屏抽屉：Figma 指引
+══════════════════════════════════════════ */
+const FIGMA_GUIDE_URL = "https://www.figma.com/design/MfTwMm4ZEcSM3oYHEKCPdp/%E7%9B%9B%E6%84%8F%E6%97%BA%E5%B0%8F%E7%A8%8B%E5%BA%8F-%E8%A1%8C%E4%B8%9A%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88?node-id=1612-13598&t=5fIatCGnDLeD9tf7-4";
+const FIGMA_EMBED_URL = "https://www.figma.com/embed?embed_host=share&url=" + encodeURIComponent(FIGMA_GUIDE_URL);
+
+function openGuideDrawer() {
+  const mask = document.getElementById('guide-drawer-mask');
+  const drawer = document.getElementById('guide-drawer');
+  if (!mask || !drawer) return;
+
+  mask.classList.add('show');
+  drawer.classList.add('open');
+
+  // 防止背景滚动
+  document.body.style.overflow = 'hidden';
+}
+
+function closeGuideDrawer() {
+  const mask = document.getElementById('guide-drawer-mask');
+  const drawer = document.getElementById('guide-drawer');
+  if (!mask || !drawer) return;
+  drawer.classList.remove('open');
+  mask.classList.remove('show');
+  document.body.style.overflow = '';
+}
+
+document.getElementById('guide-drawer-close')?.addEventListener('click', closeGuideDrawer);
+document.getElementById('guide-drawer-mask')?.addEventListener('click', closeGuideDrawer);
+document.querySelectorAll('[data-guide-tab]').forEach((tab) => {
+  tab.addEventListener('click', () => {
+    const key = tab.getAttribute('data-guide-tab');
+    document.querySelectorAll('[data-guide-tab]').forEach((el) => {
+      el.classList.toggle('active', el === tab);
+    });
+    document.querySelectorAll('[data-guide-panel]').forEach((panel) => {
+      panel.classList.toggle('active', panel.getAttribute('data-guide-panel') === key);
+    });
+  });
+});
+
+/* ══════════════════════════════════════════
+   复制工具函数
+══════════════════════════════════════════ */
+function copyText(text, btn) {
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(text).then(() => showCopied(btn));
+  } else {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    showCopied(btn);
+  }
+}
+function showCopied(btn) {
+  const orig = btn.innerHTML;
+  btn.innerHTML = '✓ 已复制';
+  btn.classList.add('copied');
+  setTimeout(() => { btn.innerHTML = orig; btn.classList.remove('copied'); }, 1500);
+}
+</script>
+</body>
+</html>
