@@ -751,15 +751,40 @@
     }
     .payer-pop.show { display: block; }
     .payer-pop-item {
-      padding: 8px 12px;
+      padding: 8px 8px 8px 12px;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+    }
+    .payer-pop-item:hover { background: #f5f7fa; }
+    .payer-pop-item-txt {
+      flex: 1;
+      min-width: 0;
       cursor: pointer;
       display: flex;
       flex-direction: column;
       gap: 2px;
     }
-    .payer-pop-item:hover { background: #f5f7fa; }
     .payer-pop-name { font-size: 13px; font-weight: 600; color: #333; }
     .payer-pop-sub  { font-size: 12px; color: #666; }
+    .payer-pop-del {
+      flex-shrink: 0;
+      width: 28px;
+      height: 28px;
+      border: none;
+      border-radius: 4px;
+      background: transparent;
+      color: #999;
+      font-size: 18px;
+      line-height: 1;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .payer-pop-del:hover { color: #f5222d; background: #fff1f0; }
 
     /* 银行模糊查询下拉 */
     .bank-dd {
@@ -1276,10 +1301,10 @@
       border: 1px solid #eef0f2;
       border-radius: 12px;
       padding: 14px 14px 12px;
-      display: grid;
-      grid-template-columns: 1fr 260px;
-      gap: 14px;
-      align-items: start;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      align-items: stretch;
     }
     .gf-line{
       display: flex;
@@ -1344,26 +1369,41 @@
     }
     .gf-copy:hover{ text-decoration: underline; }
 
+    .gf-img-col{
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      width: 100%;
+    }
+    .gf-img-hint{
+      margin: 0;
+      font-size: 12px;
+      color: #8c8c8c;
+      line-height: 1.4;
+    }
     .gf-phone{
-      width: 240px;
-      max-width: 100%;
-      min-height: 240px;
+      width: 100%;
+      max-width: 400px;
+      min-height: 200px;
       border-radius: 14px;
       overflow: hidden;
       position: relative;
       background: #fff;
-      box-shadow: 0 10px 24px rgba(0,0,0,0.12);
-      margin-left: auto;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+      margin: 0 auto;
       display: flex;
       align-items: center;
       justify-content: center;
       padding: 0;
+      cursor: zoom-in;
     }
     .gf-img{
       width: 100%;
       height: auto;
       object-fit: contain;
       display: block;
+      cursor: zoom-in;
     }
     .gf-empty{
       background: #fff;
@@ -1377,8 +1417,62 @@
     }
 
     @media (max-width: 740px){
-      .gf-step{ grid-template-columns: 1fr; }
-      .gf-phone{ margin-left: 0; width: 100%; max-width: 320px; }
+      .gf-phone{ max-width: 100%; }
+    }
+
+    /* 转账指引：步骤配图点击放大 */
+    .guide-image-preview{
+      position: fixed;
+      inset: 0;
+      z-index: 1400;
+      background: rgba(0,0,0,0.9);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 48px 20px 24px;
+      box-sizing: border-box;
+    }
+    .guide-image-preview.is-open{ display: flex; }
+    .guide-image-preview-inner{
+      position: relative;
+      max-width: 100%;
+      max-height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+    }
+    .guide-image-preview-img{
+      pointer-events: auto;
+      max-width: min(100vw - 32px, 1200px);
+      max-height: min(90vh, 2000px);
+      width: auto;
+      height: auto;
+      object-fit: contain;
+      border-radius: 6px;
+      box-shadow: 0 12px 48px rgba(0,0,0,0.45);
+    }
+    .guide-image-preview-close{
+      position: fixed;
+      top: 12px;
+      right: 16px;
+      width: 40px;
+      height: 40px;
+      border: none;
+      border-radius: 8px;
+      background: rgba(255,255,255,0.14);
+      color: #fff;
+      font-size: 22px;
+      line-height: 1;
+      cursor: pointer;
+      z-index: 1401;
+    }
+    .guide-image-preview-close:hover{ background: rgba(255,255,255,0.24); }
+    .guide-image-preview-hint{
+      margin: 12px 0 0;
+      font-size: 12px;
+      color: rgba(255,255,255,0.65);
     }
 
     @media (max-width: 980px){
@@ -1902,8 +1996,11 @@
                 <div class="gf-row"><span class="gf-k">账号</span><span class="gf-v">121909328810901</span><button class="gf-copy" type="button" onclick="copyText('121909328810901', this)">复制</button></div>
               </div>
             </div>
+            <div class="gf-img-col">
             <div class="gf-phone" aria-label="步骤1配图">
-              <img class="gf-img" src="assets/transfer-guide-tabs/step1.png" alt="步骤1手机截图">
+              <img class="gf-img" src="assets/transfer-guide-tabs/step1.png" alt="步骤1手机截图" title="点击放大">
+            </div>
+            <p class="gf-img-hint">点击图片可放大查看</p>
             </div>
           </div>
 
@@ -1914,8 +2011,11 @@
                 <div class="gf-row"><span class="gf-k">银行</span><span class="gf-v">支付机构备付金集中存管账户</span><button class="gf-copy" type="button" onclick="copyText('支付机构备付金集中存管账户', this)">复制</button></div>
               </div>
             </div>
+            <div class="gf-img-col">
             <div class="gf-phone" aria-label="步骤2配图">
-              <img class="gf-img" src="assets/transfer-guide-tabs/step2.png" alt="步骤2手机截图">
+              <img class="gf-img" src="assets/transfer-guide-tabs/step2.png" alt="步骤2手机截图" title="点击放大">
+            </div>
+            <p class="gf-img-hint">点击图片可放大查看</p>
             </div>
           </div>
 
@@ -1927,8 +2027,11 @@
                 <div class="gf-row"><span class="gf-k">附言</span><span class="gf-v" style="color:#1677ff;">DEZZ1686456364364363435</span><button class="gf-copy" type="button" onclick="copyText('DEZZ1686456364364363435', this)">复制</button></div>
               </div>
             </div>
+            <div class="gf-img-col">
             <div class="gf-phone" aria-label="步骤3配图">
-              <img class="gf-img" src="assets/transfer-guide-tabs/step3.png" alt="步骤3手机截图">
+              <img class="gf-img" src="assets/transfer-guide-tabs/step3.png" alt="步骤3手机截图" title="点击放大">
+            </div>
+            <p class="gf-img-hint">点击图片可放大查看</p>
             </div>
           </div>
 
@@ -1940,8 +2043,11 @@
                 <div class="gf-row"><span class="gf-k">分支行</span><span class="gf-v">上海盛付通-备付金账户</span><button class="gf-copy" type="button" onclick="copyText('上海盛付通-备付金账户', this)">复制</button></div>
               </div>
             </div>
+            <div class="gf-img-col">
             <div class="gf-phone" aria-label="步骤4配图">
-              <img class="gf-img" src="assets/transfer-guide-tabs/step4.png" alt="步骤4手机截图">
+              <img class="gf-img" src="assets/transfer-guide-tabs/step4.png" alt="步骤4手机截图" title="点击放大">
+            </div>
+            <p class="gf-img-hint">点击图片可放大查看</p>
             </div>
           </div>
         </div>
@@ -1955,8 +2061,11 @@
                 <div class="gf-row"><span class="gf-k">账号</span><span class="gf-v">121909328810901</span><button class="gf-copy" type="button" onclick="copyText('121909328810901', this)">复制</button></div>
               </div>
             </div>
+            <div class="gf-img-col">
             <div class="gf-phone" aria-label="网页网银步骤1配图">
-              <img class="gf-img" src="assets/transfer-guide-web/step1.png" alt="网页网银步骤1截图">
+              <img class="gf-img" src="assets/transfer-guide-web/step1.png" alt="网页网银步骤1截图" title="点击放大">
+            </div>
+            <p class="gf-img-hint">点击图片可放大查看</p>
             </div>
           </div>
 
@@ -1967,8 +2076,11 @@
                 <div class="gf-row"><span class="gf-k">银行</span><span class="gf-v">支付机构备付金集中存管账户</span><button class="gf-copy" type="button" onclick="copyText('支付机构备付金集中存管账户', this)">复制</button></div>
               </div>
             </div>
+            <div class="gf-img-col">
             <div class="gf-phone" aria-label="网页网银步骤2配图">
-              <img class="gf-img" src="assets/transfer-guide-web/step2-flat.png?v=3" alt="网页网银步骤2截图">
+              <img class="gf-img" src="assets/transfer-guide-web/step2-flat.png?v=3" alt="网页网银步骤2截图" title="点击放大">
+            </div>
+            <p class="gf-img-hint">点击图片可放大查看</p>
             </div>
           </div>
 
@@ -1980,8 +2092,11 @@
                 <div class="gf-row"><span class="gf-k">附言</span><span class="gf-v" style="color:#1677ff;">DEZZ1686456364364363435</span><button class="gf-copy" type="button" onclick="copyText('DEZZ1686456364364363435', this)">复制</button></div>
               </div>
             </div>
+            <div class="gf-img-col">
             <div class="gf-phone" aria-label="网页网银步骤3配图">
-              <img class="gf-img" src="assets/transfer-guide-web/step3.png" alt="网页网银步骤3截图">
+              <img class="gf-img" src="assets/transfer-guide-web/step3.png" alt="网页网银步骤3截图" title="点击放大">
+            </div>
+            <p class="gf-img-hint">点击图片可放大查看</p>
             </div>
           </div>
 
@@ -1993,8 +2108,11 @@
                 <div class="gf-row"><span class="gf-k">分支行</span><span class="gf-v">上海盛付通-备付金账户</span><button class="gf-copy" type="button" onclick="copyText('上海盛付通-备付金账户', this)">复制</button></div>
               </div>
             </div>
+            <div class="gf-img-col">
             <div class="gf-phone" aria-label="网页网银步骤4配图">
-              <img class="gf-img" src="assets/transfer-guide-web/step4-flat.png?v=3" alt="网页网银步骤4截图">
+              <img class="gf-img" src="assets/transfer-guide-web/step4-flat.png?v=3" alt="网页网银步骤4截图" title="点击放大">
+            </div>
+            <p class="gf-img-hint">点击图片可放大查看</p>
             </div>
           </div>
         </div>
@@ -2002,6 +2120,15 @@
     </div>
   </div>
 </aside>
+
+<!-- 转账指引配图全屏预览 -->
+<div id="guide-image-preview" class="guide-image-preview" role="dialog" aria-modal="true" aria-hidden="true" aria-label="图片预览">
+  <button type="button" class="guide-image-preview-close" id="guide-image-preview-close" aria-label="关闭预览">✕</button>
+  <div class="guide-image-preview-inner">
+    <img id="guide-image-preview-img" class="guide-image-preview-img" src="" alt="">
+    <p class="guide-image-preview-hint">点击空白处或按 Esc 关闭</p>
+  </div>
+</div>
 
 <script>
 /* ══════════════════════════════════════════
@@ -2216,11 +2343,10 @@ const __confirmOrderSnapshot = { html: null };
 
 // 付款方信息历史（最近 5 条）
 const PAYER_HISTORY_KEY = 'payerHistoryV1';
+// 盛付通侧金融机构枚举（仅中文名称，与网联编码表一致）
 const BANKS = [
-  '中国工商银行','中国农业银行','中国银行','中国建设银行','交通银行','中国邮政储蓄银行',
-  '招商银行','中信银行','中国光大银行','华夏银行','中国民生银行','广发银行','兴业银行','浦发银行',
-  '平安银行','上海银行','北京银行','南京银行','宁波银行','杭州银行','江苏银行','浙商银行',
-  '渤海银行','恒丰银行','中国人民银行','农村商业银行','城市商业银行'
+  '工商银行', '农业银行', '交通银行', '招商银行', '中信银行', '建设银行', '平安银行',
+  '江苏银行', '中国银行', '民生银行', '华夏银行', '邮政储蓄银行', '浦发银行',
 ];
 
 function getPayerHistory() {
@@ -2238,6 +2364,14 @@ function savePayerHistory(item) {
   const key = `${item.type}|${item.name}|${item.account}|${item.bank}`;
   const deduped = [item, ...list.filter(x => `${x.type}|${x.name}|${x.account}|${x.bank}` !== key)];
   localStorage.setItem(PAYER_HISTORY_KEY, JSON.stringify(deduped.slice(0, 5)));
+}
+
+function deletePayerHistoryItem(item) {
+  const k = `${item.type}|${item.name}|${item.account}|${item.bank}`;
+  const list = getPayerHistory().filter(
+    (x) => `${x.type}|${x.name}|${x.account}|${x.bank}` !== k
+  );
+  localStorage.setItem(PAYER_HISTORY_KEY, JSON.stringify(list));
 }
 
 function maskLast4(account) {
@@ -2350,7 +2484,7 @@ function renderPayerInfoPage(prefillFromLatest = false) {
             <div class="payer-card-bd">
               <div class="payer-form">
                 <div class="payer-row">
-                  <div class="payer-label req">付款账户类型</div>
+                  <div class="payer-label req">选择付款类型</div>
                   <div class="payer-field">
                     <div class="payer-radio" id="payer-type-radio">
                       <label><input type="radio" name="payerTypeRadio" value="企业银行账户" checked>企业银行账户</label>
@@ -2360,6 +2494,14 @@ function renderPayerInfoPage(prefillFromLatest = false) {
                       <option value="个人银行卡">个人银行卡</option>
                       <option value="企业银行账户">企业银行账户</option>
                     </select>
+                  </div>
+                </div>
+
+                <div class="payer-row">
+                  <div class="payer-label req">选择付款银行</div>
+                  <div class="payer-field" id="payer-bank-field">
+                    <input class="payer-input selectlike" id="payer-bank" placeholder="请选择银行（支持模糊查询）" autocomplete="off" />
+                    <div class="bank-dd" id="bank-dd"></div>
                   </div>
                 </div>
 
@@ -2378,14 +2520,6 @@ function renderPayerInfoPage(prefillFromLatest = false) {
                   <div class="payer-label req">付款账户号</div>
                   <div class="payer-field">
                     <input class="payer-input" id="payer-account" placeholder="请输入银行卡号" inputmode="numeric" />
-                  </div>
-                </div>
-
-                <div class="payer-row">
-                  <div class="payer-label req">付款银行</div>
-                  <div class="payer-field" id="payer-bank-field">
-                    <input class="payer-input selectlike" id="payer-bank" placeholder="请选择银行（支持模糊查询）" autocomplete="off" />
-                    <div class="bank-dd" id="bank-dd"></div>
                   </div>
                 </div>
 
@@ -2425,26 +2559,63 @@ function renderPayerInfoPage(prefillFromLatest = false) {
   const historyBtn = document.getElementById('payer-history-btn');
   const pop = document.getElementById('payer-history-pop');
   const nameField = document.getElementById('payer-name-field');
-  historyBtn.addEventListener('click', () => {
+  function renderPayerHistoryPop() {
     const list = getPayerHistory();
     if (!list.length) {
       pop.innerHTML = `<div class="bank-empty">暂无历史付款方</div>`;
     } else {
-      pop.innerHTML = list.map((it) => `
+      pop.innerHTML = list
+        .map(
+          (it) => `
         <div class="payer-pop-item" data-json="${escapeAttr(encodeURIComponent(JSON.stringify(it)))}">
-          <div class="payer-pop-name">${escapeHtml(it.name || '')}</div>
-          <div class="payer-pop-sub">${escapeHtml(it.bank || '')}（尾号${escapeHtml(maskLast4(it.account))}）</div>
+          <div class="payer-pop-item-txt">
+            <div class="payer-pop-name">${escapeHtml(it.name || '')}</div>
+            <div class="payer-pop-sub">${escapeHtml(it.bank || '')}（尾号${escapeHtml(maskLast4(it.account))}）</div>
+          </div>
+          <button type="button" class="payer-pop-del" title="删除此条">×</button>
         </div>
-      `).join('');
+      `
+        )
+        .join('');
     }
+  }
+  historyBtn.addEventListener('click', () => {
+    renderPayerHistoryPop();
     pop.classList.toggle('show');
   });
   pop.addEventListener('click', (e) => {
+    if (e.target.closest('.payer-pop-del')) {
+      e.stopPropagation();
+      e.preventDefault();
+      const item = e.target.closest('.payer-pop-item');
+      if (!item) return;
+      const it = JSON.parse(decodeURIComponent(item.getAttribute('data-json') || ''));
+      const curN = (document.getElementById('payer-name').value || '').trim();
+      const curA = (document.getElementById('payer-account').value || '').replace(/\s+/g, '');
+      const curB = (document.getElementById('payer-bank').value || '').trim();
+      const curT = document.getElementById('payer-type').value || '';
+      const isSame =
+        curN === (it.name || '').trim() &&
+        curA === String(it.account || '').replace(/\s+/g, '') &&
+        curB === (it.bank || '').trim() &&
+        curT === (it.type || '');
+      deletePayerHistoryItem(it);
+      if (isSame) {
+        document.getElementById('payer-name').value = '';
+        document.getElementById('payer-account').value = '';
+        document.getElementById('payer-bank').value = '';
+      }
+      renderPayerHistoryPop();
+      return;
+    }
     const item = e.target.closest('.payer-pop-item');
     if (!item) return;
-    const json = decodeURIComponent(item.getAttribute('data-json') || '');
-    const it = JSON.parse(json);
-    document.getElementById('payer-type').value = it.type || '个人银行卡';
+    const it = JSON.parse(decodeURIComponent(item.getAttribute('data-json') || ''));
+    const t = it.type || '个人银行卡';
+    document.getElementById('payer-type').value = t;
+    document.querySelectorAll('input[name="payerTypeRadio"]').forEach((inp) => {
+      inp.checked = inp.value === t;
+    });
     document.getElementById('payer-name').value = it.name || '';
     document.getElementById('payer-account').value = it.account || '';
     document.getElementById('payer-bank').value = it.bank || '';
@@ -2718,6 +2889,27 @@ document.getElementById('guide-modal').addEventListener('click', function(e) {
 const FIGMA_GUIDE_URL = "https://www.figma.com/design/MfTwMm4ZEcSM3oYHEKCPdp/%E7%9B%9B%E6%84%8F%E6%97%BA%E5%B0%8F%E7%A8%8B%E5%BA%8F-%E8%A1%8C%E4%B8%9A%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88?node-id=1612-13598&t=5fIatCGnDLeD9tf7-4";
 const FIGMA_EMBED_URL = "https://www.figma.com/embed?embed_host=share&url=" + encodeURIComponent(FIGMA_GUIDE_URL);
 
+function openGuideImagePreview(src, alt) {
+  const wrap = document.getElementById('guide-image-preview');
+  const el = document.getElementById('guide-image-preview-img');
+  if (!wrap || !el || !src) return;
+  el.src = src;
+  el.alt = alt || '';
+  wrap.classList.add('is-open');
+  wrap.setAttribute('aria-hidden', 'false');
+}
+function closeGuideImagePreview() {
+  const wrap = document.getElementById('guide-image-preview');
+  const el = document.getElementById('guide-image-preview-img');
+  if (!wrap) return;
+  wrap.classList.remove('is-open');
+  wrap.setAttribute('aria-hidden', 'true');
+  if (el) {
+    el.removeAttribute('src');
+    el.alt = '';
+  }
+}
+
 function openGuideDrawer() {
   const mask = document.getElementById('guide-drawer-mask');
   const drawer = document.getElementById('guide-drawer');
@@ -2731,6 +2923,7 @@ function openGuideDrawer() {
 }
 
 function closeGuideDrawer() {
+  closeGuideImagePreview();
   const mask = document.getElementById('guide-drawer-mask');
   const drawer = document.getElementById('guide-drawer');
   if (!mask || !drawer) return;
@@ -2751,6 +2944,28 @@ document.querySelectorAll('[data-guide-tab]').forEach((tab) => {
       panel.classList.toggle('active', panel.getAttribute('data-guide-panel') === key);
     });
   });
+});
+
+document.getElementById('guide-figma')?.addEventListener('click', (e) => {
+  const hit = e.target.closest('.gf-img');
+  if (!hit || !document.getElementById('guide-figma')?.contains(hit)) return;
+  e.preventDefault();
+  const src = hit.getAttribute('src') || hit.src;
+  if (src) openGuideImagePreview(src, hit.getAttribute('alt') || '');
+});
+document.getElementById('guide-image-preview')?.addEventListener('click', (e) => {
+  if (e.target && e.target.id === 'guide-image-preview') closeGuideImagePreview();
+});
+document.getElementById('guide-image-preview-close')?.addEventListener('click', (e) => {
+  e.stopPropagation();
+  closeGuideImagePreview();
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key !== 'Escape') return;
+  if (document.getElementById('guide-image-preview')?.classList.contains('is-open')) {
+    e.preventDefault();
+    closeGuideImagePreview();
+  }
 });
 
 /* ══════════════════════════════════════════
