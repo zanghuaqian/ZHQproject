@@ -1201,7 +1201,7 @@
       position: fixed;
       inset: 0;
       background: rgba(0,0,0,0.35);
-      z-index: 1200;
+      z-index: 1350;
       display: none;
     }
     .guide-drawer-mask.show{ display:block; }
@@ -1214,7 +1214,7 @@
       min-width: 520px;
       max-width: 860px;
       background: #fff;
-      z-index: 1201;
+      z-index: 1351;
       box-shadow: -12px 0 40px rgba(0,0,0,0.18);
       transform: translateX(100%);
       transition: transform 220ms ease;
@@ -1479,6 +1479,175 @@
       .guide-drawer{ width: 92vw; min-width: 0; max-width: none; }
     }
 
+    /* ═══ 立即支付弹窗（大额转账） ═══ */
+    .pay-modal-mask{
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.55);
+      z-index: 1300;
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+    .pay-modal-mask.is-open{ display: flex; }
+    .pay-modal-box{
+      background: #fff;
+      border-radius: 8px;
+      width: min(860px, 96vw);
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.22);
+    }
+    .pay-modal-head{
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 20px;
+      border-bottom: 1px solid #f0f0f0;
+      flex-shrink: 0;
+    }
+    .pay-modal-head-title{ font-size: 15px; font-weight: 700; color: #262626; }
+    .pay-modal-close{
+      width: 32px; height: 32px;
+      border: none; border-radius: 6px;
+      background: transparent; color: #999;
+      font-size: 20px; line-height: 1;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.15s, color 0.15s;
+    }
+    .pay-modal-close:hover{ background: #f5f5f5; color: #333; }
+    .pay-modal-body{
+      flex: 1; overflow-y: auto; overflow-x: hidden;
+      padding: 0 0 20px;
+      background: #f5f6f8;
+    }
+    .pay-modal-body .bp-top-card{
+      margin: 16px 20px 0;
+      border-radius: 8px;
+    }
+    .pay-modal-body .bank-grid{
+      margin: 12px 20px 0;
+      border-radius: 8px;
+    }
+    .pay-modal-body .bp-account-card,
+    .pay-modal-body .bp-guide-card{
+      border-radius: 8px;
+    }
+    .pay-modal-action-area{
+      padding: 16px 20px 0;
+      display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 12px;
+    }
+    .pay-modal-action-area .btn-confirmed{
+      flex: 1; min-width: 200px;
+    }
+    .pay-modal-action-area .btn-cancel-pay{
+      white-space: nowrap;
+    }
+    .pay-modal-hint{
+      text-align: center; font-size: 12px; color: #999; margin: 8px 20px 0;
+    }
+    .pay-modal-cd-wrap{
+      display: flex; align-items: center; justify-content: center;
+      gap: 6px; margin: 6px 20px 0; font-size: 12px; color: #595959;
+    }
+    .pay-modal-cd-time{
+      font-weight: 700; color: #1677ff; font-variant-numeric: tabular-nums;
+      letter-spacing: 1px; font-size: 15px;
+    }
+
+    /* ═══ 我的订单列表页 ═══ */
+    .mo-wrap{ max-width: 1200px; margin: 0 auto; }
+    .mo-breadcrumb{ font-size: 12px; color: #888; margin-bottom: 10px; }
+    .mo-breadcrumb a{ color: #1677ff; cursor: pointer; text-decoration: none; }
+    .mo-breadcrumb a:hover{ text-decoration: underline; }
+    .mo-title{ font-size: 16px; font-weight: 600; color: #262626; margin-bottom: 12px; }
+    .mo-tabs{
+      display: flex; flex-wrap: wrap; gap: 0; border-bottom: 1px solid #e8e8e8;
+      margin-bottom: 12px;
+    }
+    .mo-tab{
+      padding: 10px 14px; min-height: 40px; display: inline-flex; align-items: center;
+      font-size: 13px; color: #666; cursor: pointer; user-select: none;
+      border-bottom: 2px solid transparent; margin-bottom: -1px; transition: color 0.15s;
+    }
+    .mo-tab:hover{ color: #1677ff; }
+    .mo-tab.active{ color: #1677ff; font-weight: 600; border-bottom-color: #1677ff; }
+    .mo-tab:focus-visible{ outline: 2px solid #1677ff; outline-offset: 2px; border-radius: 2px; }
+    .mo-filter{
+      background: #fafafa; border: 1px solid #e8e8e8; border-radius: 4px; padding: 12px 14px;
+      margin-bottom: 14px;
+    }
+    .mo-filter-row{ display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; margin-bottom: 10px; }
+    .mo-filter-row:last-child{ margin-bottom: 0; }
+    .mo-f-item{ display: flex; align-items: center; gap: 8px; font-size: 12px; color: #666; }
+    .mo-f-item input, .mo-f-item select{
+      height: 30px; padding: 0 8px; border: 1px solid #d9d9d9; border-radius: 3px; font-size: 12px;
+      min-width: 120px; background: #fff;
+    }
+    .mo-f-item input:focus, .mo-f-item select:focus{ outline: none; border-color: #1677ff; }
+    .mo-f-date{ min-width: 200px !important; }
+    .mo-f-actions{ display: flex; gap: 8px; margin-left: auto; }
+    .mo-btn-q{ height: 30px; padding: 0 18px; border-radius: 3px; font-size: 12px; font-weight: 600; cursor: pointer; border: 1px solid transparent; }
+    .mo-btn-q.primary{ background: #1677ff; color: #fff; border-color: #1677ff; }
+    .mo-btn-q.primary:hover{ background: #4096ff; }
+    .mo-btn-q.ghost{ background: #fff; color: #666; border-color: #d9d9d9; }
+    .mo-btn-q.ghost:hover{ background: #fafafa; color: #333; }
+    .mo-thead{
+      display: grid;
+      grid-template-columns: minmax(200px, 1fr) 16% 14% 18% 14%;
+      gap: 8px; padding: 8px 12px; background: #fafafa; border: 1px solid #e8e8e8;
+      border-bottom: none; border-radius: 4px 4px 0 0; font-size: 12px; color: #888;
+    }
+    .mo-thead > div:last-child{ text-align: right; }
+    .mo-olist{ display: flex; flex-direction: column; gap: 10px; }
+    .mo-card{
+      border: 1px solid #e8e8e8; border-radius: 4px; overflow: hidden; background: #fff;
+    }
+    .mo-card-hd{
+      background: linear-gradient(180deg, #e6f7ff 0%, #f0f9ff 100%);
+      border-bottom: 1px solid #d6e4ff; padding: 8px 12px; font-size: 12px; color: #333;
+      display: flex; flex-wrap: wrap; gap: 8px 20px;
+    }
+    .mo-card-hd .k{ color: #888; }
+    .mo-card-bd{
+      display: grid;
+      grid-template-columns: minmax(200px, 1fr) 16% 14% 18% 14%;
+      gap: 8px; padding: 12px; align-items: start; font-size: 12px; color: #333;
+    }
+    .mo-card-bd > div{ min-width: 0; }
+    .mo-card-bd .col-ops{ text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+    .mo-good{ display: flex; gap: 10px; align-items: flex-start; }
+    .mo-thumb{
+      width: 48px; height: 48px; border: 1px solid #e8e8e8; border-radius: 3px; flex-shrink: 0;
+      background: #111; display: flex; align-items: center; justify-content: center; overflow: hidden;
+    }
+    .mo-gname{ font-weight: 600; color: #262626; margin-bottom: 4px; }
+    .mo-gsub{ color: #999; font-size: 11px; }
+    .mo-remark{ margin-top: 6px; color: #999; }
+    .mo-old{ text-decoration: line-through; color: #ccc; font-size: 11px; margin-left: 4px; }
+    .mo-x{ color: #999; margin-top: 4px; }
+    .mo-pay-main{ font-size: 14px; font-weight: 700; color: #f5222d; }
+    .mo-pay-sub{ color: #f5222d; font-size: 11px; margin-top: 4px; white-space: nowrap; }
+    .mo-pay-lg .mo-pay-main{ font-size: 18px; }
+    .mo-st{ font-weight: 500; }
+    .mo-st.pending{ color: #fa8c16; }
+    .mo-st.closed{ color: #999; }
+    .mo-ops-btn{
+      min-height: 40px; min-width: 100px; padding: 0 16px; font-size: 12px; font-weight: 600; border-radius: 4px; cursor: pointer; border: 1px solid transparent;
+    }
+    .mo-ops-btn.primary{ background: #1677ff; color: #fff; }
+    .mo-ops-btn.primary:hover{ background: #4096ff; }
+    .mo-ops-link{ background: none; border: none; color: #1677ff; font-size: 12px; cursor: pointer; padding: 4px 0; text-align: right; }
+    .mo-ops-link:hover{ text-decoration: underline; }
+    .mo-ops-link.danger{ color: #666; }
+    .mo-ops-link.danger:hover{ color: #f5222d; }
+    .mo-ops-btn:focus-visible, .mo-ops-link:focus-visible{ outline: 2px solid #1677ff; outline-offset: 2px; }
+    @media (max-width: 900px){
+      .mo-thead, .mo-card-bd{ grid-template-columns: 1fr; }
+      .mo-thead{ display: none; }
+      .mo-card-bd .col-ops{ align-items: flex-start; text-align: left; }
+    }
+
     /* （已移除右侧浮动工具条样式） */
   </style>
 </head>
@@ -1503,11 +1672,15 @@
     <div class="sb-group-title">常用 <span style="font-size:9px;color:rgba(255,255,255,0.25);">▾</span></div>
     <div class="sb-grid">
       <div class="sb-item"><span class="si-label">收款机具管理</span></div>
-      <div class="sb-item active"><span class="si-label">商城首页</span></div>
       <div class="sb-item"><span class="si-label">商户管理</span></div>
       <div class="sb-item"><span class="si-label">企業商户查询</span></div>
       <div class="sb-item"><span class="si-label">电票业务</span></div>
       <div class="sb-item"><span class="si-label">火爆活动</span></div>
+    </div>
+    <div class="sb-group-title">采购商城 <span style="font-size:9px;color:rgba(255,255,255,0.25);">▾</span></div>
+    <div class="sb-grid">
+      <div class="sb-item active" id="sb-nav-mall" data-sb="mall" role="button" tabindex="0" aria-label="商城首页"><span class="si-label">商城首页</span></div>
+      <div class="sb-item" id="sb-nav-orders" data-sb="orders" role="button" tabindex="0" aria-label="我的订单"><span class="si-label">我的订单</span></div>
     </div>
     <div class="sb-row">宝贝中心</div>
     <div class="sb-divider"></div>
@@ -2121,6 +2294,105 @@
   </div>
 </aside>
 
+<!-- ════ 立即支付弹窗（大额转账） ════ -->
+<div id="pay-now-modal" class="pay-modal-mask" role="dialog" aria-modal="true" aria-labelledby="pay-modal-title" aria-hidden="true">
+  <div class="pay-modal-box">
+    <div class="pay-modal-head">
+      <span class="pay-modal-head-title" id="pay-modal-title">银行转账支付</span>
+      <button type="button" class="pay-modal-close" id="pay-modal-close" aria-label="关闭">✕</button>
+    </div>
+    <div class="pay-modal-body">
+      <div class="bp-top-card">
+        <div class="bp-top-amount">
+          <div class="bp-amount-label">支付金额</div>
+          <div class="bp-amount-value"><span class="bp-amount-unit">¥</span><span id="pay-modal-amount">50,000.00</span></div>
+        </div>
+        <div class="bp-top-countdown">
+          <div class="bp-amount-label" style="margin-bottom:6px;">支付倒计时</div>
+          <div class="bp-countdown-wrap">
+            <span class="bp-cd-label">仅剩</span>
+            <span class="bp-cd-time" id="pay-modal-cd">02:00:00</span>
+            <span class="bp-cd-expire">过期</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="bank-grid">
+        <div class="bp-account-card">
+          <div class="bp-account-header">收款账户信息</div>
+          <div class="bp-account-body">
+            <div class="bp-account-row">
+              <span class="bp-acc-key">户名</span>
+              <span class="bp-acc-val">上海盛畅网络科技有限公司</span>
+              <button class="bp-copy-btn" type="button" onclick="copyText('上海盛畅网络科技有限公司', this)">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" stroke="currentColor" stroke-width="1.5"/></svg>
+                复制
+              </button>
+            </div>
+            <div class="bp-account-row">
+              <span class="bp-acc-key">账号</span>
+              <span class="bp-acc-val">121909328810901</span>
+              <button class="bp-copy-btn" type="button" onclick="copyText('121909328810901', this)">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" stroke="currentColor" stroke-width="1.5"/></svg>
+                复制
+              </button>
+            </div>
+            <div class="bp-account-row">
+              <span class="bp-acc-key">银行</span>
+              <span class="bp-acc-val">盛付通-备付金账户</span>
+              <button class="bp-copy-btn" type="button" onclick="copyText('盛付通-备付金账户', this)">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" stroke="currentColor" stroke-width="1.5"/></svg>
+                复制
+              </button>
+            </div>
+            <div class="bp-account-row">
+              <span class="bp-acc-key">附言</span>
+              <span class="bp-acc-val" style="font-size:12px;color:#1677ff;">DEZZ1686456364364363435</span>
+              <button class="bp-copy-btn" type="button" onclick="copyText('DEZZ1686456364364363435', this)">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" stroke="currentColor" stroke-width="1.5"/></svg>
+                复制
+              </button>
+            </div>
+            <div class="bp-memo-tip">附言必须填写正确且完整，否则无法支付成功</div>
+          </div>
+        </div>
+
+        <div class="bp-guide-card">
+          <div class="bp-guide-header">
+            <span class="bp-guide-header-title">转账指引</span>
+            <button type="button" class="btn-guide" onclick="openGuideDrawer()">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+                <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.5"/>
+                <line x1="12" y1="8" x2="12" y2="12" stroke="currentColor" stroke-width="1.5"/>
+                <line x1="12" y1="16" x2="12.01" y2="16" stroke="currentColor" stroke-width="2"/>
+              </svg>
+              查看详细指引
+            </button>
+          </div>
+          <div class="bp-guide-body">
+            <div class="bp-guide-warn">
+              <div class="bp-guide-warn-title">⚠ 注意事项</div>
+              <div class="bp-guide-warn-item">请复制收款账户信息到对应网银操作</div>
+              <div class="bp-guide-warn-item">付款银行：<span class="bp-guide-bank-highlight" id="pay-modal-bank-label">—</span></div>
+            </div>
+            <ul class="bp-guide-steps" style="margin-top:10px;">
+              <li class="bp-guide-step"><span class="bp-step-num">1</span><span>银行一栏请搜索"备付金"，选择<strong>支付机构备付金集中存管账户</strong></span></li>
+              <li class="bp-guide-step"><span class="bp-step-num">2</span><span>输入金额后需补充收款人信息。开户地选择<strong>上海</strong>，分支行选择<strong>"上海盛付通-备付金账户"</strong></span></li>
+              <li class="bp-guide-step"><span class="bp-step-num">3</span><span>复制附言编号到"转账附言"，请按以上要求完成付款，便于跟进转账记录</span></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="pay-modal-action-area">
+        <button type="button" class="btn-confirmed" id="pay-modal-confirmed">我已转账，查看转账结果</button>
+        <button type="button" class="btn-cancel-pay" id="pay-modal-cancel">取消订单</button>
+      </div>
+      <p class="pay-modal-hint">转账5-10分钟后自动更新结果，如未更新可点击按钮查询转账状态</p>
+    </div>
+  </div>
+</div>
+
 <!-- 转账指引配图全屏预览 -->
 <div id="guide-image-preview" class="guide-image-preview" role="dialog" aria-modal="true" aria-hidden="true" aria-label="图片预览">
   <button type="button" class="guide-image-preview-close" id="guide-image-preview-close" aria-label="关闭预览">✕</button>
@@ -2293,7 +2565,7 @@ function renderBankTransferPage() {
 
         <div class="bp-action-area">
           <div class="bp-action-buttons">
-            <button class="btn-cancel-pay" onclick="renderPayerInfoPage(true)">上一步</button>
+            <button class="btn-cancel-pay" onclick="renderPayerInfoPage(true)">更换付款账户</button>
             <button class="btn-confirmed" onclick="renderOrderDetailPage('pending_pay')">我已转账，查看转账结果</button>
             <button class="btn-cancel-pay" onclick="renderOrderDetailPage('closed')">取消支付</button>
           </div>
@@ -2452,6 +2724,235 @@ function bindConfirmOrderEvents() {
     });
   }
 }
+
+function setSbNavActive(which) {
+  const mall = document.getElementById('sb-nav-mall');
+  const orders = document.getElementById('sb-nav-orders');
+  if (mall) mall.classList.toggle('active', which === 'mall');
+  if (orders) orders.classList.toggle('active', which === 'orders');
+}
+
+function goMallHome() {
+  restoreConfirmOrderPage();
+  setSbNavActive('mall');
+}
+
+function applyMoListFilter(container, tabKey) {
+  if (!container) return;
+  container.querySelectorAll('.mo-card[data-mo-st]').forEach((card) => {
+    const st = card.getAttribute('data-mo-st') || '';
+    const show = tabKey === 'all' || st === tabKey;
+    card.style.display = show ? '' : 'none';
+  });
+}
+
+function renderMyOrdersPage() {
+  ensureConfirmSnapshot();
+  setSbNavActive('orders');
+  const mc = document.getElementById('main-content');
+  if (!mc) return;
+
+  mc.innerHTML = `
+    <div class="mo-wrap" id="mo-root">
+      <div class="mo-breadcrumb">
+        <a href="javascript:;" id="mo-bc-home" role="button">首页</a>
+        <span> / 我的订单</span>
+      </div>
+      <h1 class="mo-title">我的订单</h1>
+      <div class="mo-tabs" role="tablist" id="mo-tabs" aria-label="订单状态">
+        <div class="mo-tab active" data-mo-tab="all" role="tab" tabindex="0" aria-selected="true">全部订单</div>
+        <div class="mo-tab" data-mo-tab="pending_pay" role="tab" tabindex="-1">待付款</div>
+        <div class="mo-tab" data-mo-tab="audit" role="tab" tabindex="-1">待审核</div>
+        <div class="mo-tab" data-mo-tab="to_ship" role="tab" tabindex="-1">待发货</div>
+        <div class="mo-tab" data-mo-tab="shipped" role="tab" tabindex="-1">已发货</div>
+        <div class="mo-tab" data-mo-tab="done" role="tab" tabindex="-1">交易完成</div>
+        <div class="mo-tab" data-mo-tab="closed" role="tab" tabindex="-1">交易关闭</div>
+      </div>
+      <div class="mo-filter" aria-label="筛选条件">
+        <div class="mo-filter-row">
+          <label class="mo-f-item">订单编号 <input type="text" id="mo-f-order" placeholder="请输入" aria-label="订单编号"></label>
+          <label class="mo-f-item">下单时间 <input type="text" class="mo-f-date" id="mo-f-ctime" placeholder="开始时间 — 结束时间" aria-label="下单时间范围"></label>
+          <label class="mo-f-item">交易完成时间 <input type="text" class="mo-f-date" id="mo-f-ftime" placeholder="开始时间 — 结束时间" aria-label="交易完成时间范围"></label>
+        </div>
+        <div class="mo-filter-row">
+          <label class="mo-f-item">商品名称 <input type="text" id="mo-f-pname" placeholder="请输入" aria-label="商品名称"></label>
+          <label class="mo-f-item">商品类型
+            <select id="mo-f-ptype" aria-label="商品类型"><option value="">全部</option><option>实物商品</option><option>服务类</option></select>
+          </label>
+          <label class="mo-f-item">品牌
+            <select id="mo-f-brand" aria-label="品牌"><option value="">全部</option><option>盛意旺</option></select>
+          </label>
+          <div class="mo-f-actions">
+            <button type="button" class="mo-btn-q primary" id="mo-btn-search">查询</button>
+            <button type="button" class="mo-btn-q ghost" id="mo-btn-reset">重置</button>
+          </div>
+        </div>
+      </div>
+      <div class="mo-thead">
+        <div>商品信息</div>
+        <div>单价/数量</div>
+        <div>订单状态</div>
+        <div>实付总额</div>
+        <div>操作</div>
+      </div>
+      <div class="mo-olist" id="mo-olist">
+        <div class="mo-card" data-mo-st="pending_pay">
+          <div class="mo-card-hd">
+            <span><span class="k">订单编号</span> PO20260416888876543210</span>
+            <span><span class="k">下单时间</span> 2026-04-16 10:18:32</span>
+            <span><span class="k">买家信息</span> 海南掌门容时数码科技有限公司 93756797</span>
+          </div>
+          <div class="mo-card-bd">
+            <div>
+              <div class="mo-good">
+                <div class="mo-thumb" aria-hidden="true">
+                  <svg width="30" height="30" viewBox="0 0 48 48" fill="none"><rect x="10" y="3" width="28" height="42" rx="4" fill="#1a1a1a" stroke="#333" stroke-width="1"/><rect x="13" y="7" width="22" height="26" rx="2" fill="#1565c0"/></svg>
+                </div>
+                <div>
+                  <div class="mo-gname">企业大额支付·采购批次（对公转账）</div>
+                  <div class="mo-gsub">对公 | 需网银付款</div>
+                  <div class="mo-remark">订单备注：—</div>
+                </div>
+              </div>
+            </div>
+            <div>
+              <div>¥50,000.00 <span class="mo-old">¥50,200.00</span></div>
+              <div class="mo-x">×1</div>
+            </div>
+            <div class="col-st"><span class="mo-st pending">待付款</span></div>
+            <div class="mo-pay-lg">
+              <div class="mo-pay-main">¥50,000.00</div>
+              <div class="mo-pay-sub">+快递费¥0.00=¥50,000.00</div>
+            </div>
+            <div class="col-ops">
+              <button type="button" class="mo-ops-btn primary" id="mo-btn-pay-now" aria-label="立即支付">立即支付</button>
+              <button type="button" class="mo-ops-link" data-mo-act="detail" data-mo-od="lg">订单详情</button>
+              <button type="button" class="mo-ops-link danger" id="mo-btn-cancel-lg" data-mo-act="cancel">取消订单</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="mo-card" data-mo-st="closed">
+          <div class="mo-card-hd">
+            <span><span class="k">订单编号</span> PO202603241737590963164884592685</span>
+            <span><span class="k">下单时间</span> 2026-03-24 17:37:46</span>
+            <span><span class="k">买家信息</span> 海南掌门容时数码科技有限公司 93756797</span>
+          </div>
+          <div class="mo-card-bd">
+            <div>
+              <div class="mo-good">
+                <div class="mo-thumb" aria-hidden="true">
+                  <svg width="30" height="30" viewBox="0 0 48 48" fill="none"><rect x="10" y="3" width="28" height="42" rx="4" fill="#1a1a1a" stroke="#333" stroke-width="1"/><rect x="13" y="7" width="22" height="26" rx="2" fill="#1565c0"/></svg>
+                </div>
+                <div>
+                  <div class="mo-gname">碰一碰收款立牌</div>
+                  <div class="mo-gsub">白蓝　网络</div>
+                  <div class="mo-remark">订单备注：—</div>
+                </div>
+              </div>
+            </div>
+            <div>
+              <div>¥3.50 <span class="mo-old">¥8.00</span></div>
+              <div class="mo-x">×10</div>
+            </div>
+            <div class="col-st"><span class="mo-st closed">订单关闭</span></div>
+            <div>
+              <div class="mo-pay-main">¥35.00</div>
+              <div class="mo-pay-sub">+快递费¥8.00=¥43.00</div>
+            </div>
+            <div class="col-ops">
+              <button type="button" class="mo-ops-link" data-mo-act="detail" data-mo-od="closed">订单详情</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  const root = document.getElementById('mo-root');
+  const tablist = document.getElementById('mo-tabs');
+  if (tablist) {
+    tablist.addEventListener('click', (e) => {
+      const t = e.target.closest('.mo-tab');
+      if (!t) return;
+      const key = t.getAttribute('data-mo-tab') || 'all';
+      tablist.querySelectorAll('.mo-tab').forEach((x) => {
+        const on = x === t;
+        x.classList.toggle('active', on);
+        x.setAttribute('aria-selected', on ? 'true' : 'false');
+        x.setAttribute('tabindex', on ? '0' : '-1');
+      });
+      applyMoListFilter(root, key);
+    });
+  }
+
+  document.getElementById('mo-bc-home')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    goMallHome();
+  });
+  document.getElementById('mo-btn-search')?.addEventListener('click', () => {
+    /* 演示：仅作交互反馈 */ void 0;
+  });
+  document.getElementById('mo-btn-reset')?.addEventListener('click', () => {
+    ['mo-f-order', 'mo-f-ctime', 'mo-f-ftime', 'mo-f-pname'].forEach((id) => {
+      const el = document.getElementById(id);
+      if (el) el.value = '';
+    });
+    const a = document.getElementById('mo-f-ptype');
+    const b = document.getElementById('mo-f-brand');
+    if (a) a.selectedIndex = 0;
+    if (b) b.selectedIndex = 0;
+  });
+
+  document.getElementById('mo-btn-pay-now')?.addEventListener('click', () => {
+    openPayNowModal();
+  });
+  document.getElementById('mo-olist')?.addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-mo-act]');
+    if (!btn) return;
+    const act = btn.getAttribute('data-mo-act');
+    if (act === 'cancel') {
+      if (confirm('确定要取消该订单吗？')) {
+        alert('当前为演示环境，已模拟取消。');
+      }
+      return;
+    }
+    if (act === 'detail') {
+      const which = btn.getAttribute('data-mo-od');
+      if (which === 'closed' && typeof renderOrderDetailPage === 'function') {
+        setSbNavActive('mall');
+        renderOrderDetailPage('closed');
+      } else if (typeof renderOrderDetailPage === 'function') {
+        setSbNavActive('mall');
+        renderOrderDetailPage('pending_pay');
+      }
+    }
+  });
+}
+
+function initSidebarPurchaseNav() {
+  const mall = document.getElementById('sb-nav-mall');
+  const orders = document.getElementById('sb-nav-orders');
+  const onMall = (e) => {
+    if (e) e.preventDefault();
+    goMallHome();
+  };
+  const onOrders = (e) => {
+    if (e) e.preventDefault();
+    renderMyOrdersPage();
+  };
+  mall?.addEventListener('click', onMall);
+  orders?.addEventListener('click', onOrders);
+  [mall, orders].forEach((el) => {
+    if (!el) return;
+    el.addEventListener('keydown', (e) => {
+      if (e.key !== 'Enter' && e.key !== ' ') return;
+      e.preventDefault();
+      (el === mall ? onMall : onOrders)(e);
+    });
+  });
+}
+initSidebarPurchaseNav();
 
 function renderPayerInfoPage(prefillFromLatest = false) {
   ensureConfirmSnapshot();
@@ -2881,6 +3382,88 @@ document.getElementById('modal-close-btn').addEventListener('click', () => {
 });
 document.getElementById('guide-modal').addEventListener('click', function(e) {
   if (e.target === this) this.classList.add('hidden');
+});
+
+/* ══════════════════════════════════════════
+   立即支付弹窗（大额转账）
+══════════════════════════════════════════ */
+let payModalCdTotal = 2 * 60 * 60;
+let payModalCdTimer = null;
+
+function openPayNowModal() {
+  const modal = document.getElementById('pay-now-modal');
+  if (!modal) return;
+  const bankLabel = document.getElementById('pay-modal-bank-label');
+  if (bankLabel) {
+    const latestPayer = getPayerHistory()[0];
+    bankLabel.textContent = (latestPayer && latestPayer.bank) ? latestPayer.bank : '未选择付款银行';
+  }
+  modal.classList.add('is-open');
+  modal.setAttribute('aria-hidden', 'false');
+  document.body.style.overflow = 'hidden';
+  startPayModalCountdown();
+}
+
+function closePayNowModal() {
+  const modal = document.getElementById('pay-now-modal');
+  if (!modal) return;
+  modal.classList.remove('is-open');
+  modal.setAttribute('aria-hidden', 'true');
+  document.body.style.overflow = '';
+  if (payModalCdTimer) { clearInterval(payModalCdTimer); payModalCdTimer = null; }
+}
+
+function startPayModalCountdown() {
+  if (payModalCdTimer) clearInterval(payModalCdTimer);
+  payModalCdTotal = 2 * 60 * 60;
+  const el = () => document.getElementById('pay-modal-cd');
+  const sync = () => { const e = el(); if (e) e.textContent = formatTime(payModalCdTotal); };
+  sync();
+  payModalCdTimer = setInterval(() => {
+    if (payModalCdTotal <= 0) {
+      clearInterval(payModalCdTimer); payModalCdTimer = null;
+      const e = el(); if (e) e.textContent = '00:00:00';
+      return;
+    }
+    payModalCdTotal--;
+    sync();
+  }, 1000);
+}
+
+document.getElementById('pay-modal-close')?.addEventListener('click', closePayNowModal);
+document.getElementById('pay-now-modal')?.addEventListener('click', (e) => {
+  if (e.target === document.getElementById('pay-now-modal')) closePayNowModal();
+});
+document.getElementById('pay-modal-confirmed')?.addEventListener('click', () => {
+  closePayNowModal();
+  setSbNavActive('mall');
+  renderOrderDetailPage('to_ship');
+});
+document.getElementById('pay-modal-cancel')?.addEventListener('click', () => {
+  // 把订单列表中的大额待支付卡片改为「订单关闭」状态
+  const pendingCard = document.querySelector('#mo-olist .mo-card[data-mo-st="pending_pay"]');
+  if (pendingCard) {
+    pendingCard.setAttribute('data-mo-st', 'closed');
+    const stEl = pendingCard.querySelector('.mo-st');
+    if (stEl) {
+      stEl.textContent = '订单关闭';
+      stEl.className = 'mo-st closed';
+    }
+    const opsEl = pendingCard.querySelector('.col-ops');
+    if (opsEl) {
+      opsEl.innerHTML = '<button type="button" class="mo-ops-link" data-mo-act="detail" data-mo-od="closed">订单详情</button>';
+    }
+    // 若当前 tab 是「待付款」则隐藏该卡片
+    const activeTab = document.querySelector('#mo-tabs .mo-tab.active');
+    if (activeTab) applyMoListFilter(document.getElementById('mo-root'), activeTab.getAttribute('data-mo-tab') || 'all');
+  }
+  closePayNowModal();
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && document.getElementById('pay-now-modal')?.classList.contains('is-open')) {
+    e.preventDefault();
+    closePayNowModal();
+  }
 });
 
 /* ══════════════════════════════════════════
