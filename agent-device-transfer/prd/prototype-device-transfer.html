@@ -146,7 +146,7 @@
     table.data .op-links { white-space: nowrap; }
     table.data .op-links a { margin-right: 8px; }
     .text-muted-cell { color: #595959; font-size: 12px; line-height: 1.5; }
-    .tag { display: inline-block; padding: 0 6px; border-radius: 2px; font-size: 11px; }
+    .tag { display: inline-block; padding: 0 6px; border-radius: 2px; font-size: 11px; white-space: nowrap; }
     .tag-green { background: #f6ffed; color: var(--success); border: 1px solid #b7eb8f; }
     .tag-red { background: #fff2f0; color: var(--danger); border: 1px solid #ffccc7; }
 
@@ -260,19 +260,20 @@
     .receiver-history-summary .t { font-size: 12px; color: #595959; margin-bottom: 6px; }
     .receiver-history-summary .v { font-weight: 600; color: var(--text); word-break: break-all; }
     .receiver-history-summary .sub { margin-top: 8px; font-size: 12px; color: #389e0d; line-height: 1.5; }
-    .step0-section-title { margin: 0 0 8px; font-size: 13px; font-weight: 600; color: var(--text); }
-    .step0-section-lead { margin: 0 0 12px; font-size: 12px; color: var(--muted); line-height: 1.55; }
-    .step0-manual-block { padding-bottom: 16px; margin-bottom: 16px; border-bottom: 1px solid #e8e8e8; }
-    .step0-import-block { padding: 12px 12px 2px; background: #fafafa; border: 1px dashed #d9d9d9; border-radius: var(--radius); }
-    .modal-import-tabs {
-      display: flex; flex-wrap: wrap; gap: 0; margin-bottom: 10px; border-bottom: 1px solid #e8e8e8;
+    .step0-mode-tabs {
+      display: flex; gap: 0; border-bottom: 2px solid #e8e8e8; margin-bottom: 16px;
     }
-    .modal-import-tab {
-      padding: 8px 12px; margin-bottom: -1px; cursor: pointer; color: #595959; border-bottom: 2px solid transparent;
-      font-size: 12px; user-select: none; background: none; border: none; font-family: inherit;
+    .step0-mode-tab {
+      padding: 10px 20px; margin-bottom: -2px; cursor: pointer; color: #595959;
+      border-bottom: 2px solid transparent; font-size: 13px; font-weight: 500;
+      user-select: none; background: none; border: none; font-family: inherit;
     }
-    .modal-import-tab:hover { color: var(--primary); }
-    .modal-import-tab.active { color: var(--primary); font-weight: 600; border-bottom-color: var(--primary); }
+    .step0-mode-tab:hover { color: var(--primary); }
+    .step0-mode-tab.active { color: var(--primary); font-weight: 600; border-bottom-color: var(--primary); }
+    .step0-mode-panel { }
+    .step0-mode-panel.hidden { display: none !important; }
+
+    .step0-import-block { padding: 12px 14px 10px; background: #fafafa; border: 1px dashed #d9d9d9; border-radius: var(--radius); margin-bottom: 12px; }
 
     .import-sn-wrap { margin-top: 0; padding: 0; background: transparent; border: none; border-radius: 0; }
     .import-sn-wrap label { font-size: 12px; color: #595959; display: block; margin-bottom: 6px; font-weight: 500; }
@@ -545,108 +546,106 @@
         <p style="font-size:12px;color:#595959;margin:0 0 12px;padding:10px 12px;background:#fffbe6;border:1px solid #ffe58f;border-radius:var(--radius);line-height:1.65;">
           仅展示<strong>直属代理商</strong>且<strong>未绑定</strong>设备；如需转<strong>归属渠道商</strong>的机具，请先操作<strong>批量回收</strong>；单次转移最多支持 <strong>500</strong> 台。
         </p>
-        <div class="step0-manual-block">
-        <p class="step0-section-title">方式一：手动勾选</p>
-        <p class="step0-section-lead" style="margin-top:-4px;">按设备类型筛选列表并勾选；与下方「批量导入」相互独立，可单独使用或组合使用。</p>
-        <div class="modal-transfer-tabs" id="modal-transfer-type-tabs" role="tablist" aria-label="设备类型">
-          <button type="button" class="modal-transfer-tab active" data-equip-tab="code" role="tab" aria-selected="true">收款码牌</button>
-          <button type="button" class="modal-transfer-tab" data-equip-tab="pos" role="tab" aria-selected="false">智能POS</button>
-          <button type="button" class="modal-transfer-tab" data-equip-tab="speaker" role="tab" aria-selected="false">云音箱</button>
-          <button type="button" class="modal-transfer-tab" data-equip-tab="mamawang" role="tab" aria-selected="false">扫码王</button>
-          <button type="button" class="modal-transfer-tab" data-equip-tab="printer" role="tab" aria-selected="false">云打印机</button>
+        <div class="step0-mode-tabs" id="step0-mode-tabs">
+          <button type="button" class="step0-mode-tab active" data-mode="manual">方式一：手动勾选</button>
+          <button type="button" class="step0-mode-tab" data-mode="import">方式二：批量导入</button>
         </div>
-        <div id="modal-step0-panel-code" class="modal-step0-filter-panel" role="tabpanel">
-          <div class="filters" style="flex-wrap:wrap;">
-            <div class="field">
-              <label for="modal-f-code-sn">码牌编号</label>
-              <input type="text" id="modal-f-code-sn" placeholder="支持模糊查询" autocomplete="off" style="min-width:200px;" />
+
+        <!-- 方式一：手动勾选面板 -->
+        <div id="step0-panel-manual" class="step0-mode-panel">
+          <div class="modal-transfer-tabs" id="modal-transfer-type-tabs" role="tablist" aria-label="设备类型">
+            <button type="button" class="modal-transfer-tab active" data-equip-tab="code" role="tab" aria-selected="true">收款码牌</button>
+            <button type="button" class="modal-transfer-tab" data-equip-tab="pos" role="tab" aria-selected="false">智能POS</button>
+            <button type="button" class="modal-transfer-tab" data-equip-tab="speaker" role="tab" aria-selected="false">云音箱</button>
+            <button type="button" class="modal-transfer-tab" data-equip-tab="mamawang" role="tab" aria-selected="false">扫码王</button>
+            <button type="button" class="modal-transfer-tab" data-equip-tab="printer" role="tab" aria-selected="false">云打印机</button>
+          </div>
+          <div id="modal-step0-panel-code" class="modal-step0-filter-panel" role="tabpanel">
+            <div class="filters" style="flex-wrap:wrap;">
+              <div class="field">
+                <label for="modal-f-code-sn">码牌编号</label>
+                <input type="text" id="modal-f-code-sn" placeholder="支持模糊查询" autocomplete="off" style="min-width:200px;" />
+              </div>
+              <button type="button" class="btn btn-primary" id="modal-step0-query">应用筛选</button>
             </div>
-            <button type="button" class="btn btn-primary" id="modal-step0-query">应用筛选</button>
+          </div>
+          <div id="modal-step0-panel-pos" class="modal-step0-filter-panel hidden" role="tabpanel">
+            <div class="filters" style="flex-wrap:wrap;">
+              <div class="field">
+                <label for="modal-f-pos-sn">终端序列号（SN号）</label>
+                <input type="text" id="modal-f-pos-sn" placeholder="支持模糊查询" autocomplete="off" style="min-width:200px;" />
+              </div>
+              <button type="button" class="btn btn-primary" id="modal-step0-query-pos">应用筛选</button>
+            </div>
+          </div>
+          <div id="modal-step0-panel-speaker" class="modal-step0-filter-panel hidden" role="tabpanel">
+            <div class="filters" style="flex-wrap:wrap;">
+              <div class="field">
+                <label for="modal-f-speaker-sn">设备SN号</label>
+                <input type="text" id="modal-f-speaker-sn" placeholder="支持模糊查询" autocomplete="off" style="min-width:180px;" />
+              </div>
+              <div class="field">
+                <label for="modal-f-speaker-code">码牌编号</label>
+                <input type="text" id="modal-f-speaker-code" placeholder="支持模糊查询" autocomplete="off" style="min-width:180px;" />
+              </div>
+              <button type="button" class="btn btn-primary" id="modal-step0-query-speaker">应用筛选</button>
+            </div>
+          </div>
+          <div id="modal-step0-panel-mamawang" class="modal-step0-filter-panel hidden" role="tabpanel">
+            <div class="filters" style="flex-wrap:wrap;">
+              <div class="field">
+                <label for="modal-f-mamawang-sn">终端序列号（SN号）</label>
+                <input type="text" id="modal-f-mamawang-sn" placeholder="支持模糊查询" autocomplete="off" style="min-width:200px;" />
+              </div>
+              <button type="button" class="btn btn-primary" id="modal-step0-query-mamawang">应用筛选</button>
+            </div>
+          </div>
+          <div id="modal-step0-panel-printer" class="modal-step0-filter-panel hidden" role="tabpanel">
+            <div class="filters" style="flex-wrap:wrap;">
+              <div class="field">
+                <label for="modal-f-printer-sn">终端序列号（SN号）</label>
+                <input type="text" id="modal-f-printer-sn" placeholder="支持模糊查询" autocomplete="off" style="min-width:200px;" />
+              </div>
+              <button type="button" class="btn btn-primary" id="modal-step0-query-printer">应用筛选</button>
+            </div>
+          </div>
+          <div style="overflow:auto;max-height:min(320px,45vh);border:1px solid var(--border);border-radius:var(--radius);">
+            <table class="list-table" style="margin:0;">
+              <thead>
+                <tr>
+                  <th style="width:44px;"><input type="checkbox" id="modal-chk-all" title="全选当前筛选结果（受 500 台上限约束）" /></th>
+                  <th id="modal-step0-th-device-col">码牌编号</th>
+                  <th>设备类型</th>
+                  <th>更新时间</th>
+                </tr>
+              </thead>
+              <tbody id="modal-step0-tbody"></tbody>
+            </table>
           </div>
         </div>
-        <div id="modal-step0-panel-pos" class="modal-step0-filter-panel hidden" role="tabpanel">
-          <div class="filters" style="flex-wrap:wrap;">
-            <div class="field">
-              <label for="modal-f-pos-sn">终端序列号（SN号）</label>
-              <input type="text" id="modal-f-pos-sn" placeholder="支持模糊查询" autocomplete="off" style="min-width:200px;" />
+
+        <!-- 方式二：批量导入面板 -->
+        <div id="step0-panel-import" class="step0-mode-panel hidden">
+          <div class="step0-import-block">
+            <p class="import-sn-hint" style="margin-bottom:10px;">粘贴设备序列号（每行一个，或逗号/分号分隔），或<strong>下载 .xlsx 模板</strong>后填写并<strong>上传</strong>；点击「导入并添加到已选」后序列号将直接显示在下方已选列表。</p>
+            <div class="import-sn-toolbar">
+              <button type="button" class="btn btn-sm btn-ghost" id="btn-download-import-template">下载导入模板（.xlsx）</button>
+              <button type="button" class="btn btn-sm btn-ghost" id="btn-upload-import-file">上传导入文件</button>
+              <input type="file" id="modal-import-file" accept=".xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel" style="display:none;" tabindex="-1" aria-hidden="true" />
             </div>
-            <button type="button" class="btn btn-primary" id="modal-step0-query-pos">应用筛选</button>
+            <label for="modal-import-sn" style="font-size:12px;color:#595959;display:block;margin-bottom:6px;font-weight:500;">设备序列号</label>
+            <textarea id="modal-import-sn" style="width:100%;min-height:100px;padding:8px 10px;border:1px solid #d9d9d9;border-radius:var(--radius);font-size:12px;font-family:inherit;resize:vertical;box-sizing:border-box;" placeholder="例如：&#10;MP889012345679&#10;SN882736451902&#10;SP776655443322,PRT6600117788"></textarea>
+            <div class="import-sn-actions">
+              <button type="button" class="btn btn-primary btn-sm" id="btn-modal-import-apply">导入并添加到已选</button>
+              <span style="font-size:12px;color:var(--muted);">符合「直属且未绑定」的序列号将添加至下方已选，受 500 台上限约束。</span>
+            </div>
           </div>
         </div>
-        <div id="modal-step0-panel-speaker" class="modal-step0-filter-panel hidden" role="tabpanel">
-          <div class="filters" style="flex-wrap:wrap;">
-            <div class="field">
-              <label for="modal-f-speaker-sn">设备SN号</label>
-              <input type="text" id="modal-f-speaker-sn" placeholder="支持模糊查询" autocomplete="off" style="min-width:180px;" />
-            </div>
-            <div class="field">
-              <label for="modal-f-speaker-code">码牌编号</label>
-              <input type="text" id="modal-f-speaker-code" placeholder="支持模糊查询" autocomplete="off" style="min-width:180px;" />
-            </div>
-            <button type="button" class="btn btn-primary" id="modal-step0-query-speaker">应用筛选</button>
-          </div>
-        </div>
-        <div id="modal-step0-panel-mamawang" class="modal-step0-filter-panel hidden" role="tabpanel">
-          <div class="filters" style="flex-wrap:wrap;">
-            <div class="field">
-              <label for="modal-f-mamawang-sn">终端序列号（SN号）</label>
-              <input type="text" id="modal-f-mamawang-sn" placeholder="支持模糊查询" autocomplete="off" style="min-width:200px;" />
-            </div>
-            <button type="button" class="btn btn-primary" id="modal-step0-query-mamawang">应用筛选</button>
-          </div>
-        </div>
-        <div id="modal-step0-panel-printer" class="modal-step0-filter-panel hidden" role="tabpanel">
-          <div class="filters" style="flex-wrap:wrap;">
-            <div class="field">
-              <label for="modal-f-printer-sn">终端序列号（SN号）</label>
-              <input type="text" id="modal-f-printer-sn" placeholder="支持模糊查询" autocomplete="off" style="min-width:200px;" />
-            </div>
-            <button type="button" class="btn btn-primary" id="modal-step0-query-printer">应用筛选</button>
-          </div>
-        </div>
+
+        <!-- 已选摘要（两种方式共用，始终显示） -->
         <div class="modal-sel-summary">
           已选 <strong id="modal-sel-count">0</strong> 台（上限 500 台）
           <div class="modal-sel-tags empty" id="modal-sel-sn-preview">暂无已选设备</div>
-        </div>
-        <div style="overflow:auto;max-height:min(360px,50vh);border:1px solid var(--border);border-radius:var(--radius);">
-          <table class="list-table" style="margin:0;">
-            <thead>
-              <tr>
-                <th style="width:44px;"><input type="checkbox" id="modal-chk-all" title="全选当前筛选结果（受 500 台上限约束）" /></th>
-                <th id="modal-step0-th-device-col">码牌编号</th>
-                <th>设备类型</th>
-                <th>更新时间</th>
-              </tr>
-            </thead>
-            <tbody id="modal-step0-tbody"></tbody>
-          </table>
-        </div>
-        </div>
-
-        <div class="step0-import-block">
-        <p class="step0-section-title">方式二：批量导入</p>
-        <p class="step0-section-lead" style="margin-top:-4px;">与上方列表勾选分开操作。模板为 <strong>.xlsx</strong>，底部以<strong>设备类型分工作表（Sheet）</strong>，表头与对应类型的查询字段名称一致；也可在下方按当前导入类型粘贴。</p>
-        <div class="modal-import-tabs" id="modal-import-type-tabs" role="tablist" aria-label="导入设备类型">
-          <button type="button" class="modal-import-tab active" data-import-tab="code" role="tab" aria-selected="true">收款码牌</button>
-          <button type="button" class="modal-import-tab" data-import-tab="pos" role="tab" aria-selected="false">智能POS</button>
-          <button type="button" class="modal-import-tab" data-import-tab="speaker" role="tab" aria-selected="false">云音箱</button>
-          <button type="button" class="modal-import-tab" data-import-tab="mamawang" role="tab" aria-selected="false">扫码王</button>
-          <button type="button" class="modal-import-tab" data-import-tab="printer" role="tab" aria-selected="false">云打印机</button>
-        </div>
-        <div class="import-sn-wrap">
-          <p class="import-sn-hint">下载模板后请在<strong>对应 Sheet</strong>中填写；上传时将读取<strong>全部 Sheet</strong>中的有效行。下方粘贴仅针对当前选中的导入类型，表头含义与模板该 Sheet 一致。</p>
-          <div class="import-sn-toolbar">
-            <button type="button" class="btn btn-sm btn-ghost" id="btn-download-import-template">下载导入模板（.xlsx）</button>
-            <button type="button" class="btn btn-sm btn-ghost" id="btn-upload-import-file">上传导入文件</button>
-            <input type="file" id="modal-import-file" accept=".xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel" style="display:none;" tabindex="-1" aria-hidden="true" />
-          </div>
-          <label for="modal-import-sn" id="modal-import-field-label">码牌编号（粘贴）</label>
-          <textarea id="modal-import-sn" placeholder="每行一条；可与英文逗号分隔多个字段（云音箱可为：设备SN 或 码牌编号 或 SN,码牌编号）"></textarea>
-          <div class="import-sn-actions">
-            <button type="button" class="btn btn-primary btn-sm" id="btn-modal-import-apply">解析并勾选</button>
-            <span style="font-size:12px;color:var(--muted);">仅勾选符合「直属且未绑定」且类型匹配的终端，已选数量受 500 台上限约束。</span>
-          </div>
-        </div>
         </div>
       </div>
       <div class="modal-ft">
@@ -671,19 +670,29 @@
           <span>1 选择终端</span><span class="on">2 确认清单</span><span>3 接收方</span><span>4 验证提交</span>
         </div>
         <p style="font-size:12px;color:var(--muted);margin:0 0 10px;line-height:1.5;">系统已对所选设备做转移前校验；若存在<strong>未通过</strong>项，请<strong>删除该条</strong>后方可进入下一步填写接收方。<span style="color:var(--danger)">存在未通过项时，「下一步」不可用。</span></p>
-        <table class="list-table" id="confirm-table">
+        <div style="overflow-x:auto;">
+        <table class="list-table" id="confirm-table" style="table-layout:fixed;min-width:640px;">
+          <colgroup>
+            <col style="width:160px;" />
+            <col style="width:80px;" />
+            <col style="width:70px;" />
+            <col style="width:68px;" />
+            <col />
+            <col style="width:52px;" />
+          </colgroup>
           <thead>
             <tr>
-              <th>SN</th>
-              <th>终端类型</th>
-              <th>终端状态</th>
-              <th>校验</th>
-              <th style="min-width:200px;">说明</th>
+              <th style="white-space:nowrap;">SN</th>
+              <th style="white-space:nowrap;">终端类型</th>
+              <th style="white-space:nowrap;">终端状态</th>
+              <th style="white-space:nowrap;">校验</th>
+              <th>说明</th>
               <th></th>
             </tr>
           </thead>
           <tbody id="confirm-tbody"></tbody>
         </table>
+        </div>
       </div>
       <div class="modal-ft">
         <button type="button" class="btn" id="btn-back-confirm">上一步</button>
@@ -758,16 +767,21 @@
             </div>
 
             <div class="receiver-qr-block hidden" id="receiver-qr-block">
-              <p class="receiver-notify">
-                已向接收方<strong>合作伙伴后台</strong>推送消息通知（消息中心可查看），并将<strong>确认链接与二维码</strong>以短信发送至接收方<strong>代理商管理员手机号</strong>（尾号 <strong id="admin-phone-tail">****</strong>，示例）。
-              </p>
               <div class="qr-meta-row">
                 <span id="qr-expire-label">转移关系二维码有效期至：<strong id="qr-expire-at">—</strong>（2 小时）</span>
                 <button type="button" class="btn btn-sm btn-primary" id="btn-refresh-qr">刷新二维码</button>
               </div>
               <p id="qr-expired-tip" class="qr-expired-tip hidden">二维码已过期，请点击「刷新二维码」后重新通知接收方。</p>
+              <div id="receiver-notify-send-block" style="margin-bottom:10px;padding:10px 12px;background:#fffbe6;border:1px solid #ffe58f;border-radius:var(--radius);font-size:12px;line-height:1.6;">
+                <span id="receiver-notify-unsent-tip">接收方<strong>尚未收到通知</strong>。点击下方按钮，将绑定确认链接以<strong>消息通知 + 短信</strong>发送给接收方代理商管理员（手机尾号 <strong id="admin-phone-tail">****</strong>），由其登录后扫码确认。</span>
+                <span id="receiver-notify-sent-tip" class="hidden" style="color:#389e0d;">消息通知已发送至接收方管理员（手机尾号 <strong id="admin-phone-tail-sent">****</strong>，消息中心可查看）。等待其扫码确认后方可继续。</span>
+                <div style="margin-top:8px;">
+                  <button type="button" class="btn btn-primary btn-sm" id="btn-send-notify">发送消息通知</button>
+                  <button type="button" class="btn btn-sm" id="btn-resend-notify" style="display:none;">重新发送</button>
+                </div>
+              </div>
               <p class="receiver-qr-hint">
-                请接收方<strong>代理商管理员</strong>打开盛意旺合作伙伴平台并完成登录，使用微信或浏览器扫描下方二维码，<strong>确认绑定</strong>本次机具转移关系。
+                请接收方<strong>代理商管理员</strong>使用微信或浏览器扫描下方二维码，<strong>确认绑定</strong>本次机具转移关系。
               </p>
               <div class="receiver-qr-wrap">
                 <img id="receiver-qr-img" width="180" height="180" alt="转移关系确认二维码" />
@@ -924,7 +938,7 @@
   var modalSelPreview = document.getElementById('modal-sel-sn-preview');
   var btnStep0Next = document.getElementById('btn-step0-next');
   var modalStep0EquipTab = 'code';
-  var modalImportEquipTab = 'code';
+  var step0Mode = 'manual';
 
   var IMPORT_SHEET_META = {
     收款码牌: { typeKey: 'code', headers: ['码牌编号'] },
@@ -932,22 +946,6 @@
     云音箱: { typeKey: 'speaker', headers: ['设备SN号', '码牌编号'] },
     扫码王: { typeKey: 'mamawang', headers: ['终端序列号（SN号）'] },
     云打印机: { typeKey: 'printer', headers: ['终端序列号（SN号）'] }
-  };
-
-  var IMPORT_FIELD_LABEL = {
-    code: '码牌编号（粘贴）',
-    pos: '终端序列号（SN号）（粘贴）',
-    speaker: '设备SN号 / 码牌编号（粘贴）',
-    mamawang: '终端序列号（SN号）（粘贴）',
-    printer: '终端序列号（SN号）（粘贴）'
-  };
-
-  var IMPORT_TEXT_PLACEHOLDER = {
-    code: '每行一个码牌编号，例如：\nMP889012345679',
-    pos: '每行一个终端序列号（SN号），例如：\nSN882736451902',
-    speaker: '每行一条：可仅填设备SN，或仅填码牌编号，或「设备SN,码牌编号」\nSP776655443322\nMP889000111',
-    mamawang: '每行一个终端序列号（SN号），例如：\nMMW9900112233',
-    printer: '每行一个终端序列号（SN号），例如：\nPRT6600117788'
   };
 
   var MODAL_STEP0_COL_TITLE = {
@@ -975,17 +973,13 @@
     renderModalStep0();
   }
 
-  function switchModalImportEquipTab(tab) {
-    modalImportEquipTab = tab;
-    document.querySelectorAll('#modal-import-type-tabs .modal-import-tab').forEach(function (el) {
-      var on = el.getAttribute('data-import-tab') === tab;
-      el.classList.toggle('active', on);
-      el.setAttribute('aria-selected', on ? 'true' : 'false');
+  function switchStep0Mode(mode) {
+    step0Mode = mode;
+    document.querySelectorAll('#step0-mode-tabs .step0-mode-tab').forEach(function (el) {
+      el.classList.toggle('active', el.getAttribute('data-mode') === mode);
     });
-    var lab = document.getElementById('modal-import-field-label');
-    if (lab) lab.textContent = IMPORT_FIELD_LABEL[tab] || '设备编号（粘贴）';
-    var ta = document.getElementById('modal-import-sn');
-    if (ta) ta.placeholder = IMPORT_TEXT_PLACEHOLDER[tab] || '';
+    document.getElementById('step0-panel-manual').classList.toggle('hidden', mode !== 'manual');
+    document.getElementById('step0-panel-import').classList.toggle('hidden', mode !== 'import');
   }
 
   function clearModalStep0FilterInputs() {
@@ -1080,12 +1074,58 @@
     return { added: added, skipped: skipped };
   }
 
+  function applyRawSnList(rawText) {
+    var sns = String(rawText || '')
+      .split(/[\s,，;；\n\r\t]+/)
+      .map(function (s) { return s.trim(); })
+      .filter(Boolean);
+    var skipped = [];
+    var added = 0;
+    sns.forEach(function (sn) {
+      if (modalTransferSelected.has(sn)) return;
+      var m = demoMachines.filter(function (x) { return x.sn === sn; })[0];
+      if (!m) {
+        skipped.push(sn + '（不存在）');
+        return;
+      }
+      if (!isModalEligibleMachine(m)) {
+        skipped.push(sn + '（非直属或未绑定）');
+        return;
+      }
+      if (modalTransferSelected.size >= MAX_TRANSFER) {
+        skipped.push(sn + '（已达 500 台上限）');
+        return;
+      }
+      modalTransferSelected.add(sn);
+      added++;
+    });
+    updateModalSelSummary();
+    return { added: added, skipped: skipped };
+  }
+
+  function extractAllSerialsFromWorkbook(wb) {
+    var sns = [];
+    wb.SheetNames.forEach(function (sheetName) {
+      var sheet = wb.Sheets[sheetName];
+      if (!sheet) return;
+      var rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '', blankrows: false });
+      rows.forEach(function (row, i) {
+        if (!row) return;
+        for (var c = 0; c < row.length; c++) {
+          var v = normalizeImportCell(row[c]);
+          if (!v) continue;
+          if (i === 0 && /^(设备编号|码牌编号|终端序列号|SN号|设备SN号)/.test(v)) continue;
+          sns.push(v);
+        }
+      });
+    });
+    return sns;
+  }
+
   function parseTextareaToImportEntries(raw, tab) {
     var lines = String(raw || '')
       .split(/[\n\r]+/)
-      .map(function (s) {
-        return s.trim();
-      })
+      .map(function (s) { return s.trim(); })
       .filter(Boolean);
     var entries = [];
     lines.forEach(function (line) {
@@ -1372,6 +1412,7 @@
         if (impClose) impClose.value = '';
         var fiClose = document.getElementById('modal-import-file');
         if (fiClose) fiClose.value = '';
+        switchStep0Mode('manual');
       }
       closeModal(id);
     });
@@ -1435,23 +1476,23 @@
     if (el) el.addEventListener('click', function () { renderModalStep0(); });
   });
 
+  document.getElementById('step0-mode-tabs').addEventListener('click', function (e) {
+    var btn = e.target.closest('[data-mode]');
+    if (!btn) return;
+    switchStep0Mode(btn.getAttribute('data-mode'));
+  });
+
   document.getElementById('btn-batch-transfer-top').addEventListener('click', function () {
     modalTransferSelected.clear();
     clearModalStep0FilterInputs();
     switchModalStep0EquipTab('code');
-    switchModalImportEquipTab('code');
+    switchStep0Mode('manual');
     var imp = document.getElementById('modal-import-sn');
     if (imp) imp.value = '';
     var fileIn = document.getElementById('modal-import-file');
     if (fileIn) fileIn.value = '';
     renderModalStep0();
     openModal('modal-step0');
-  });
-
-  document.getElementById('modal-import-type-tabs').addEventListener('click', function (e) {
-    var btn = e.target.closest('[data-import-tab]');
-    if (!btn) return;
-    switchModalImportEquipTab(btn.getAttribute('data-import-tab'));
   });
 
   document.getElementById('btn-download-import-template').addEventListener('click', function () {
@@ -1475,15 +1516,15 @@
       try {
         var data = new Uint8Array(ev.target.result);
         var wb = XLSX.read(data, { type: 'array' });
-        var entries = extractImportEntriesFromWorkbook(wb);
-        if (!entries.length) {
-          alert('未在文件中解析到有效数据。请使用官方模板：各设备类型对应独立 Sheet，表头与页面查询字段名称一致，从第二行起填写。');
+        var sns = extractAllSerialsFromWorkbook(wb);
+        if (!sns.length) {
+          alert('未在文件中解析到有效的序列号，请确认使用官方模板并从第二行起填写。');
           return;
         }
-        var r = applyImportEntries(entries);
+        var r = applyRawSnList(sns.join('\n'));
         alert(formatImportResult(r.added, r.skipped));
       } catch (err) {
-        alert('文件解析失败，请确认上传为 .xlsx / .xls 且格式与模板一致。');
+        alert('文件解析失败，请确认上传为 .xlsx / .xls 格式。');
       }
     };
     reader.readAsArrayBuffer(f);
@@ -1491,16 +1532,19 @@
 
   document.getElementById('btn-modal-import-apply').addEventListener('click', function () {
     var raw = document.getElementById('modal-import-sn').value || '';
-    var entries = parseTextareaToImportEntries(raw, modalImportEquipTab);
-    if (!entries.length) {
-      alert('请先粘贴至少一行有效内容。');
+    if (!raw.trim()) {
+      alert('请先粘贴至少一行设备序列号。');
       return;
     }
-    var r = applyImportEntries(entries);
-    alert(formatImportResult(r.added, r.skipped));
+    var r = applyRawSnList(raw);
+    var msg = '已添加到已选：' + r.added + ' 台';
+    if (r.skipped.length) {
+      msg += '；跳过 ' + r.skipped.length + ' 条';
+      if (r.skipped.length <= 12) msg += '：\n' + r.skipped.join('\n');
+      else msg += '（前 12 条）：\n' + r.skipped.slice(0, 12).join('\n') + '\n…';
+    }
+    alert(msg);
   });
-
-  switchModalImportEquipTab('code');
 
   var qrExpireAtMs = 0;
   var qrExpiryTimerId = null;
@@ -1680,14 +1724,14 @@
       tr.dataset.sn = sn;
       if (!vr.ok) tr.setAttribute('data-fail', '1');
       tr.innerHTML =
-        '<td>' + escapeHtmlRec(m.sn) + '</td>' +
-        '<td>' + escapeHtmlRec(m.type) + '</td>' +
-        '<td><span class="tag tag-green">未绑定</span></td>' +
-        '<td>' + (vr.ok ? '<span class="tag tag-green">通过</span>' : '<span class="tag tag-red">未通过</span>') + '</td>' +
-        '<td style="font-size:12px;line-height:1.45;color:' + (vr.ok ? '#8c8c8c' : '#a8071a') + ';">' +
+        '<td style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:12px;" title="' + escapeHtmlRec(m.sn) + '">' + escapeHtmlRec(m.sn) + '</td>' +
+        '<td style="white-space:nowrap;">' + escapeHtmlRec(m.type) + '</td>' +
+        '<td style="white-space:nowrap;"><span class="tag tag-green">未绑定</span></td>' +
+        '<td style="white-space:nowrap;">' + (vr.ok ? '<span class="tag tag-green">通过</span>' : '<span class="tag tag-red">未通过</span>') + '</td>' +
+        '<td style="font-size:12px;line-height:1.5;word-break:break-all;color:' + (vr.ok ? '#8c8c8c' : '#a8071a') + ';">' +
         (vr.ok ? '—' : escapeHtmlRec(vr.reason)) +
         '</td>' +
-        '<td><button type="button" class="btn btn-sm row-del">删除</button></td>';
+        '<td style="white-space:nowrap;"><button type="button" class="btn btn-sm row-del">删除</button></td>';
       ct.appendChild(tr);
     });
     ct.querySelectorAll('.row-del').forEach(function (btn) {
@@ -1724,6 +1768,14 @@
     if (qr) { qr.removeAttribute('src'); qr.style.display = ''; }
     var lp = document.getElementById('receiver-linked-panel');
     if (lp) lp.classList.add('hidden');
+    var unsentTip = document.getElementById('receiver-notify-unsent-tip');
+    if (unsentTip) unsentTip.classList.remove('hidden');
+    var sentTip = document.getElementById('receiver-notify-sent-tip');
+    if (sentTip) sentTip.classList.add('hidden');
+    var sendBtn = document.getElementById('btn-send-notify');
+    if (sendBtn) sendBtn.style.display = '';
+    var resendBtn = document.getElementById('btn-resend-notify');
+    if (resendBtn) resendBtn.style.display = 'none';
     var qb = document.getElementById('receiver-qr-block');
     if (qb) qb.classList.add('hidden');
     var tip = document.getElementById('qr-expired-tip');
@@ -1827,7 +1879,26 @@
     }
 
     document.getElementById('receiver-qr-block').classList.remove('hidden');
+    document.getElementById('receiver-notify-unsent-tip').classList.remove('hidden');
+    document.getElementById('receiver-notify-sent-tip').classList.add('hidden');
+    document.getElementById('btn-send-notify').style.display = '';
+    document.getElementById('btn-resend-notify').style.display = 'none';
     issueNewQrAndTimer(no);
+  });
+
+  document.getElementById('btn-send-notify').addEventListener('click', function () {
+    var tail = document.getElementById('admin-phone-tail').textContent;
+    document.getElementById('receiver-notify-unsent-tip').classList.add('hidden');
+    document.getElementById('receiver-notify-sent-tip').classList.remove('hidden');
+    document.getElementById('admin-phone-tail-sent').textContent = tail;
+    document.getElementById('btn-send-notify').style.display = 'none';
+    document.getElementById('btn-resend-notify').style.display = '';
+  });
+
+  document.getElementById('btn-resend-notify').addEventListener('click', function () {
+    var tail = document.getElementById('admin-phone-tail').textContent;
+    document.getElementById('admin-phone-tail-sent').textContent = tail;
+    alert('消息通知已重新发送（原型演示）');
   });
 
   document.getElementById('btn-refresh-qr').addEventListener('click', function () {
