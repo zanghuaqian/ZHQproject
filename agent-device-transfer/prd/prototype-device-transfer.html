@@ -1,0 +1,2227 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>机具批量转移 - 原型（盛意旺合作伙伴平台）</title>
+  <style>
+    :root {
+      --primary: #1677ff;
+      --primary-hover: #4096ff;
+      --border: #e8e8e8;
+      --bg: #f5f6f8;
+      --text: #262626;
+      --muted: #8c8c8c;
+      --danger: #f5222d;
+      --success: #52c41a;
+      --warn: #faad14;
+      --radius: 4px;
+      --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans SC", sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: var(--font); font-size: 13px; color: var(--text); background: var(--bg); min-height: 100vh; }
+    a { color: var(--primary); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    /* 盛意旺合作伙伴平台 · 收银机具管理壳层 */
+    .app { min-height: 100vh; display: flex; flex-direction: column; }
+    .app-header {
+      height: 56px; flex-shrink: 0; background: #fff; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; padding: 0 20px; gap: 24px;
+    }
+    .app-header-brand { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 16px; color: var(--text); white-space: nowrap; }
+    .app-header-brand .sep { color: #bfbfbf; font-weight: 400; }
+    .app-header-search {
+      flex: 1; max-width: 420px;
+    }
+    .app-header-search input {
+      width: 100%; height: 34px; padding: 0 12px; border: 1px solid #d9d9d9; border-radius: var(--radius);
+      font-size: 13px; background: #fafafa;
+    }
+    .app-header-search input::placeholder { color: #bfbfbf; }
+    .app-header-right { margin-left: auto; display: flex; align-items: center; gap: 16px; color: var(--text); font-size: 13px; }
+    .app-header-bell { width: 32px; height: 32px; border-radius: var(--radius); border: none; background: transparent; cursor: pointer; font-size: 18px; color: #595959; }
+    .app-header-bell:hover { background: #f5f5f5; }
+    .app-header-user { color: #262626; }
+
+    .app-body { flex: 1; display: flex; min-height: 0; }
+    .app-sider {
+      width: 220px; flex-shrink: 0; background: #fff; border-right: 1px solid var(--border);
+      padding: 12px 0; overflow-y: auto; font-size: 13px;
+    }
+    .nav-group-title { padding: 8px 20px 4px; font-size: 12px; color: #8c8c8c; }
+    .nav-item {
+      padding: 10px 20px 10px 28px; color: #595959; cursor: pointer; border-left: 3px solid transparent;
+    }
+    .nav-item:hover { color: var(--primary); background: #f6fbff; }
+    .nav-item.active { color: var(--primary); background: #e6f4ff; font-weight: 600; border-left-color: var(--primary); }
+    .nav-item.sub { padding-left: 40px; font-size: 12px; }
+
+    .app-main { flex: 1; min-width: 0; background: #f5f6f8; padding: 0 20px 24px; overflow: auto; }
+
+    .page-tabs {
+      display: flex; align-items: center; gap: 4px; padding: 12px 0 8px; flex-wrap: wrap;
+      border-bottom: 1px solid #e8e8e8; margin-bottom: 4px;
+    }
+    .page-tab {
+      display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: var(--radius);
+      color: #595959; cursor: pointer; font-size: 13px; user-select: none;
+    }
+    .page-tab:hover { color: var(--primary); background: rgba(22,119,255,0.06); }
+    .page-tab.active { color: var(--primary); font-weight: 600; background: #fff; border: 1px solid #e8e8e8; }
+    .page-tab .close { opacity: 0.45; font-size: 12px; }
+    .page-tab.active .close:hover { opacity: 1; color: var(--text); }
+
+    .page-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin: 12px 0 8px; }
+    .page-title { margin: 0; font-size: 20px; font-weight: 600; color: var(--text); letter-spacing: -0.02em; }
+    .page-head-extra { display: flex; gap: 8px; flex-shrink: 0; }
+    .btn-ghost { background: #fff; color: var(--primary); border: 1px solid var(--primary); }
+    .btn-ghost:hover { background: #f6fbff; }
+
+    .equip-tabs {
+      display: flex; flex-wrap: wrap; gap: 0; margin-bottom: 16px; border-bottom: 1px solid #e8e8e8;
+    }
+    .equip-tab {
+      padding: 12px 20px; margin-bottom: -1px; cursor: pointer; color: #595959; border-bottom: 2px solid transparent;
+      font-size: 14px; user-select: none;
+    }
+    .equip-tab:hover { color: var(--primary); }
+    .equip-tab.active { color: var(--primary); font-weight: 600; border-bottom-color: var(--primary); }
+
+    .record-role-tabs {
+      display: flex; gap: 0; margin-bottom: 12px; border-bottom: 1px solid #e8e8e8;
+    }
+    .record-role-tab {
+      padding: 10px 20px; margin-bottom: -1px; cursor: pointer; color: #595959; border-bottom: 2px solid transparent;
+      font-size: 14px; user-select: none;
+    }
+    .record-role-tab:hover { color: var(--primary); }
+    .record-role-tab.active { color: var(--primary); font-weight: 600; border-bottom-color: var(--primary); }
+
+    .filter-box {
+      background: #fff; border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 16px 8px; margin-bottom: 12px;
+    }
+    .filter-rows { display: flex; flex-direction: column; gap: 12px; }
+    .filter-row { display: flex; flex-wrap: wrap; gap: 16px 24px; align-items: flex-end; }
+    /* 机具归属与绑定商户/门店同行时：不占满整行，并收紧项间距 */
+    .filter-row.filter-row--ownership { column-gap: 12px; }
+    .field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+    .field label { font-size: 13px; color: #595959; }
+    .field-inline { flex-direction: row; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .field-inline label { margin-right: 4px; }
+    .radio-group { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+    .radio-group label { display: inline-flex; align-items: center; gap: 4px; cursor: pointer; font-size: 13px; color: var(--text); }
+    .input-with-icon { position: relative; display: inline-block; }
+    .input-with-icon input { padding-right: 32px; min-width: 180px; }
+    .input-with-icon .icon-search { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); color: #8c8c8c; pointer-events: none; font-size: 14px; }
+
+    .filters { display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end; margin-bottom: 12px; }
+    select, input[type="text"], input[type="search"] {
+      height: 32px; padding: 0 10px; border: 1px solid #d9d9d9; border-radius: var(--radius); min-width: 140px; font-size: 13px;
+    }
+    .btn {
+      height: 32px; padding: 0 14px; border-radius: var(--radius); border: 1px solid #d9d9d9; background: #fff; cursor: pointer; font-size: 13px;
+    }
+    .btn:hover { border-color: var(--primary); color: var(--primary); }
+    .btn-primary { background: var(--primary); color: #fff; border-color: var(--primary); }
+    .btn-primary:hover { background: var(--primary-hover); border-color: var(--primary-hover); color: #fff; }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-danger { background: var(--danger); color: #fff; border-color: var(--danger); }
+    .btn-danger:hover { opacity: 0.9; color: #fff; }
+    .btn-sm { height: 28px; padding: 0 10px; font-size: 12px; }
+
+    .table-card { background: #fff; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+    .table-toolbar {
+      display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between;
+      padding: 12px 16px; border-bottom: 1px solid #f0f0f0; background: #fff;
+    }
+    .table-toolbar-left { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+    .toolbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 10px; }
+    .sel-hint { color: var(--primary); font-weight: 600; font-size: 13px; }
+
+    table.data { width: 100%; border-collapse: collapse; font-size: 13px; }
+    table.data th, table.data td { padding: 12px 12px; border-bottom: 1px solid #f0f0f0; text-align: left; vertical-align: middle; }
+    table.data th { background: #fafafa; color: #8c8c8c; font-weight: 500; white-space: nowrap; }
+    table.data tr:hover td { background: #fafafa; }
+    table.data .op-links { white-space: nowrap; }
+    table.data .op-links a { margin-right: 8px; }
+    .text-muted-cell { color: #595959; font-size: 12px; line-height: 1.5; }
+    .tag { display: inline-block; padding: 0 6px; border-radius: 2px; font-size: 11px; }
+    .tag-green { background: #f6ffed; color: var(--success); border: 1px solid #b7eb8f; }
+    .tag-red { background: #fff2f0; color: var(--danger); border: 1px solid #ffccc7; }
+
+    /* Modal */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 1000;
+      align-items: center; justify-content: center; padding: 20px;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: #fff; border-radius: 8px; width: 100%; max-width: 640px; max-height: 90vh; overflow: hidden;
+      display: flex; flex-direction: column; box-shadow: 0 4px 24px rgba(0,0,0,0.12);
+    }
+    .modal-lg { max-width: 720px; }
+    .modal-xl { max-width: 920px; }
+    .modal-sel-summary {
+      margin-bottom: 12px; padding: 10px 12px; background: #fafafa; border: 1px solid var(--border); border-radius: var(--radius); font-size: 12px;
+    }
+    .modal-sel-summary strong { color: var(--primary); font-size: 14px; }
+    .modal-sel-tags {
+      margin-top: 8px; min-height: 36px; max-height: 120px; overflow-y: auto;
+      display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+      padding: 8px; background: #fff; border: 1px solid #f0f0f0; border-radius: var(--radius);
+    }
+    .modal-sel-tags.empty { align-content: center; color: #bfbfbf; font-size: 12px; }
+    .sel-tag {
+      display: inline-flex; align-items: center; gap: 2px; max-width: 100%;
+      padding: 2px 2px 2px 10px; background: #e6f4ff; border: 1px solid #91caff; border-radius: 4px;
+      font-size: 12px; color: var(--text);
+    }
+    .sel-tag-txt { word-break: break-all; }
+    .sel-tag-x {
+      flex-shrink: 0; border: none; background: transparent; cursor: pointer; color: #8c8c8c;
+      padding: 2px 8px; font-size: 16px; line-height: 1; border-radius: 2px;
+    }
+    .sel-tag-x:hover { color: var(--danger); background: rgba(245,34,45,0.08); }
+    .modal-hd {
+      padding: 14px 16px; border-bottom: 1px solid var(--border); font-weight: 600; font-size: 15px;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .modal-bd { padding: 16px; overflow-y: auto; flex: 1; }
+    .modal-ft { padding: 12px 16px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 8px; }
+
+    .step-dots { display: flex; gap: 8px; margin-bottom: 14px; font-size: 12px; color: var(--muted); }
+    .step-dots span { padding: 4px 10px; border-radius: 12px; background: #f5f5f5; }
+    .step-dots span.on { background: #e6f4ff; color: var(--primary); font-weight: 600; }
+
+    .receiver-card {
+      border: 1px solid var(--border); border-radius: var(--radius); padding: 12px; background: #fafafa; margin-top: 10px;
+    }
+    .receiver-card.ok { border-color: #91caff; background: #f6fbff; }
+    .receiver-row { display: flex; gap: 8px; margin-bottom: 6px; font-size: 12px; align-items: baseline; flex-wrap: wrap; }
+    .receiver-row .k { color: var(--muted); width: 100px; flex-shrink: 0; }
+    .receiver-mask-tag { font-size: 11px; color: #8c8c8c; margin-left: 4px; }
+
+    .receiver-qr-block {
+      margin-top: 14px; padding: 14px 16px; border: 1px dashed #91caff; border-radius: var(--radius);
+      background: #fafafa; text-align: center;
+    }
+    .receiver-qr-hint { font-size: 12px; color: #595959; line-height: 1.6; margin: 0 0 10px; text-align: left; }
+    .receiver-qr-hint strong { color: var(--text); }
+    .receiver-qr-wrap { display: inline-block; padding: 8px; background: #fff; border: 1px solid #f0f0f0; border-radius: var(--radius); }
+    .receiver-qr-wrap img { display: block; vertical-align: top; }
+    .receiver-qr-foot { font-size: 12px; color: var(--muted); margin: 10px 0 0; }
+    .receiver-confirm-mock { display: flex; align-items: flex-start; gap: 8px; margin-top: 14px; padding-top: 12px; border-top: 1px solid #f0f0f0; text-align: left; font-size: 13px; color: #262626; }
+    .receiver-confirm-mock input { margin-top: 2px; }
+    .receiver-notify { font-size: 12px; color: #595959; line-height: 1.65; margin: 0 0 10px; text-align: left; }
+    .qr-meta-row { font-size: 12px; color: #595959; margin: 8px 0 10px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; }
+    .qr-expired-tip { color: var(--danger); font-size: 12px; margin: 0 0 8px; }
+
+    .history-list { margin-top: 12px; }
+    .history-item {
+      display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 8px 10px; border: 1px solid #f0f0f0;
+      border-radius: var(--radius); margin-bottom: 6px; font-size: 12px;
+    }
+    .history-item:hover { border-color: var(--primary); }
+    .history-item-text { flex: 1; min-width: 0; }
+    .history-item-actions { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+    .history-item.history-item--selected { border-color: var(--primary); background: #e6f4ff; box-shadow: inset 0 0 0 1px var(--primary); }
+    .receiver-stack { display: flex; flex-direction: column; gap: 14px; }
+    .receiver-block { border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; background: #fff; }
+    .receiver-block-hd {
+      padding: 10px 12px; font-weight: 600; font-size: 13px; display: flex; align-items: center; gap: 8px;
+    }
+    .receiver-block--history .receiver-block-hd { background: #f6ffed; border-bottom: 1px solid #b7eb8f; color: #135200; }
+    .receiver-block--new .receiver-block-hd { background: #f0f9ff; border-bottom: 1px solid #91caff; color: #0958d9; }
+    .receiver-block-bd { padding: 12px; }
+    .receiver-block-tip { margin: 0 0 10px; font-size: 12px; color: #595959; line-height: 1.55; }
+    .receiver-block-icon {
+      display: inline-flex; width: 22px; height: 22px; align-items: center; justify-content: center;
+      border-radius: 50%; font-size: 12px; font-weight: 700; flex-shrink: 0;
+    }
+    .receiver-block--history .receiver-block-icon { background: #b7eb8f; color: #135200; }
+    .receiver-block--new .receiver-block-icon { background: #91caff; color: #0958d9; }
+    .receiver-tab-bar {
+      display: flex; gap: 0; margin-bottom: 12px; border-bottom: 1px solid #e8e8e8;
+    }
+    .receiver-tab {
+      padding: 10px 16px; margin-bottom: -1px; cursor: pointer; color: #595959;
+      border-bottom: 2px solid transparent; font-size: 14px; background: none; border-top: none; border-left: none; border-right: none;
+      font-family: inherit;
+    }
+    .receiver-tab:hover { color: var(--primary); }
+    .receiver-tab.active { color: var(--primary); font-weight: 600; border-bottom-color: var(--primary); }
+    .receiver-tab.hidden { display: none !important; }
+    .receiver-tab-panel { min-height: 120px; }
+    .receiver-tab-panel.hidden { display: none !important; }
+    .receiver-history-summary {
+      margin-top: 12px; padding: 12px 14px; background: #f6ffed; border: 1px solid #b7eb8f; border-radius: var(--radius); font-size: 13px;
+    }
+    .receiver-history-summary .t { font-size: 12px; color: #595959; margin-bottom: 6px; }
+    .receiver-history-summary .v { font-weight: 600; color: var(--text); word-break: break-all; }
+    .receiver-history-summary .sub { margin-top: 8px; font-size: 12px; color: #389e0d; line-height: 1.5; }
+    .step0-section-title { margin: 0 0 8px; font-size: 13px; font-weight: 600; color: var(--text); }
+    .step0-section-lead { margin: 0 0 12px; font-size: 12px; color: var(--muted); line-height: 1.55; }
+    .step0-manual-block { padding-bottom: 16px; margin-bottom: 16px; border-bottom: 1px solid #e8e8e8; }
+    .step0-import-block { padding: 12px 12px 2px; background: #fafafa; border: 1px dashed #d9d9d9; border-radius: var(--radius); }
+    .modal-import-tabs {
+      display: flex; flex-wrap: wrap; gap: 0; margin-bottom: 10px; border-bottom: 1px solid #e8e8e8;
+    }
+    .modal-import-tab {
+      padding: 8px 12px; margin-bottom: -1px; cursor: pointer; color: #595959; border-bottom: 2px solid transparent;
+      font-size: 12px; user-select: none; background: none; border: none; font-family: inherit;
+    }
+    .modal-import-tab:hover { color: var(--primary); }
+    .modal-import-tab.active { color: var(--primary); font-weight: 600; border-bottom-color: var(--primary); }
+
+    .import-sn-wrap { margin-top: 0; padding: 0; background: transparent; border: none; border-radius: 0; }
+    .import-sn-wrap label { font-size: 12px; color: #595959; display: block; margin-bottom: 6px; font-weight: 500; }
+    .import-sn-hint { margin: 0 0 8px; font-size: 12px; color: var(--muted); line-height: 1.55; }
+    .import-sn-toolbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 8px; }
+    .import-sn-wrap textarea {
+      width: 100%; min-height: 64px; padding: 8px 10px; border: 1px solid #d9d9d9; border-radius: var(--radius);
+      font-size: 12px; font-family: inherit; resize: vertical; box-sizing: border-box;
+    }
+    .import-sn-actions { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+
+    .modal-transfer-tabs {
+      display: flex; flex-wrap: wrap; gap: 0; margin-bottom: 12px; border-bottom: 1px solid #e8e8e8;
+    }
+    .modal-transfer-tab {
+      padding: 10px 16px; margin-bottom: -1px; cursor: pointer; color: #595959; border-bottom: 2px solid transparent;
+      font-size: 13px; user-select: none; background: none; border: none; font-family: inherit;
+    }
+    .modal-transfer-tab:hover { color: var(--primary); }
+    .modal-transfer-tab.active { color: var(--primary); font-weight: 600; border-bottom-color: var(--primary); }
+    .modal-step0-filter-panel { margin-bottom: 12px; }
+    .modal-step0-filter-panel.hidden { display: none !important; }
+    .modal-step0-filter-panel .filters { margin-bottom: 0; }
+
+    .list-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    .list-table th, .list-table td { padding: 8px; border-bottom: 1px solid #f0f0f0; text-align: left; }
+    .list-table th { color: #888; font-weight: 500; }
+
+    .result-banner {
+      padding: 16px; border-radius: var(--radius); margin-bottom: 14px; display: flex; align-items: flex-start; gap: 12px;
+    }
+    .result-banner.ok { background: #f6ffed; border: 1px solid #b7eb8f; }
+    .result-banner.partial { background: #fffbe6; border: 1px solid #ffe58f; }
+    .result-title { font-weight: 700; font-size: 15px; margin-bottom: 4px; }
+
+    .empty { text-align: center; padding: 40px; color: #bbb; }
+
+    .hidden { display: none !important; }
+
+    @media (max-width: 720px) {
+      .filters .field { width: 100%; }
+      select, input { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="app-header">
+      <div class="app-header-brand">
+        <span>盛意旺</span><span class="sep">|</span><span>合作伙伴平台</span>
+      </div>
+      <div class="app-header-search">
+        <input type="search" placeholder="全局搜索" aria-label="全局搜索" />
+      </div>
+      <div class="app-header-right">
+        <button type="button" class="app-header-bell" title="消息">🔔</button>
+        <span class="app-header-user">海南示例科技有限公司 (46041621)</span>
+      </div>
+    </header>
+
+    <div class="app-body">
+      <aside class="app-sider" aria-label="主导航">
+        <div class="nav-group-title">数据中心</div>
+        <div class="nav-item">数据概览</div>
+        <div class="nav-group-title">账单管理</div>
+        <div class="nav-item">交易账单</div>
+        <div class="nav-group-title">风控管理</div>
+        <div class="nav-item">风控查询</div>
+        <div class="nav-group-title">运营中心</div>
+        <div class="nav-item active">收银机具管理</div>
+        <div class="nav-item sub">库存总览</div>
+      </aside>
+
+      <main class="app-main">
+        <nav class="page-tabs" aria-label="页签">
+          <span class="page-tab">首页</span>
+          <span class="page-tab">商户认证</span>
+          <span class="page-tab active" data-view="machines">收银机具管理 <span class="close">×</span></span>
+          <span class="page-tab" data-view="records">转移记录</span>
+        </nav>
+
+        <!-- 视图1：收银机具管理（列表样式对齐线上） -->
+        <section id="view-machines">
+          <div class="page-head">
+            <h1 class="page-title">收银机具管理</h1>
+            <div class="page-head-extra">
+              <button type="button" class="btn btn-ghost">查看库存总览</button>
+              <button type="button" class="btn btn-primary" id="btn-batch-transfer-top">机具转移</button>
+              <button type="button" class="btn btn-ghost">去采购</button>
+            </div>
+          </div>
+
+          <div class="equip-tabs" role="tablist" aria-label="机具类型">
+            <div class="equip-tab active" data-equip="code">收款码牌</div>
+            <div class="equip-tab" data-equip="pos">智能POS</div>
+            <div class="equip-tab" data-equip="speaker">云音箱</div>
+            <div class="equip-tab" data-equip="mamawang">扫码王</div>
+            <div class="equip-tab" data-equip="printer">云打印机</div>
+          </div>
+
+          <div class="filter-box">
+            <div class="filter-rows">
+              <div class="filter-row">
+                <div class="field">
+                  <label for="f-sn">码牌编号</label>
+                  <input type="search" id="f-sn" placeholder="请输入" />
+                </div>
+                <div class="field">
+                  <label for="f-code-type">码牌类型</label>
+                  <select id="f-code-type">
+                    <option value="">全部</option>
+                    <option>电子码牌</option>
+                    <option>实体码牌</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="f-status">绑定状态</label>
+                  <select id="f-status">
+                    <option value="">全部</option>
+                    <option value="unbound">未绑定</option>
+                    <option value="bound">已绑定</option>
+                  </select>
+                </div>
+              </div>
+              <div class="filter-row filter-row--ownership">
+                <div class="field" style="flex:0 1 auto;min-width:280px;max-width:100%;">
+                  <span class="field-inline" style="display:block;margin-bottom:6px;"><label>机具归属</label></span>
+                  <div style="display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;">
+                    <div class="radio-group" id="f-ownership">
+                      <label><input type="radio" name="own" value="all" checked /> 全部</label>
+                      <label><input type="radio" name="own" value="direct" /> 直属代理商</label>
+                      <label><input type="radio" name="own" value="channel" /> 归属渠道商</label>
+                    </div>
+                    <input type="text" id="f-channel-select" placeholder="请选择渠道商" autocomplete="off" style="min-width:200px;max-width:320px;height:32px;" />
+                  </div>
+                </div>
+                <div class="field" style="min-width:160px;">
+                  <label for="f-bound-merchant">绑定商户ID</label>
+                  <div class="input-with-icon">
+                    <input type="text" id="f-bound-merchant" placeholder="请输入" />
+                    <span class="icon-search">⌕</span>
+                  </div>
+                </div>
+                <div class="field" style="min-width:220px;">
+                  <label for="f-store">绑定门店</label>
+                  <select id="f-store">
+                    <option value="">请选择门店</option>
+                    <option>示例门店A</option>
+                    <option>示例门店B</option>
+                  </select>
+                </div>
+                <div class="field field-inline" style="margin-left:auto;">
+                  <button type="button" class="btn btn-primary" id="btn-query">搜索</button>
+                  <button type="button" class="btn" id="btn-refresh">重置</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="table-card">
+            <div class="table-toolbar">
+              <div class="table-toolbar-left">
+                <span class="sel-hint">已选 <span id="sel-count">0</span> 台</span>
+                <button type="button" class="btn btn-primary" id="btn-batch-transfer" disabled>批量划拨/收回</button>
+                <button type="button" class="btn btn-ghost">去绑定商户</button>
+              </div>
+              <span style="color:var(--muted);font-size:12px;">原型说明：平级「机具转移」请点页面右上角按钮；此处为存量「批量划拨/收回」入口</span>
+            </div>
+            <div style="overflow-x:auto;">
+              <table class="data">
+                <thead>
+                  <tr>
+                    <th style="width:44px;"><input type="checkbox" id="chk-all" title="全选本页可选行" /></th>
+                    <th>码牌编号</th>
+                    <th>码牌名称</th>
+                    <th>绑定商户信息</th>
+                    <th>归属渠道商</th>
+                    <th>码牌类型</th>
+                    <th>绑定状态</th>
+                    <th>更新时间</th>
+                    <th style="min-width:200px;">操作</th>
+                  </tr>
+                </thead>
+                <tbody id="machine-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- 视图2：转移记录 -->
+        <section id="view-records" class="hidden">
+          <div class="page-head">
+            <h1 class="page-title">转移记录</h1>
+          </div>
+          <div class="table-card">
+            <div style="padding:16px;border-bottom:1px solid #f0f0f0;">
+              <div class="filters" style="flex-wrap:wrap;align-items:flex-end;">
+                <div class="field">
+                  <label for="rec-date-start">起始日期</label>
+                  <input type="date" id="rec-date-start" />
+                </div>
+                <div class="field">
+                  <label for="rec-date-end">结束日期</label>
+                  <input type="date" id="rec-date-end" />
+                </div>
+                <div class="field hidden" id="rec-filter-init-wrap">
+                  <label for="rec-q-init-id">发起方商户号</label>
+                  <input type="text" id="rec-q-init-id" placeholder="精准查询" autocomplete="off" />
+                </div>
+                <div class="field hidden" id="rec-filter-init-name-wrap">
+                  <label for="rec-q-init-name">发起方商户名称</label>
+                  <input type="text" id="rec-q-init-name" placeholder="模糊查询" autocomplete="off" />
+                </div>
+                <div class="field hidden" id="rec-filter-rcv-wrap">
+                  <label for="rec-q-rcv-id">接收方商户号</label>
+                  <input type="text" id="rec-q-rcv-id" placeholder="精准查询" autocomplete="off" />
+                </div>
+                <div class="field hidden" id="rec-filter-rcv-name-wrap">
+                  <label for="rec-q-rcv-name">接收方商户名称</label>
+                  <input type="text" id="rec-q-rcv-name" placeholder="模糊查询" autocomplete="off" />
+                </div>
+                <div class="field">
+                  <label for="rec-q-batch">批次号</label>
+                  <input type="text" id="rec-q-batch" placeholder="精准查询" autocomplete="off" />
+                </div>
+                <button type="button" class="btn btn-primary" id="btn-rec-query">查询</button>
+                <button type="button" class="btn" id="btn-rec-reset">重置</button>
+              </div>
+            </div>
+            <div class="record-role-tabs" role="tablist" aria-label="转移角色">
+              <div class="record-role-tab active" data-record-tab="initiated" id="rec-tab-initiated">我发起的</div>
+              <div class="record-role-tab" data-record-tab="received" id="rec-tab-received">我接收的</div>
+            </div>
+            <div style="overflow-x:auto;">
+              <table class="data">
+                <thead>
+                  <tr>
+                    <th>批次号</th>
+                    <th>发起方</th>
+                    <th>接收方</th>
+                    <th>总台数</th>
+                    <th>状态</th>
+                    <th>创建时间</th>
+                    <th style="min-width:88px;">操作</th>
+                  </tr>
+                </thead>
+                <tbody id="records-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <!-- 弹窗：步骤1 选择终端（未绑定设备） -->
+  <div class="modal-overlay" id="modal-step0" aria-hidden="true">
+    <div class="modal modal-xl" role="dialog" aria-labelledby="m0-title">
+      <div class="modal-hd">
+        <span id="m0-title">批量转移 · 选择终端</span>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <button type="button" class="btn btn-sm btn-ghost js-transfer-records">转移记录</button>
+          <button type="button" class="btn btn-sm" data-close="modal-step0">关闭</button>
+        </div>
+      </div>
+      <div class="modal-bd">
+        <div class="step-dots">
+          <span class="on">1 选择终端</span><span>2 确认清单</span><span>3 接收方</span><span>4 验证提交</span>
+        </div>
+        <p style="font-size:12px;color:#595959;margin:0 0 12px;padding:10px 12px;background:#fffbe6;border:1px solid #ffe58f;border-radius:var(--radius);line-height:1.65;">
+          仅展示<strong>直属代理商</strong>且<strong>未绑定</strong>设备；如需转<strong>归属渠道商</strong>的机具，请先操作<strong>批量回收</strong>；单次转移最多支持 <strong>500</strong> 台。
+        </p>
+        <div class="step0-manual-block">
+        <p class="step0-section-title">方式一：手动勾选</p>
+        <p class="step0-section-lead" style="margin-top:-4px;">按设备类型筛选列表并勾选；与下方「批量导入」相互独立，可单独使用或组合使用。</p>
+        <div class="modal-transfer-tabs" id="modal-transfer-type-tabs" role="tablist" aria-label="设备类型">
+          <button type="button" class="modal-transfer-tab active" data-equip-tab="code" role="tab" aria-selected="true">收款码牌</button>
+          <button type="button" class="modal-transfer-tab" data-equip-tab="pos" role="tab" aria-selected="false">智能POS</button>
+          <button type="button" class="modal-transfer-tab" data-equip-tab="speaker" role="tab" aria-selected="false">云音箱</button>
+          <button type="button" class="modal-transfer-tab" data-equip-tab="mamawang" role="tab" aria-selected="false">扫码王</button>
+          <button type="button" class="modal-transfer-tab" data-equip-tab="printer" role="tab" aria-selected="false">云打印机</button>
+        </div>
+        <div id="modal-step0-panel-code" class="modal-step0-filter-panel" role="tabpanel">
+          <div class="filters" style="flex-wrap:wrap;">
+            <div class="field">
+              <label for="modal-f-code-sn">码牌编号</label>
+              <input type="text" id="modal-f-code-sn" placeholder="支持模糊查询" autocomplete="off" style="min-width:200px;" />
+            </div>
+            <button type="button" class="btn btn-primary" id="modal-step0-query">应用筛选</button>
+          </div>
+        </div>
+        <div id="modal-step0-panel-pos" class="modal-step0-filter-panel hidden" role="tabpanel">
+          <div class="filters" style="flex-wrap:wrap;">
+            <div class="field">
+              <label for="modal-f-pos-sn">终端序列号（SN号）</label>
+              <input type="text" id="modal-f-pos-sn" placeholder="支持模糊查询" autocomplete="off" style="min-width:200px;" />
+            </div>
+            <button type="button" class="btn btn-primary" id="modal-step0-query-pos">应用筛选</button>
+          </div>
+        </div>
+        <div id="modal-step0-panel-speaker" class="modal-step0-filter-panel hidden" role="tabpanel">
+          <div class="filters" style="flex-wrap:wrap;">
+            <div class="field">
+              <label for="modal-f-speaker-sn">设备SN号</label>
+              <input type="text" id="modal-f-speaker-sn" placeholder="支持模糊查询" autocomplete="off" style="min-width:180px;" />
+            </div>
+            <div class="field">
+              <label for="modal-f-speaker-code">码牌编号</label>
+              <input type="text" id="modal-f-speaker-code" placeholder="支持模糊查询" autocomplete="off" style="min-width:180px;" />
+            </div>
+            <button type="button" class="btn btn-primary" id="modal-step0-query-speaker">应用筛选</button>
+          </div>
+        </div>
+        <div id="modal-step0-panel-mamawang" class="modal-step0-filter-panel hidden" role="tabpanel">
+          <div class="filters" style="flex-wrap:wrap;">
+            <div class="field">
+              <label for="modal-f-mamawang-sn">终端序列号（SN号）</label>
+              <input type="text" id="modal-f-mamawang-sn" placeholder="支持模糊查询" autocomplete="off" style="min-width:200px;" />
+            </div>
+            <button type="button" class="btn btn-primary" id="modal-step0-query-mamawang">应用筛选</button>
+          </div>
+        </div>
+        <div id="modal-step0-panel-printer" class="modal-step0-filter-panel hidden" role="tabpanel">
+          <div class="filters" style="flex-wrap:wrap;">
+            <div class="field">
+              <label for="modal-f-printer-sn">终端序列号（SN号）</label>
+              <input type="text" id="modal-f-printer-sn" placeholder="支持模糊查询" autocomplete="off" style="min-width:200px;" />
+            </div>
+            <button type="button" class="btn btn-primary" id="modal-step0-query-printer">应用筛选</button>
+          </div>
+        </div>
+        <div class="modal-sel-summary">
+          已选 <strong id="modal-sel-count">0</strong> 台（上限 500 台）
+          <div class="modal-sel-tags empty" id="modal-sel-sn-preview">暂无已选设备</div>
+        </div>
+        <div style="overflow:auto;max-height:min(360px,50vh);border:1px solid var(--border);border-radius:var(--radius);">
+          <table class="list-table" style="margin:0;">
+            <thead>
+              <tr>
+                <th style="width:44px;"><input type="checkbox" id="modal-chk-all" title="全选当前筛选结果（受 500 台上限约束）" /></th>
+                <th id="modal-step0-th-device-col">码牌编号</th>
+                <th>设备类型</th>
+                <th>更新时间</th>
+              </tr>
+            </thead>
+            <tbody id="modal-step0-tbody"></tbody>
+          </table>
+        </div>
+        </div>
+
+        <div class="step0-import-block">
+        <p class="step0-section-title">方式二：批量导入</p>
+        <p class="step0-section-lead" style="margin-top:-4px;">与上方列表勾选分开操作。模板为 <strong>.xlsx</strong>，底部以<strong>设备类型分工作表（Sheet）</strong>，表头与对应类型的查询字段名称一致；也可在下方按当前导入类型粘贴。</p>
+        <div class="modal-import-tabs" id="modal-import-type-tabs" role="tablist" aria-label="导入设备类型">
+          <button type="button" class="modal-import-tab active" data-import-tab="code" role="tab" aria-selected="true">收款码牌</button>
+          <button type="button" class="modal-import-tab" data-import-tab="pos" role="tab" aria-selected="false">智能POS</button>
+          <button type="button" class="modal-import-tab" data-import-tab="speaker" role="tab" aria-selected="false">云音箱</button>
+          <button type="button" class="modal-import-tab" data-import-tab="mamawang" role="tab" aria-selected="false">扫码王</button>
+          <button type="button" class="modal-import-tab" data-import-tab="printer" role="tab" aria-selected="false">云打印机</button>
+        </div>
+        <div class="import-sn-wrap">
+          <p class="import-sn-hint">下载模板后请在<strong>对应 Sheet</strong>中填写；上传时将读取<strong>全部 Sheet</strong>中的有效行。下方粘贴仅针对当前选中的导入类型，表头含义与模板该 Sheet 一致。</p>
+          <div class="import-sn-toolbar">
+            <button type="button" class="btn btn-sm btn-ghost" id="btn-download-import-template">下载导入模板（.xlsx）</button>
+            <button type="button" class="btn btn-sm btn-ghost" id="btn-upload-import-file">上传导入文件</button>
+            <input type="file" id="modal-import-file" accept=".xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel" style="display:none;" tabindex="-1" aria-hidden="true" />
+          </div>
+          <label for="modal-import-sn" id="modal-import-field-label">码牌编号（粘贴）</label>
+          <textarea id="modal-import-sn" placeholder="每行一条；可与英文逗号分隔多个字段（云音箱可为：设备SN 或 码牌编号 或 SN,码牌编号）"></textarea>
+          <div class="import-sn-actions">
+            <button type="button" class="btn btn-primary btn-sm" id="btn-modal-import-apply">解析并勾选</button>
+            <span style="font-size:12px;color:var(--muted);">仅勾选符合「直属且未绑定」且类型匹配的终端，已选数量受 500 台上限约束。</span>
+          </div>
+        </div>
+        </div>
+      </div>
+      <div class="modal-ft">
+        <button type="button" class="btn" data-close="modal-step0">取消</button>
+        <button type="button" class="btn btn-primary" id="btn-step0-next" disabled>下一步</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 弹窗：步骤2 确认清单 -->
+  <div class="modal-overlay" id="modal-step2" aria-hidden="true">
+    <div class="modal modal-lg" role="dialog">
+      <div class="modal-hd">
+        <span>批量转移 · 确认清单</span>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <button type="button" class="btn btn-sm btn-ghost js-transfer-records">转移记录</button>
+          <button type="button" class="btn btn-sm" data-close="modal-step2">关闭</button>
+        </div>
+      </div>
+      <div class="modal-bd">
+        <div class="step-dots">
+          <span>1 选择终端</span><span class="on">2 确认清单</span><span>3 接收方</span><span>4 验证提交</span>
+        </div>
+        <p style="font-size:12px;color:var(--muted);margin:0 0 10px;line-height:1.5;">系统已对所选设备做转移前校验；若存在<strong>未通过</strong>项，请<strong>删除该条</strong>后方可进入下一步填写接收方。<span style="color:var(--danger)">存在未通过项时，「下一步」不可用。</span></p>
+        <table class="list-table" id="confirm-table">
+          <thead>
+            <tr>
+              <th>SN</th>
+              <th>终端类型</th>
+              <th>终端状态</th>
+              <th>校验</th>
+              <th style="min-width:200px;">说明</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="confirm-tbody"></tbody>
+        </table>
+      </div>
+      <div class="modal-ft">
+        <button type="button" class="btn" id="btn-back-confirm">上一步</button>
+        <button type="button" class="btn btn-primary" id="btn-confirm-to-receiver" disabled>下一步</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 弹窗：步骤3 接收方 -->
+  <div class="modal-overlay" id="modal-step1" aria-hidden="true">
+    <div class="modal modal-lg" role="dialog" aria-labelledby="m1-title">
+      <div class="modal-hd">
+        <span id="m1-title">批量转移 · 接收方</span>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <button type="button" class="btn btn-sm btn-ghost js-transfer-records">转移记录</button>
+          <button type="button" class="btn btn-sm" data-close="modal-step1">关闭</button>
+        </div>
+      </div>
+      <div class="modal-bd">
+        <div class="step-dots">
+          <span>1 选择终端</span><span>2 确认清单</span><span class="on">3 接收方</span><span>4 验证提交</span>
+        </div>
+        <div class="receiver-tab-bar" id="receiver-tab-bar" role="tablist">
+          <button type="button" class="receiver-tab active" id="receiver-tab-history" data-receiver-tab="history" role="tab">已有转移关系</button>
+          <button type="button" class="receiver-tab" id="receiver-tab-new" data-receiver-tab="new" role="tab">新接收方</button>
+        </div>
+
+        <div id="receiver-panel-history" class="receiver-tab-panel" role="tabpanel">
+          <p class="receiver-block-tip" style="margin:0 0 12px;">以下商户已与贵司建立<strong>转移关联</strong>，点击「选择」即可确认为本批次的接收方，<strong>不会</strong>写入右侧「新接收方」输入框；无需扫码，可直接进入短信验证。</p>
+          <div class="history-list" id="history-receiver-list">
+            <div class="history-item" data-merchant="46041688" data-fullname="海南某某科技有限公司" data-linked="true">
+              <span class="history-item-text">46041688 · 海南某某科技有限公司</span>
+              <span class="history-item-actions">
+                <button type="button" class="btn btn-sm btn-ghost history-select">选择</button>
+                <button type="button" class="btn btn-sm history-del" style="color:var(--danger);border-color:#ffccc7;">删除</button>
+              </span>
+            </div>
+            <div class="history-item" data-merchant="31011206" data-fullname="上海某某网络有限公司" data-linked="true">
+              <span class="history-item-text">31011206 · 上海某某网络有限公司</span>
+              <span class="history-item-actions">
+                <button type="button" class="btn btn-sm btn-ghost history-select">选择</button>
+                <button type="button" class="btn btn-sm history-del" style="color:var(--danger);border-color:#ffccc7;">删除</button>
+              </span>
+            </div>
+          </div>
+          <div id="receiver-history-detail" class="receiver-history-summary hidden">
+            <div class="t">已选接收方</div>
+            <div class="v" id="receiver-history-detail-text">—</div>
+            <div class="sub">已建立转移关联，无需扫码确认，可直接点击「下一步」进入短信验证。</div>
+          </div>
+        </div>
+
+        <div id="receiver-panel-new" class="receiver-tab-panel hidden" role="tabpanel">
+          <p class="receiver-block-tip" style="margin:0 0 12px;">填写对方<strong>代理商商户号</strong>并「查询并回显」。若双方<strong>从未建立</strong>转移关系，需接收方管理员扫码确认后方可继续。</p>
+          <div class="field">
+            <label for="receiver-merchant-no">接收方代理商商户号</label>
+            <input type="text" id="receiver-merchant-no" placeholder="请输入接收方代理商商户号" style="width:100%;max-width:420px;" autocomplete="off" />
+          </div>
+          <button type="button" class="btn btn-primary" id="btn-validate-receiver" style="margin-top:10px;">查询并回显</button>
+
+          <div id="receiver-result" class="hidden" style="margin-top:14px;">
+            <div class="receiver-card ok" id="receiver-name-card">
+              <div class="receiver-row">
+                <span class="k">商户名称</span>
+                <span id="rcv-name-mask">—</span>
+                <span class="receiver-mask-tag" id="receiver-name-suffix">（脱敏展示）</span>
+              </div>
+            </div>
+
+            <div id="receiver-linked-panel" class="hidden" style="margin-top:12px;padding:12px;background:#f6ffed;border:1px solid #b7eb8f;border-radius:var(--radius);font-size:12px;line-height:1.6;">
+              该商户已与您建立过<strong>转移关联关系</strong>，无需再次扫码确认，可直接进入验证提交。
+            </div>
+
+            <div class="receiver-qr-block hidden" id="receiver-qr-block">
+              <p class="receiver-notify">
+                已向接收方<strong>合作伙伴后台</strong>推送消息通知（消息中心可查看），并将<strong>确认链接与二维码</strong>以短信发送至接收方<strong>代理商管理员手机号</strong>（尾号 <strong id="admin-phone-tail">****</strong>，示例）。
+              </p>
+              <div class="qr-meta-row">
+                <span id="qr-expire-label">转移关系二维码有效期至：<strong id="qr-expire-at">—</strong>（2 小时）</span>
+                <button type="button" class="btn btn-sm btn-primary" id="btn-refresh-qr">刷新二维码</button>
+              </div>
+              <p id="qr-expired-tip" class="qr-expired-tip hidden">二维码已过期，请点击「刷新二维码」后重新通知接收方。</p>
+              <p class="receiver-qr-hint">
+                请接收方<strong>代理商管理员</strong>打开盛意旺合作伙伴平台并完成登录，使用微信或浏览器扫描下方二维码，<strong>确认绑定</strong>本次机具转移关系。
+              </p>
+              <div class="receiver-qr-wrap">
+                <img id="receiver-qr-img" width="180" height="180" alt="转移关系确认二维码" />
+              </div>
+              <p style="font-size:12px;margin:8px 0 0;text-align:center;">
+                <a href="#" id="receiver-bind-preview-link" target="_blank" rel="noopener">在新窗口打开确认页（原型联调）</a>
+              </p>
+              <p class="receiver-qr-foot">二维码含一次性确认令牌，有效期 2 小时，超时须刷新；请勿转发给非管理员人员。扫码进入需接收方管理员登录后确认绑定。</p>
+              <div class="receiver-confirm-mock">
+                <input type="checkbox" id="receiver-admin-confirmed" />
+                <label for="receiver-admin-confirmed">接收方管理员已在移动端完成扫码确认（原型演示勾选此项以模拟确认结果）</label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-ft">
+        <button type="button" class="btn" data-close="modal-step1">取消</button>
+        <button type="button" class="btn" id="btn-back-to-confirm">上一步</button>
+        <button type="button" class="btn btn-primary" id="btn-receiver-to-otp" disabled>下一步</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 弹窗：步骤4 验证提交 -->
+  <div class="modal-overlay" id="modal-otp" aria-hidden="true">
+    <div class="modal" role="dialog">
+      <div class="modal-hd">
+        <span>二次验证</span>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <button type="button" class="btn btn-sm btn-ghost js-transfer-records">转移记录</button>
+          <button type="button" class="btn btn-sm" data-close="modal-otp">关闭</button>
+        </div>
+      </div>
+      <div class="modal-bd">
+        <div class="step-dots">
+          <span>1 选择终端</span><span>2 确认清单</span><span>3 接收方</span><span class="on">4 验证提交</span>
+        </div>
+        <p style="font-size:13px;margin:0 0 12px;">当前操作员手机号：<strong id="operator-phone-mask">138****8000</strong></p>
+        <p style="font-size:12px;color:var(--muted);margin:0 0 10px;">请先点击「获取验证码」，短信将发送至上述手机号；收到后输入 6 位验证码，再点击「提交」完成发起。</p>
+        <div class="field">
+          <label for="otp-input">短信验证码</label>
+          <input type="text" id="otp-input" placeholder="6位数字" maxlength="6" inputmode="numeric" autocomplete="one-time-code" style="width:100%;max-width:240px;letter-spacing:4px;" />
+        </div>
+        <button type="button" class="btn btn-primary" id="btn-send-otp" style="margin-top:8px;">获取验证码</button>
+        <p id="otp-sent-hint" class="hidden" style="font-size:12px;color:var(--success);margin-top:8px;">验证码已发送，请查收短信。</p>
+      </div>
+      <div class="modal-ft">
+        <button type="button" class="btn" data-close="modal-otp">取消</button>
+        <button type="button" class="btn btn-primary" id="btn-submit-transfer" disabled>提交</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 结果页：仅展示批次已生成 -->
+  <div class="modal-overlay" id="modal-result" aria-hidden="true">
+    <div class="modal modal-lg" role="dialog">
+      <div class="modal-hd">
+        <span>批次已提交</span>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <button type="button" class="btn btn-sm btn-ghost js-transfer-records">转移记录</button>
+          <button type="button" class="btn btn-sm" id="btn-close-result">关闭</button>
+        </div>
+      </div>
+      <div class="modal-bd">
+        <div class="result-banner ok" id="result-banner">
+          <div>
+            <div class="result-title" id="result-title">批次已生成</div>
+            <div style="font-size:12px;color:#666;">批次号：<strong id="result-batch">—</strong></div>
+          </div>
+        </div>
+        <p style="font-size:13px;line-height:1.65;color:#595959;margin:0 0 12px;">
+          系统已受理本笔转移申请，<strong>实际执行结果</strong>（成功/失败台数、每台设备归属变更结果）请在 <strong>转移记录</strong> 中查看；批次处理完成前状态可能为「处理中」。
+        </p>
+        <div style="margin-top:16px;display:flex;gap:8px;flex-wrap:wrap;">
+          <button type="button" class="btn btn-primary" id="btn-goto-records">查看转移记录</button>
+          <button type="button" class="btn" id="btn-back-list">返回机具列表</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 批次明细 -->
+  <div class="modal-overlay" id="modal-batch-detail" aria-hidden="true">
+    <div class="modal modal-lg" role="dialog" aria-labelledby="batch-detail-title">
+      <div class="modal-hd">
+        <span id="batch-detail-title">批次明细</span>
+        <button type="button" class="btn btn-sm" data-close="modal-batch-detail">关闭</button>
+      </div>
+      <div class="modal-bd">
+        <p style="font-size:13px;margin:0 0 12px;">批次号：<strong id="detail-batch-id">—</strong></p>
+        <div style="display:flex;flex-wrap:wrap;gap:16px;margin-bottom:14px;font-size:13px;">
+          <span>总台数：<strong id="detail-total">0</strong></span>
+          <span>成功台数：<strong id="detail-ok" style="color:var(--success);">0</strong></span>
+          <span>失败台数：<strong id="detail-fail" style="color:var(--danger);">0</strong></span>
+        </div>
+        <div style="overflow:auto;max-height:min(360px,50vh);border:1px solid var(--border);border-radius:var(--radius);">
+          <table class="list-table" style="margin:0;">
+            <thead>
+              <tr>
+                <th>设备编号</th>
+                <th>设备类型</th>
+                <th>转移结果</th>
+                <th>最新归属代理商商户号</th>
+                <th>失败原因</th>
+              </tr>
+            </thead>
+            <tbody id="batch-detail-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal-ft">
+        <button type="button" class="btn btn-primary" data-close="modal-batch-detail">关闭</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script>
+(function () {
+  const demoMachines = [
+    { sn: 'MP889012345678', name: '门店收款静态码', merchantInfo: '海南某某餐饮 (M88001234)', channel: '海南某某渠道服务商', channelMerchantNo: '46050001', codeType: '电子码牌', type: '收款码牌', typeKey: 'code', status: 'bound', updateTime: '2026-04-17 10:22:31' },
+    { sn: 'MP889012345679', name: '柜台收款码', merchantInfo: '—', channel: '—', channelMerchantNo: '', codeType: '电子码牌', type: '收款码牌', typeKey: 'code', status: 'unbound', updateTime: '2026-04-16 09:15:00' },
+    { sn: 'MP889012345680', name: '外摆台卡', merchantInfo: '三亚某某零售 (M88004567)', channel: '海南某某渠道服务商', channelMerchantNo: '46050001', codeType: '电子码牌', type: '收款码牌', typeKey: 'code', status: 'bound', updateTime: '2026-04-17 08:01:12' },
+    { sn: 'SN882736451902', name: '智能POS-A1', merchantInfo: '—', channel: 'CH001', channelMerchantNo: '46010001', codeType: '—', type: '智能POS', typeKey: 'pos', status: 'unbound', updateTime: '2026-04-15 14:00:00' },
+    { sn: 'SP776655443322', name: '云音箱-Pro', merchantInfo: '—', channel: '—', channelMerchantNo: '', codeType: '—', type: '云音箱', typeKey: 'speaker', status: 'unbound', updateTime: '2026-04-14 11:30:00', boundPlate: 'MP889000111' },
+    { sn: 'MMW9900112233', name: '联迪扫码王', merchantInfo: '—', channel: 'CH002', channelMerchantNo: '46010002', codeType: '—', type: '扫码王', typeKey: 'mamawang', status: 'unbound', updateTime: '2026-04-13 16:20:00' },
+    { sn: 'PRT6600117788', name: '云打印机-K3', merchantInfo: '—', channel: '—', channelMerchantNo: '', codeType: '—', type: '云打印机', typeKey: 'printer', status: 'unbound', updateTime: '2026-04-12 10:00:00' },
+    { sn: 'MP889012345681', name: '备用码牌-01', merchantInfo: '—', channel: 'CH003', channelMerchantNo: '46010003', codeType: '电子码牌', type: '收款码牌', typeKey: 'code', status: 'unbound', updateTime: '2026-04-11 09:00:00' },
+    { sn: 'MP889012345682', name: '备用码牌-02', merchantInfo: '—', channel: 'CH003', channelMerchantNo: '46010003', codeType: '电子码牌', type: '收款码牌', typeKey: 'code', status: 'unbound', updateTime: '2026-04-11 09:05:00' },
+    { sn: 'SN882736451903', name: '智能POS-A2', merchantInfo: '—', channel: 'CH001', channelMerchantNo: '46010001', codeType: '—', type: '智能POS', typeKey: 'pos', status: 'unbound', updateTime: '2026-04-10 16:00:00' },
+    { sn: 'SN882736451904', name: '智能POS-A3', merchantInfo: '—', channel: '—', channelMerchantNo: '', codeType: '—', type: '智能POS', typeKey: 'pos', status: 'unbound', updateTime: '2026-04-10 15:30:00' },
+    { sn: 'SP776655443323', name: '云音箱-Mini', merchantInfo: '—', channel: 'CH002', channelMerchantNo: '46010002', codeType: '—', type: '云音箱', typeKey: 'speaker', status: 'unbound', updateTime: '2026-04-09 12:00:00' },
+    { sn: 'MMW9900112234', name: '扫码王-B1', merchantInfo: '—', channel: 'CH002', channelMerchantNo: '46010002', codeType: '—', type: '扫码王', typeKey: 'mamawang', status: 'unbound', updateTime: '2026-04-08 08:20:00' },
+    { sn: 'PRT6600117789', name: '云打印机-K4', merchantInfo: '—', channel: '—', channelMerchantNo: '', codeType: '—', type: '云打印机', typeKey: 'printer', status: 'unbound', updateTime: '2026-04-07 18:00:00' },
+  ];
+
+  const tbody = document.getElementById('machine-tbody');
+  const selCount = document.getElementById('sel-count');
+  const chkAll = document.getElementById('chk-all');
+  const btnTransfer = document.getElementById('btn-batch-transfer');
+  let selected = new Set();
+  let activeEquip = 'code';
+
+  function escapeHtmlRec(s) {
+    return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  var MAX_TRANSFER = 500;
+  var modalTransferSelected = new Set();
+  var modalChkAll = document.getElementById('modal-chk-all');
+  var modalStep0Tbody = document.getElementById('modal-step0-tbody');
+  var modalSelCount = document.getElementById('modal-sel-count');
+  var modalSelPreview = document.getElementById('modal-sel-sn-preview');
+  var btnStep0Next = document.getElementById('btn-step0-next');
+  var modalStep0EquipTab = 'code';
+  var modalImportEquipTab = 'code';
+
+  var IMPORT_SHEET_META = {
+    收款码牌: { typeKey: 'code', headers: ['码牌编号'] },
+    智能POS: { typeKey: 'pos', headers: ['终端序列号（SN号）'] },
+    云音箱: { typeKey: 'speaker', headers: ['设备SN号', '码牌编号'] },
+    扫码王: { typeKey: 'mamawang', headers: ['终端序列号（SN号）'] },
+    云打印机: { typeKey: 'printer', headers: ['终端序列号（SN号）'] }
+  };
+
+  var IMPORT_FIELD_LABEL = {
+    code: '码牌编号（粘贴）',
+    pos: '终端序列号（SN号）（粘贴）',
+    speaker: '设备SN号 / 码牌编号（粘贴）',
+    mamawang: '终端序列号（SN号）（粘贴）',
+    printer: '终端序列号（SN号）（粘贴）'
+  };
+
+  var IMPORT_TEXT_PLACEHOLDER = {
+    code: '每行一个码牌编号，例如：\nMP889012345679',
+    pos: '每行一个终端序列号（SN号），例如：\nSN882736451902',
+    speaker: '每行一条：可仅填设备SN，或仅填码牌编号，或「设备SN,码牌编号」\nSP776655443322\nMP889000111',
+    mamawang: '每行一个终端序列号（SN号），例如：\nMMW9900112233',
+    printer: '每行一个终端序列号（SN号），例如：\nPRT6600117788'
+  };
+
+  var MODAL_STEP0_COL_TITLE = {
+    code: '码牌编号',
+    pos: '终端序列号（SN号）',
+    speaker: '设备SN号',
+    mamawang: '终端序列号（SN号）',
+    printer: '终端序列号（SN号）'
+  };
+
+  function switchModalStep0EquipTab(tab) {
+    modalStep0EquipTab = tab;
+    document.querySelectorAll('#modal-transfer-type-tabs .modal-transfer-tab').forEach(function (el) {
+      var on = el.getAttribute('data-equip-tab') === tab;
+      el.classList.toggle('active', on);
+      el.setAttribute('aria-selected', on ? 'true' : 'false');
+    });
+    document.querySelectorAll('.modal-step0-filter-panel').forEach(function (el) {
+      var id = el.id;
+      var t = id.replace('modal-step0-panel-', '');
+      el.classList.toggle('hidden', t !== tab);
+    });
+    var th = document.getElementById('modal-step0-th-device-col');
+    if (th) th.textContent = MODAL_STEP0_COL_TITLE[tab] || '设备编号';
+    renderModalStep0();
+  }
+
+  function switchModalImportEquipTab(tab) {
+    modalImportEquipTab = tab;
+    document.querySelectorAll('#modal-import-type-tabs .modal-import-tab').forEach(function (el) {
+      var on = el.getAttribute('data-import-tab') === tab;
+      el.classList.toggle('active', on);
+      el.setAttribute('aria-selected', on ? 'true' : 'false');
+    });
+    var lab = document.getElementById('modal-import-field-label');
+    if (lab) lab.textContent = IMPORT_FIELD_LABEL[tab] || '设备编号（粘贴）';
+    var ta = document.getElementById('modal-import-sn');
+    if (ta) ta.placeholder = IMPORT_TEXT_PLACEHOLDER[tab] || '';
+  }
+
+  function clearModalStep0FilterInputs() {
+    ['modal-f-code-sn', 'modal-f-pos-sn', 'modal-f-speaker-sn', 'modal-f-speaker-code', 'modal-f-mamawang-sn', 'modal-f-printer-sn'].forEach(function (id) {
+      var el = document.getElementById(id);
+      if (el) el.value = '';
+    });
+  }
+
+  function isModalEligibleMachine(m) {
+    if (!m || m.status !== 'unbound') return false;
+    var c = (m.channel || '').trim();
+    return c === '' || c === '—';
+  }
+
+  function normalizeImportCell(v) {
+    if (v == null) return '';
+    return String(v).trim();
+  }
+
+  function resolveImportEntry(entry) {
+    var typeKey = entry.typeKey;
+    var pool = demoMachines.filter(function (m) {
+      return m.typeKey === typeKey;
+    });
+    function pickBySn(v) {
+      if (!v) return null;
+      var exact = pool.filter(function (m) {
+        return isModalEligibleMachine(m) && m.sn === v;
+      })[0];
+      if (exact) return exact.sn;
+      var fz = pool.filter(function (m) {
+        return isModalEligibleMachine(m) && m.sn.indexOf(v) !== -1;
+      });
+      if (fz.length === 1) return fz[0].sn;
+      return null;
+    }
+    if (entry.value) {
+      var byV = pickBySn(entry.value);
+      if (byV) return byV;
+    }
+    if (typeKey === 'speaker') {
+      var cp = entry.codePlate || entry.value || '';
+      if (cp) {
+        var elig = pool.filter(isModalEligibleMachine);
+        var byPlate = elig.filter(function (m) {
+          var plate = m.boundPlate != null ? String(m.boundPlate) : '';
+          return plate && (plate === cp || plate.indexOf(cp) !== -1);
+        });
+        if (byPlate.length === 1) return byPlate[0].sn;
+        var bySnLike = elig.filter(function (m) {
+          return m.sn.indexOf(cp) !== -1;
+        });
+        if (bySnLike.length === 1) return bySnLike[0].sn;
+      }
+    }
+    return null;
+  }
+
+  function applyImportEntries(entries) {
+    var skipped = [];
+    var added = 0;
+    entries.forEach(function (entry) {
+      var label = entry.label || entry.value || entry.codePlate || '（空行）';
+      var sn = resolveImportEntry(entry);
+      if (!sn) {
+        skipped.push(label + '（无法匹配或不符合直属/未绑定）');
+        return;
+      }
+      if (modalTransferSelected.has(sn)) return;
+      var m = demoMachines.filter(function (x) { return x.sn === sn; })[0];
+      if (!m) {
+        skipped.push(label + '（不存在）');
+        return;
+      }
+      if (!isModalEligibleMachine(m)) {
+        skipped.push(label + '（非直属或未绑定）');
+        return;
+      }
+      if (m.typeKey !== entry.typeKey) {
+        skipped.push(label + '（设备类型与导入分类不一致）');
+        return;
+      }
+      if (modalTransferSelected.size >= MAX_TRANSFER) {
+        skipped.push(label + '（已达 500 台上限）');
+        return;
+      }
+      modalTransferSelected.add(sn);
+      added++;
+    });
+    renderModalStep0();
+    return { added: added, skipped: skipped };
+  }
+
+  function parseTextareaToImportEntries(raw, tab) {
+    var lines = String(raw || '')
+      .split(/[\n\r]+/)
+      .map(function (s) {
+        return s.trim();
+      })
+      .filter(Boolean);
+    var entries = [];
+    lines.forEach(function (line) {
+      if (tab === 'speaker') {
+        var parts = line.split(/[,，]/).map(function (p) {
+          return p.trim();
+        }).filter(Boolean);
+        if (parts.length >= 2) {
+          entries.push({ typeKey: 'speaker', value: parts[0], codePlate: parts[1], label: parts[0] + ',' + parts[1] });
+        } else if (parts.length === 1) {
+          entries.push({ typeKey: 'speaker', value: parts[0], label: parts[0] });
+        }
+        return;
+      }
+      entries.push({ typeKey: tab, value: line, label: line });
+    });
+    return entries;
+  }
+
+  function extractImportEntriesFromWorkbook(wb) {
+    var entries = [];
+    wb.SheetNames.forEach(function (sheetName) {
+      var meta = IMPORT_SHEET_META[sheetName];
+      if (!meta) return;
+      var sheet = wb.Sheets[sheetName];
+      if (!sheet) return;
+      var rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '', blankrows: false });
+      if (!rows.length) return;
+      var start = 0;
+      var head = rows[0].map(normalizeImportCell);
+      if (head[0] === meta.headers[0] && (meta.headers.length === 1 || head[1] === meta.headers[1])) start = 1;
+      for (var i = start; i < rows.length; i++) {
+        var row = rows[i];
+        if (!row) continue;
+        if (meta.typeKey === 'speaker') {
+          var snV = normalizeImportCell(row[0]);
+          var codeV = normalizeImportCell(row[1]);
+          if (!snV && !codeV) continue;
+          entries.push({
+            typeKey: 'speaker',
+            value: snV || undefined,
+            codePlate: codeV || undefined,
+            label: snV && codeV ? snV + ',' + codeV : snV || codeV
+          });
+          continue;
+        }
+        var v = normalizeImportCell(row[0]);
+        if (!v) continue;
+        entries.push({ typeKey: meta.typeKey, value: v, label: v });
+      }
+    });
+    return entries;
+  }
+
+  function formatImportResult(added, skipped) {
+    var msg = '本次成功勾选 ' + added + ' 台';
+    if (skipped.length) {
+      msg += '；未勾选 ' + skipped.length + ' 条';
+      if (skipped.length <= 12) msg += '：\n' + skipped.join('\n');
+      else msg += '（前 12 条：\n' + skipped.slice(0, 12).join('\n') + '\n…）';
+    }
+    return msg;
+  }
+
+  function downloadImportTemplateXlsx() {
+    if (typeof XLSX === 'undefined') {
+      alert('表格组件加载失败，请检查网络后重试。');
+      return;
+    }
+    var wb = XLSX.utils.book_new();
+    var specs = [
+      { name: '收款码牌', headers: ['码牌编号'], emptyRows: [[''], [''], ['']], cols: [{ wch: 26 }] },
+      { name: '智能POS', headers: ['终端序列号（SN号）'], emptyRows: [[''], [''], ['']], cols: [{ wch: 30 }] },
+      { name: '云音箱', headers: ['设备SN号', '码牌编号'], emptyRows: [['', ''], ['', ''], ['', '']], cols: [{ wch: 22 }, { wch: 22 }] },
+      { name: '扫码王', headers: ['终端序列号（SN号）'], emptyRows: [[''], [''], ['']], cols: [{ wch: 30 }] },
+      { name: '云打印机', headers: ['终端序列号（SN号）'], emptyRows: [[''], [''], ['']], cols: [{ wch: 30 }] }
+    ];
+    specs.forEach(function (s) {
+      var aoa = [s.headers].concat(s.emptyRows);
+      var ws = XLSX.utils.aoa_to_sheet(aoa);
+      ws['!cols'] = s.cols;
+      XLSX.utils.book_append_sheet(wb, ws, s.name);
+    });
+    XLSX.writeFile(wb, '机具批量转移导入模板.xlsx');
+  }
+
+  function getModalVisibleUnbound() {
+    var tab = modalStep0EquipTab;
+    return demoMachines.filter(function (m) {
+      if (!isModalEligibleMachine(m)) return false;
+      if (m.typeKey !== tab) return false;
+      if (tab === 'code') {
+        var q = (document.getElementById('modal-f-code-sn') && document.getElementById('modal-f-code-sn').value || '').trim();
+        if (q && String(m.sn).indexOf(q) === -1) return false;
+        return true;
+      }
+      if (tab === 'pos') {
+        var qp = (document.getElementById('modal-f-pos-sn') && document.getElementById('modal-f-pos-sn').value || '').trim();
+        if (qp && String(m.sn).indexOf(qp) === -1) return false;
+        return true;
+      }
+      if (tab === 'speaker') {
+        var qs = (document.getElementById('modal-f-speaker-sn') && document.getElementById('modal-f-speaker-sn').value || '').trim();
+        var qc = (document.getElementById('modal-f-speaker-code') && document.getElementById('modal-f-speaker-code').value || '').trim();
+        if (qs && String(m.sn).indexOf(qs) === -1) return false;
+        if (qc) {
+          var plate = m.boundPlate != null ? String(m.boundPlate) : '';
+          var codeHit = String(m.sn).indexOf(qc) !== -1 || (plate && plate.indexOf(qc) !== -1);
+          if (!codeHit) return false;
+        }
+        return true;
+      }
+      if (tab === 'mamawang') {
+        var qm = (document.getElementById('modal-f-mamawang-sn') && document.getElementById('modal-f-mamawang-sn').value || '').trim();
+        if (qm && String(m.sn).indexOf(qm) === -1) return false;
+        return true;
+      }
+      if (tab === 'printer') {
+        var qpr = (document.getElementById('modal-f-printer-sn') && document.getElementById('modal-f-printer-sn').value || '').trim();
+        if (qpr && String(m.sn).indexOf(qpr) === -1) return false;
+        return true;
+      }
+      return true;
+    });
+  }
+
+  function updateModalSelSummary() {
+    var n = modalTransferSelected.size;
+    modalSelCount.textContent = String(n);
+    btnStep0Next.disabled = n === 0;
+    var sns = Array.from(modalTransferSelected);
+    if (sns.length === 0) {
+      modalSelPreview.innerHTML = '暂无已选设备';
+      modalSelPreview.classList.add('empty');
+      return;
+    }
+    modalSelPreview.classList.remove('empty');
+    modalSelPreview.innerHTML = sns.map(function (sn) {
+      return (
+        '<span class="sel-tag" data-sn="' + escapeHtmlRec(sn) + '">' +
+        '<span class="sel-tag-txt">' + escapeHtmlRec(sn) + '</span>' +
+        '<button type="button" class="sel-tag-x" title="移除" aria-label="从已选移除">&times;</button></span>'
+      );
+    }).join('');
+  }
+
+  function renderModalStep0() {
+    var list = getModalVisibleUnbound();
+    if (list.length === 0) {
+      modalStep0Tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:24px;color:#bfbfbf;">暂无符合条件的设备（需直属且未绑定）</td></tr>';
+      modalChkAll.checked = false;
+      modalChkAll.indeterminate = false;
+      modalChkAll.disabled = true;
+      updateModalSelSummary();
+      return;
+    }
+    modalChkAll.disabled = false;
+    var visibleSns = list.map(function (m) { return m.sn; });
+    var allVisSel = visibleSns.every(function (sn) { return modalTransferSelected.has(sn); });
+    var someVisSel = visibleSns.some(function (sn) { return modalTransferSelected.has(sn); });
+    modalChkAll.checked = allVisSel && visibleSns.length > 0;
+    modalChkAll.indeterminate = someVisSel && !allVisSel;
+    modalStep0Tbody.innerHTML = list.map(function (m) {
+      var on = modalTransferSelected.has(m.sn);
+      return (
+        '<tr data-sn="' + m.sn + '">' +
+        '<td><input type="checkbox" class="modal-row-chk" data-sn="' + m.sn + '" ' + (on ? 'checked' : '') + ' /></td>' +
+        '<td>' + m.sn + '</td>' +
+        '<td>' + m.type + '</td>' +
+        '<td style="color:#8c8c8c;">' + m.updateTime + '</td>' +
+        '</tr>'
+      );
+    }).join('');
+    updateModalSelSummary();
+  }
+
+  function getVisibleMachines() {
+    const snQ = (document.getElementById('f-sn') && document.getElementById('f-sn').value || '').trim();
+    const st = document.getElementById('f-status').value;
+    const chQ = (document.getElementById('f-channel-select') && document.getElementById('f-channel-select').value || '').trim();
+    return demoMachines.filter(function (m) {
+      if (activeEquip && m.typeKey !== activeEquip) return false;
+      if (st && m.status !== st) return false;
+      if (snQ && m.sn.indexOf(snQ) === -1) return false;
+      if (chQ) {
+        var nm = (m.channel || '');
+        var no = m.channelMerchantNo != null ? String(m.channelMerchantNo) : '';
+        if (nm.indexOf(chQ) === -1 && no.indexOf(chQ) === -1) return false;
+      }
+      return true;
+    });
+  }
+
+  function statusTag(m) {
+    if (m.status === 'bound') return '<span class="tag tag-green">已绑定</span>';
+    return '<span class="tag" style="background:#fafafa;color:#595959;border:1px solid #d9d9d9;">未绑定</span>';
+  }
+
+  function opLinks(m) {
+    const detail = '<a href="#">详情</a>';
+    if (m.status === 'bound') {
+      return '<span class="op-links">' + detail + '<a href="#">解绑商户</a><a href="#">导出图片</a></span>';
+    }
+    return '<span class="op-links">' + detail + '</span>';
+  }
+
+  function renderTable() {
+    const visible = getVisibleMachines();
+    const unboundList = visible.filter(function (m) { return m.status === 'unbound'; });
+    if (visible.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:40px;color:#bfbfbf;">暂无数据</td></tr>';
+      chkAll.checked = false;
+      chkAll.disabled = true;
+      selCount.textContent = selected.size;
+      btnTransfer.disabled = false;
+      return;
+    }
+    tbody.innerHTML = visible.map(function (m) {
+      const can = m.status === 'unbound';
+      const chk = can
+        ? `<input type="checkbox" class="row-chk" data-sn="${m.sn}" ${selected.has(m.sn) ? 'checked' : ''} />`
+        : '<input type="checkbox" disabled title="已绑定不可批量转移" />';
+      const merchantCell = m.merchantInfo === '—' ? '—' : '<div class="text-muted-cell">' + m.merchantInfo + '</div>';
+      return `
+      <tr data-sn="${m.sn}">
+        <td>${chk}</td>
+        <td>${m.sn}</td>
+        <td>${m.name}</td>
+        <td>${merchantCell}</td>
+        <td>${m.channel}</td>
+        <td>${m.codeType}</td>
+        <td>${statusTag(m)}</td>
+        <td style="color:#8c8c8c;font-size:12px;">${m.updateTime}</td>
+        <td>${opLinks(m)}</td>
+      </tr>`;
+    }).join('');
+    chkAll.checked = unboundList.length > 0 && unboundList.every(function (m) { return selected.has(m.sn); });
+    chkAll.disabled = unboundList.length === 0;
+    selCount.textContent = selected.size;
+    btnTransfer.disabled = false;
+  }
+
+  tbody.addEventListener('change', function (e) {
+    if (e.target.classList.contains('row-chk')) {
+      const sn = e.target.getAttribute('data-sn');
+      if (e.target.checked) selected.add(sn); else selected.delete(sn);
+      renderTable();
+    }
+  });
+  chkAll.addEventListener('change', function () {
+    const unboundList = getVisibleMachines().filter(function (m) { return m.status === 'unbound'; });
+    if (chkAll.checked) unboundList.forEach(function (m) { selected.add(m.sn); });
+    else unboundList.forEach(function (m) { selected.delete(m.sn); });
+    renderTable();
+  });
+
+  document.querySelectorAll('.equip-tab').forEach(function (tab) {
+    tab.addEventListener('click', function () {
+      document.querySelectorAll('.equip-tab').forEach(function (t) { t.classList.remove('active'); });
+      tab.classList.add('active');
+      activeEquip = tab.getAttribute('data-equip') || 'code';
+      selected.clear();
+      renderTable();
+    });
+  });
+
+  function openModal(id) {
+    const el = document.getElementById(id);
+    el.classList.add('open');
+    el.setAttribute('aria-hidden', 'false');
+  }
+  function closeModal(id) {
+    if (id === 'modal-step1') clearQrExpiryTimer();
+    const el = document.getElementById(id);
+    el.classList.remove('open');
+    el.setAttribute('aria-hidden', 'true');
+  }
+  document.querySelectorAll('[data-close]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var id = b.getAttribute('data-close');
+      if (id === 'modal-step0') {
+        modalTransferSelected.clear();
+        var impClose = document.getElementById('modal-import-sn');
+        if (impClose) impClose.value = '';
+        var fiClose = document.getElementById('modal-import-file');
+        if (fiClose) fiClose.value = '';
+      }
+      closeModal(id);
+    });
+  });
+
+  modalSelPreview.addEventListener('click', function (e) {
+    var x = e.target.closest('.sel-tag-x');
+    if (!x) return;
+    e.preventDefault();
+    var tag = x.closest('.sel-tag');
+    if (!tag) return;
+    var sn = tag.getAttribute('data-sn');
+    if (sn) modalTransferSelected.delete(sn);
+    renderModalStep0();
+  });
+
+  document.getElementById('modal-step0-tbody').addEventListener('change', function (e) {
+    if (!e.target.classList.contains('modal-row-chk')) return;
+    var sn = e.target.getAttribute('data-sn');
+    if (e.target.checked) {
+      if (modalTransferSelected.size >= MAX_TRANSFER && !modalTransferSelected.has(sn)) {
+        e.target.checked = false;
+        alert('最多选择 500 台');
+        return;
+      }
+      modalTransferSelected.add(sn);
+    } else {
+      modalTransferSelected.delete(sn);
+    }
+    renderModalStep0();
+  });
+
+  modalChkAll.addEventListener('change', function () {
+    var visible = getModalVisibleUnbound();
+    if (modalChkAll.checked) {
+      var capped = false;
+      for (var i = 0; i < visible.length; i++) {
+        var sn = visible[i].sn;
+        if (modalTransferSelected.has(sn)) continue;
+        if (modalTransferSelected.size >= MAX_TRANSFER) {
+          capped = true;
+          break;
+        }
+        modalTransferSelected.add(sn);
+      }
+      if (capped) alert('最多选择 500 台，已按上限停止勾选');
+    } else {
+      visible.forEach(function (m) { modalTransferSelected.delete(m.sn); });
+    }
+    renderModalStep0();
+  });
+
+  document.getElementById('modal-transfer-type-tabs').addEventListener('click', function (e) {
+    var btn = e.target.closest('[data-equip-tab]');
+    if (!btn) return;
+    switchModalStep0EquipTab(btn.getAttribute('data-equip-tab'));
+  });
+
+  ['modal-step0-query', 'modal-step0-query-pos', 'modal-step0-query-speaker', 'modal-step0-query-mamawang', 'modal-step0-query-printer'].forEach(function (btnId) {
+    var el = document.getElementById(btnId);
+    if (el) el.addEventListener('click', function () { renderModalStep0(); });
+  });
+
+  document.getElementById('btn-batch-transfer-top').addEventListener('click', function () {
+    modalTransferSelected.clear();
+    clearModalStep0FilterInputs();
+    switchModalStep0EquipTab('code');
+    switchModalImportEquipTab('code');
+    var imp = document.getElementById('modal-import-sn');
+    if (imp) imp.value = '';
+    var fileIn = document.getElementById('modal-import-file');
+    if (fileIn) fileIn.value = '';
+    renderModalStep0();
+    openModal('modal-step0');
+  });
+
+  document.getElementById('modal-import-type-tabs').addEventListener('click', function (e) {
+    var btn = e.target.closest('[data-import-tab]');
+    if (!btn) return;
+    switchModalImportEquipTab(btn.getAttribute('data-import-tab'));
+  });
+
+  document.getElementById('btn-download-import-template').addEventListener('click', function () {
+    downloadImportTemplateXlsx();
+  });
+
+  document.getElementById('btn-upload-import-file').addEventListener('click', function () {
+    document.getElementById('modal-import-file').click();
+  });
+
+  document.getElementById('modal-import-file').addEventListener('change', function (e) {
+    var f = e.target.files && e.target.files[0];
+    e.target.value = '';
+    if (!f) return;
+    if (typeof XLSX === 'undefined') {
+      alert('表格组件加载失败，请检查网络后重试。');
+      return;
+    }
+    var reader = new FileReader();
+    reader.onload = function (ev) {
+      try {
+        var data = new Uint8Array(ev.target.result);
+        var wb = XLSX.read(data, { type: 'array' });
+        var entries = extractImportEntriesFromWorkbook(wb);
+        if (!entries.length) {
+          alert('未在文件中解析到有效数据。请使用官方模板：各设备类型对应独立 Sheet，表头与页面查询字段名称一致，从第二行起填写。');
+          return;
+        }
+        var r = applyImportEntries(entries);
+        alert(formatImportResult(r.added, r.skipped));
+      } catch (err) {
+        alert('文件解析失败，请确认上传为 .xlsx / .xls 且格式与模板一致。');
+      }
+    };
+    reader.readAsArrayBuffer(f);
+  });
+
+  document.getElementById('btn-modal-import-apply').addEventListener('click', function () {
+    var raw = document.getElementById('modal-import-sn').value || '';
+    var entries = parseTextareaToImportEntries(raw, modalImportEquipTab);
+    if (!entries.length) {
+      alert('请先粘贴至少一行有效内容。');
+      return;
+    }
+    var r = applyImportEntries(entries);
+    alert(formatImportResult(r.added, r.skipped));
+  });
+
+  switchModalImportEquipTab('code');
+
+  var qrExpireAtMs = 0;
+  var qrExpiryTimerId = null;
+  var receiverIsLinked = false;
+  var otpSentFlag = false;
+  var receiverTabActive = 'history';
+  var historySelectedMerchantNo = null;
+  var historySelectedFullname = null;
+
+  function switchReceiverTab(tab) {
+    receiverTabActive = tab;
+    document.querySelectorAll('#receiver-tab-bar .receiver-tab').forEach(function (el) {
+      el.classList.toggle('active', el.getAttribute('data-receiver-tab') === tab);
+    });
+    var ph = document.getElementById('receiver-panel-history');
+    var pn = document.getElementById('receiver-panel-new');
+    if (ph) ph.classList.toggle('hidden', tab !== 'history');
+    if (pn) pn.classList.toggle('hidden', tab !== 'new');
+    if (tab === 'new') {
+      historySelectedMerchantNo = null;
+      historySelectedFullname = null;
+      document.querySelectorAll('#history-receiver-list .history-item').forEach(function (el) {
+        el.classList.remove('history-item--selected');
+      });
+      var hd = document.getElementById('receiver-history-detail');
+      if (hd) hd.classList.add('hidden');
+    }
+    updateReceiverNextState();
+  }
+
+  function initReceiverTabsDefault() {
+    var n = document.querySelectorAll('#history-receiver-list .history-item').length;
+    var th = document.getElementById('receiver-tab-history');
+    if (n === 0) {
+      if (th) th.classList.add('hidden');
+      switchReceiverTab('new');
+    } else {
+      if (th) th.classList.remove('hidden');
+      switchReceiverTab('history');
+    }
+  }
+
+  function refreshReceiverTabAvailability() {
+    var n = document.querySelectorAll('#history-receiver-list .history-item').length;
+    var th = document.getElementById('receiver-tab-history');
+    if (n === 0) {
+      if (th) th.classList.add('hidden');
+      if (receiverTabActive === 'history') {
+        switchReceiverTab('new');
+      }
+    } else if (th) {
+      th.classList.remove('hidden');
+    }
+  }
+
+  function pad2(n) { return n < 10 ? '0' + n : String(n); }
+  function fmtExpire(ts) {
+    var d = new Date(ts);
+    return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()) + ' ' + pad2(d.getHours()) + ':' + pad2(d.getMinutes()) + ':' + pad2(d.getSeconds());
+  }
+
+  function clearQrExpiryTimer() {
+    if (qrExpiryTimerId) {
+      clearInterval(qrExpiryTimerId);
+      qrExpiryTimerId = null;
+    }
+  }
+
+  function isQrExpired() {
+    return Date.now() > qrExpireAtMs;
+  }
+
+  function updateReceiverNextState() {
+    var btn = document.getElementById('btn-receiver-to-otp');
+    if (receiverTabActive === 'history') {
+      btn.disabled = !historySelectedMerchantNo;
+      return;
+    }
+    var res = document.getElementById('receiver-result');
+    if (!res || res.classList.contains('hidden')) {
+      btn.disabled = true;
+      return;
+    }
+    if (receiverIsLinked) {
+      btn.disabled = false;
+      return;
+    }
+    if (isQrExpired()) {
+      btn.disabled = true;
+      return;
+    }
+    btn.disabled = !document.getElementById('receiver-admin-confirmed').checked;
+  }
+
+  function buildTransferBindConfirmUrl(merchantNo, token) {
+    var sns = Array.from(modalTransferSelected);
+    var typeCount = {};
+    sns.forEach(function (sn) {
+      var m = demoMachines.filter(function (x) { return x.sn === sn; })[0];
+      if (!m) return;
+      typeCount[m.type] = (typeCount[m.type] || 0) + 1;
+    });
+    var qs =
+      'token=' + encodeURIComponent(token) +
+      '&receiver=' + encodeURIComponent(merchantNo) +
+      '&initId=' + encodeURIComponent('46041621') +
+      '&initName=' + encodeURIComponent('海南示例科技有限公司') +
+      '&total=' + encodeURIComponent(String(sns.length)) +
+      '&bd=' + encodeURIComponent(JSON.stringify(typeCount));
+    var path = 'transfer-receiver-bind-confirm.html?' + qs;
+    try {
+      return new URL(path, window.location.href).href;
+    } catch (e) {
+      return path;
+    }
+  }
+
+  function issueNewQrAndTimer(merchantNo) {
+    clearQrExpiryTimer();
+    var token = 'T' + Date.now() + '_' + Math.random().toString(36).slice(2, 10);
+    qrExpireAtMs = Date.now() + 2 * 60 * 60 * 1000;
+    document.getElementById('qr-expire-at').textContent = fmtExpire(qrExpireAtMs);
+    document.getElementById('qr-expired-tip').classList.add('hidden');
+    var confirmUrl = buildTransferBindConfirmUrl(merchantNo, token);
+    var previewA = document.getElementById('receiver-bind-preview-link');
+    if (previewA) {
+      previewA.href = confirmUrl;
+    }
+    var qrImg = document.getElementById('receiver-qr-img');
+    qrImg.onerror = function () {
+      qrImg.style.display = 'none';
+      var wrap = document.querySelector('.receiver-qr-wrap');
+      if (wrap && !wrap.querySelector('.qr-fallback')) {
+        var p = document.createElement('p');
+        p.className = 'qr-fallback';
+        p.style.cssText = 'width:180px;height:180px;display:flex;align-items:center;justify-content:center;font-size:12px;color:#8c8c8c;padding:12px;';
+        p.textContent = '二维码示意图（网络不可用时）';
+        wrap.appendChild(p);
+      }
+    };
+    qrImg.style.display = '';
+    var fallback = document.querySelector('.receiver-qr-wrap .qr-fallback');
+    if (fallback) fallback.remove();
+    qrImg.src = 'https://api.qrserver.com/v1/create-qr-code/?size=180x180&margin=2&data=' + encodeURIComponent(confirmUrl);
+    qrExpiryTimerId = setInterval(function () {
+      if (isQrExpired()) {
+        document.getElementById('qr-expired-tip').classList.remove('hidden');
+        updateReceiverNextState();
+      }
+    }, 1000);
+    updateReceiverNextState();
+  }
+
+  function getTransferValidateResult(sn, sortedSns) {
+    var m = demoMachines.filter(function (x) { return x.sn === sn; })[0];
+    if (!m) {
+      return { ok: false, reason: '设备不存在或已从列表移除' };
+    }
+    if (sortedSns.length && sn === sortedSns[0]) {
+      return {
+        ok: false,
+        reason: '该设备存在未完结业务/风控状态，暂不可发起转移（示例；正式环境将返回具体未通过原因）'
+      };
+    }
+    return { ok: true, reason: '' };
+  }
+
+  function renderConfirmList() {
+    var ct = document.getElementById('confirm-tbody');
+    ct.innerHTML = '';
+    var sns = Array.from(modalTransferSelected).sort();
+    sns.forEach(function (sn) {
+      var m = demoMachines.filter(function (x) { return x.sn === sn; })[0];
+      if (!m) return;
+      var vr = getTransferValidateResult(sn, sns);
+      var tr = document.createElement('tr');
+      tr.dataset.sn = sn;
+      if (!vr.ok) tr.setAttribute('data-fail', '1');
+      tr.innerHTML =
+        '<td>' + escapeHtmlRec(m.sn) + '</td>' +
+        '<td>' + escapeHtmlRec(m.type) + '</td>' +
+        '<td><span class="tag tag-green">未绑定</span></td>' +
+        '<td>' + (vr.ok ? '<span class="tag tag-green">通过</span>' : '<span class="tag tag-red">未通过</span>') + '</td>' +
+        '<td style="font-size:12px;line-height:1.45;color:' + (vr.ok ? '#8c8c8c' : '#a8071a') + ';">' +
+        (vr.ok ? '—' : escapeHtmlRec(vr.reason)) +
+        '</td>' +
+        '<td><button type="button" class="btn btn-sm row-del">删除</button></td>';
+      ct.appendChild(tr);
+    });
+    ct.querySelectorAll('.row-del').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var tr = btn.closest('tr');
+        if (!tr) return;
+        var sn = tr.dataset.sn;
+        if (sn) modalTransferSelected.delete(sn);
+        tr.remove();
+        updateConfirmFooter();
+      });
+    });
+    updateConfirmFooter();
+  }
+
+  function updateConfirmFooter() {
+    var rows = document.querySelectorAll('#confirm-tbody tr');
+    var hasFail = document.querySelector('#confirm-tbody tr[data-fail="1"]');
+    document.getElementById('btn-confirm-to-receiver').disabled = rows.length === 0 || !!hasFail;
+  }
+
+  function resetReceiverStep() {
+    receiverIsLinked = false;
+    historySelectedMerchantNo = null;
+    historySelectedFullname = null;
+    clearQrExpiryTimer();
+    var inp = document.getElementById('receiver-merchant-no');
+    if (inp) inp.value = '';
+    var res = document.getElementById('receiver-result');
+    if (res) res.classList.add('hidden');
+    var cb = document.getElementById('receiver-admin-confirmed');
+    if (cb) cb.checked = false;
+    var qr = document.getElementById('receiver-qr-img');
+    if (qr) { qr.removeAttribute('src'); qr.style.display = ''; }
+    var lp = document.getElementById('receiver-linked-panel');
+    if (lp) lp.classList.add('hidden');
+    var qb = document.getElementById('receiver-qr-block');
+    if (qb) qb.classList.add('hidden');
+    var tip = document.getElementById('qr-expired-tip');
+    if (tip) tip.classList.add('hidden');
+    var next = document.getElementById('btn-receiver-to-otp');
+    if (next) next.disabled = true;
+    var suf = document.getElementById('receiver-name-suffix');
+    if (suf) suf.classList.remove('hidden');
+    document.querySelectorAll('#history-receiver-list .history-item').forEach(function (el) {
+      el.classList.remove('history-item--selected');
+    });
+    var hdet = document.getElementById('receiver-history-detail');
+    if (hdet) hdet.classList.add('hidden');
+    initReceiverTabsDefault();
+  }
+
+  document.getElementById('btn-step0-next').addEventListener('click', function () {
+    if (modalTransferSelected.size === 0) {
+      alert('请至少选择 1 台设备');
+      return;
+    }
+    closeModal('modal-step0');
+    renderConfirmList();
+    openModal('modal-step2');
+  });
+
+  document.getElementById('btn-back-confirm').addEventListener('click', function () {
+    closeModal('modal-step2');
+    renderModalStep0();
+    openModal('modal-step0');
+  });
+
+  document.getElementById('btn-confirm-to-receiver').addEventListener('click', function () {
+    if (document.querySelector('#confirm-tbody tr[data-fail="1"]')) return;
+    closeModal('modal-step2');
+    resetReceiverStep();
+    openModal('modal-step1');
+  });
+
+  document.getElementById('btn-back-to-confirm').addEventListener('click', function () {
+    closeModal('modal-step1');
+    clearQrExpiryTimer();
+    openModal('modal-step2');
+  });
+
+  document.querySelectorAll('.page-tab[data-view]').forEach(function (tab) {
+    tab.addEventListener('click', function () {
+      document.querySelectorAll('.page-tab[data-view]').forEach(function (t) { t.classList.remove('active'); });
+      tab.classList.add('active');
+      const v = tab.getAttribute('data-view');
+      document.getElementById('view-machines').classList.toggle('hidden', v !== 'machines');
+      document.getElementById('view-records').classList.toggle('hidden', v !== 'records');
+      if (v === 'records') renderRecordsTable();
+    });
+  });
+
+  document.getElementById('btn-batch-transfer').addEventListener('click', function () {
+    alert('「批量划拨/收回」为存量能力，与平级「机具转移」不同。请使用页面右上角「机具转移」发起机具转移。');
+  });
+
+  document.getElementById('receiver-tab-bar').addEventListener('click', function (e) {
+    var tabBtn = e.target.closest('[data-receiver-tab]');
+    if (!tabBtn || tabBtn.classList.contains('hidden')) return;
+    switchReceiverTab(tabBtn.getAttribute('data-receiver-tab'));
+  });
+
+  document.getElementById('btn-validate-receiver').addEventListener('click', function () {
+    var no = document.getElementById('receiver-merchant-no').value.trim();
+    if (!no) {
+      alert('请输入接收方代理商商户号');
+      return;
+    }
+    var displayName = '海***科技有限公司';
+    var hideDesensitizeTag = false;
+    var hit = null;
+    document.querySelectorAll('#history-receiver-list .history-item[data-merchant]').forEach(function (el) {
+      if (el.getAttribute('data-merchant') === no) hit = el;
+    });
+    if (hit && hit.getAttribute('data-fullname')) {
+      displayName = hit.getAttribute('data-fullname');
+      hideDesensitizeTag = true;
+    } else if (hit && hit.getAttribute('data-mask')) {
+      displayName = hit.getAttribute('data-mask');
+    }
+    receiverIsLinked = !!(hit && hit.getAttribute('data-linked') === 'true');
+
+    document.getElementById('rcv-name-mask').textContent = displayName;
+    var suf = document.getElementById('receiver-name-suffix');
+    if (suf) suf.classList.toggle('hidden', hideDesensitizeTag);
+    document.getElementById('receiver-result').classList.remove('hidden');
+    document.getElementById('receiver-linked-panel').classList.add('hidden');
+    document.getElementById('receiver-qr-block').classList.add('hidden');
+    document.getElementById('receiver-admin-confirmed').checked = false;
+    document.getElementById('admin-phone-tail').textContent = '8912';
+
+    if (receiverIsLinked) {
+      document.getElementById('receiver-linked-panel').classList.remove('hidden');
+      clearQrExpiryTimer();
+      updateReceiverNextState();
+      return;
+    }
+
+    document.getElementById('receiver-qr-block').classList.remove('hidden');
+    issueNewQrAndTimer(no);
+  });
+
+  document.getElementById('btn-refresh-qr').addEventListener('click', function () {
+    var no = document.getElementById('receiver-merchant-no').value.trim();
+    if (!no) {
+      alert('请先输入商户号并查询');
+      return;
+    }
+    if (receiverIsLinked) return;
+    issueNewQrAndTimer(no);
+    document.getElementById('receiver-admin-confirmed').checked = false;
+  });
+
+  document.getElementById('receiver-admin-confirmed').addEventListener('change', function () {
+    updateReceiverNextState();
+  });
+
+  document.getElementById('history-receiver-list').addEventListener('click', function (e) {
+    var delBtn = e.target.closest('.history-del');
+    if (delBtn) {
+      e.preventDefault();
+      var item = delBtn.closest('.history-item');
+      if (item && confirm('删除后需重新关联转移关系，才可进行机具转移')) {
+        var wasSel = item.classList.contains('history-item--selected');
+        item.remove();
+        refreshReceiverTabAvailability();
+        if (wasSel) {
+          historySelectedMerchantNo = null;
+          historySelectedFullname = null;
+          var hdet = document.getElementById('receiver-history-detail');
+          if (hdet) hdet.classList.add('hidden');
+          updateReceiverNextState();
+        }
+      }
+      return;
+    }
+    var selBtn = e.target.closest('.history-select');
+    if (selBtn) {
+      var item = selBtn.closest('.history-item');
+      if (!item) return;
+      switchReceiverTab('history');
+      var m = item.getAttribute('data-merchant');
+      var fn = item.getAttribute('data-fullname') || '';
+      document.querySelectorAll('#history-receiver-list .history-item').forEach(function (el) {
+        el.classList.remove('history-item--selected');
+      });
+      item.classList.add('history-item--selected');
+      historySelectedMerchantNo = m || null;
+      historySelectedFullname = fn;
+      document.getElementById('receiver-history-detail').classList.remove('hidden');
+      document.getElementById('receiver-history-detail-text').textContent =
+        (m ? m + ' · ' : '') + (fn || '—');
+      updateReceiverNextState();
+    }
+  });
+
+  document.getElementById('btn-receiver-to-otp').addEventListener('click', function () {
+    if (receiverTabActive === 'history') {
+      if (!historySelectedMerchantNo) {
+        alert('请先选择已有转移关系的接收方');
+        return;
+      }
+    } else {
+      if (!receiverIsLinked) {
+        if (isQrExpired()) {
+          alert('二维码已过期，请点击「刷新二维码」后重新完成接收方确认');
+          return;
+        }
+        if (!document.getElementById('receiver-admin-confirmed').checked) {
+          alert('须由接收方代理商管理员扫码确认绑定关系后，勾选确认项方可继续');
+          return;
+        }
+      }
+    }
+    closeModal('modal-step1');
+    clearQrExpiryTimer();
+    document.getElementById('otp-input').value = '';
+    document.getElementById('otp-sent-hint').classList.add('hidden');
+    document.getElementById('btn-submit-transfer').disabled = true;
+    otpSentFlag = false;
+    openModal('modal-otp');
+  });
+
+  document.getElementById('btn-send-otp').addEventListener('click', function () {
+    otpSentFlag = true;
+    document.getElementById('otp-sent-hint').classList.remove('hidden');
+    var v = document.getElementById('otp-input').value.replace(/\D/g, '').slice(0, 6);
+    document.getElementById('btn-submit-transfer').disabled = v.length !== 6;
+  });
+
+  document.getElementById('otp-input').addEventListener('input', function () {
+    this.value = this.value.replace(/\D/g, '').slice(0, 6);
+    document.getElementById('btn-submit-transfer').disabled = this.value.length !== 6;
+  });
+
+  var transferRecordsInitiated = [];
+  var transferRecordsReceived = [];
+  var activeRecordTab = 'initiated';
+
+  function fmtNowTs() {
+    var d = new Date();
+    function p(n) { return n < 10 ? '0' + n : String(n); }
+    return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes()) + ':' + p(d.getSeconds());
+  }
+
+  function seedDemoRecords() {
+    transferRecordsInitiated = [
+      {
+        batchId: 'DT20260417120001',
+        initiatorName: '海南示例科技有限公司',
+        initiatorId: '46041621',
+        receiverName: '海南某某科技有限公司',
+        receiverId: '46041688',
+        total: 3,
+        success: 3,
+        fail: 0,
+        status: 'success',
+        createdAt: '2026-04-17 12:00:05',
+        devices: [
+          { sn: 'MP889012345679', type: '收款码牌', result: '成功', ownerMerchantNo: '46041688' },
+          { sn: 'SN882736451902', type: '智能POS', result: '成功', ownerMerchantNo: '46041688' },
+          { sn: 'SP776655443322', type: '云音箱', result: '成功', ownerMerchantNo: '46041688' }
+        ]
+      },
+      {
+        batchId: 'DT20260417103022',
+        initiatorName: '海南示例科技有限公司',
+        initiatorId: '46041621',
+        receiverName: '上海某某网络有限公司',
+        receiverId: '31011206',
+        total: 120,
+        success: 118,
+        fail: 2,
+        status: 'partial',
+        createdAt: '2026-04-17 10:30:00',
+        devices: [
+          { sn: 'MP889012345681', type: '收款码牌', result: '成功', ownerMerchantNo: '31011206' },
+          { sn: 'MP889012345682', type: '收款码牌', result: '失败', ownerMerchantNo: '46041621', failReason: '终端类型不支持转移' },
+          { sn: 'SN882736451903', type: '智能POS', result: '成功', ownerMerchantNo: '31011206' },
+          { sn: 'SN882736451904', type: '智能POS', result: '成功', ownerMerchantNo: '31011206' }
+        ]
+      }
+    ];
+    transferRecordsReceived = [
+      {
+        batchId: 'DT20260416100001',
+        initiatorName: '沪上某某网络有限公司',
+        initiatorId: '31011206',
+        receiverName: '海南示例科技有限公司',
+        receiverId: '46041621',
+        total: 5,
+        success: 5,
+        fail: 0,
+        status: 'success',
+        createdAt: '2026-04-16 10:00:00',
+        devices: [
+          { sn: 'MMW9900112233', type: '扫码王', result: '成功', ownerMerchantNo: '46041621' },
+          { sn: 'PRT6600117788', type: '云打印机', result: '成功', ownerMerchantNo: '46041621' }
+        ]
+      },
+      {
+        batchId: 'DT20260415120000',
+        initiatorName: '华北某某服务商',
+        initiatorId: 'A10001',
+        receiverName: '海南示例科技有限公司',
+        receiverId: '46041621',
+        total: 2,
+        success: 2,
+        fail: 0,
+        status: 'success',
+        createdAt: '2026-04-15 12:00:00',
+        devices: [
+          { sn: 'SP776655443323', type: '云音箱', result: '成功', ownerMerchantNo: '46041621' }
+        ]
+      }
+    ];
+  }
+
+  function inDateRange(createdAtStr, startStr, endStr) {
+    if (!startStr && !endStr) return true;
+    var d = new Date(createdAtStr.replace(' ', 'T'));
+    if (startStr) {
+      var s = new Date(startStr + 'T00:00:00');
+      if (d < s) return false;
+    }
+    if (endStr) {
+      var e = new Date(endStr + 'T23:59:59');
+      if (d > e) return false;
+    }
+    return true;
+  }
+
+  function openBatchDetail(batch) {
+    document.getElementById('detail-batch-id').textContent = batch.batchId;
+    document.getElementById('detail-total').textContent = String(batch.total);
+    document.getElementById('detail-ok').textContent = batch.success === null || batch.success === undefined ? '—' : String(batch.success);
+    document.getElementById('detail-fail').textContent = batch.fail === null || batch.fail === undefined ? '—' : String(batch.fail);
+    var tb = document.getElementById('batch-detail-tbody');
+    tb.innerHTML = (batch.devices || []).map(function (d) {
+      var failReasonCell = d.result === '失败' ? (d.failReason || '—') : '—';
+      return '<tr><td>' + escapeHtmlRec(d.sn) + '</td><td>' + escapeHtmlRec(d.type) + '</td><td>' + escapeHtmlRec(d.result) + '</td><td>' + escapeHtmlRec(d.ownerMerchantNo) + '</td><td>' + escapeHtmlRec(failReasonCell) + '</td></tr>';
+    }).join('');
+    openModal('modal-batch-detail');
+  }
+
+  function statusTagRecord(st) {
+    if (st === 'processing') return '<span class="tag" style="background:#e6f4ff;color:#1677ff;border:1px solid #91caff;">处理中</span>';
+    if (st === 'success') return '<span class="tag tag-green">成功</span>';
+    if (st === 'partial') return '<span class="tag" style="background:#fffbe6;color:#d48806;border:1px solid #ffe58f;">部分成功</span>';
+    if (st === 'fail') return '<span class="tag tag-red">失败</span>';
+    return '<span class="tag" style="background:#f5f5f5;color:#666;">—</span>';
+  }
+
+  function partyCell(name, id) {
+    return '<div class="text-muted-cell">' + escapeHtmlRec(name) + '<br/><span style="color:#8c8c8c;">' + escapeHtmlRec(id) + '</span></div>';
+  }
+
+  function renderRecordsTable() {
+    var list = activeRecordTab === 'initiated' ? transferRecordsInitiated : transferRecordsReceived;
+    var startStr = document.getElementById('rec-date-start').value;
+    var endStr = document.getElementById('rec-date-end').value;
+    var batchQ = (document.getElementById('rec-q-batch').value || '').trim();
+    var initIdQ = (document.getElementById('rec-q-init-id').value || '').trim();
+    var initNameQ = (document.getElementById('rec-q-init-name').value || '').trim().toLowerCase();
+    var rcvIdQ = (document.getElementById('rec-q-rcv-id').value || '').trim();
+    var rcvNameQ = (document.getElementById('rec-q-rcv-name').value || '').trim().toLowerCase();
+
+    list = list.filter(function (b) {
+      if (!inDateRange(b.createdAt, startStr, endStr)) return false;
+      if (batchQ && b.batchId !== batchQ) return false;
+      if (activeRecordTab === 'received') {
+        if (initIdQ && b.initiatorId !== initIdQ) return false;
+        if (initNameQ && String(b.initiatorName || '').toLowerCase().indexOf(initNameQ) === -1) return false;
+      } else {
+        if (rcvIdQ && b.receiverId !== rcvIdQ) return false;
+        if (rcvNameQ && String(b.receiverName || '').toLowerCase().indexOf(rcvNameQ) === -1) return false;
+      }
+      return true;
+    });
+
+    var tbody = document.getElementById('records-tbody');
+    var role = activeRecordTab === 'initiated' ? 'initiated' : 'received';
+    tbody.innerHTML = list.map(function (b) {
+      return '<tr>' +
+        '<td>' + escapeHtmlRec(b.batchId) + '</td>' +
+        '<td>' + partyCell(b.initiatorName, b.initiatorId) + '</td>' +
+        '<td>' + partyCell(b.receiverName, b.receiverId) + '</td>' +
+        '<td>' + b.total + '</td>' +
+        '<td>' + statusTagRecord(b.status) + '</td>' +
+        '<td style="color:#8c8c8c;font-size:12px;">' + escapeHtmlRec(b.createdAt) + '</td>' +
+        '<td><a href="#" data-batch="' + escapeHtmlRec(b.batchId) + '" data-role="' + role + '" class="rec-detail-link">查看明细</a></td>' +
+        '</tr>';
+    }).join('');
+  }
+
+  function updateRecordTabUI() {
+    document.querySelectorAll('.record-role-tab').forEach(function (t) {
+      t.classList.toggle('active', t.getAttribute('data-record-tab') === activeRecordTab);
+    });
+    document.getElementById('rec-filter-init-wrap').classList.toggle('hidden', activeRecordTab !== 'received');
+    document.getElementById('rec-filter-init-name-wrap').classList.toggle('hidden', activeRecordTab !== 'received');
+    document.getElementById('rec-filter-rcv-wrap').classList.toggle('hidden', activeRecordTab !== 'initiated');
+    document.getElementById('rec-filter-rcv-name-wrap').classList.toggle('hidden', activeRecordTab !== 'initiated');
+  }
+
+  function setDefaultRecDates() {
+    var end = new Date();
+    var start = new Date(end.getTime() - 30 * 24 * 60 * 60 * 1000);
+    function fmtDate(d) {
+      function p(n) { return n < 10 ? '0' + n : String(n); }
+      return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate());
+    }
+    document.getElementById('rec-date-end').value = fmtDate(end);
+    document.getElementById('rec-date-start').value = fmtDate(start);
+  }
+
+  seedDemoRecords();
+  setDefaultRecDates();
+  updateRecordTabUI();
+
+  document.getElementById('records-tbody').addEventListener('click', function (e) {
+    var a = e.target.closest('a.rec-detail-link');
+    if (!a) return;
+    e.preventDefault();
+    var batchId = a.getAttribute('data-batch');
+    var role = a.getAttribute('data-role');
+    var list = role === 'received' ? transferRecordsReceived : transferRecordsInitiated;
+    var batch = list.filter(function (x) { return x.batchId === batchId; })[0];
+    if (batch) openBatchDetail(batch);
+  });
+
+  document.querySelectorAll('.record-role-tab').forEach(function (tab) {
+    tab.addEventListener('click', function () {
+      activeRecordTab = tab.getAttribute('data-record-tab') || 'initiated';
+      updateRecordTabUI();
+      renderRecordsTable();
+    });
+  });
+
+  document.getElementById('btn-rec-query').addEventListener('click', renderRecordsTable);
+  document.getElementById('btn-rec-reset').addEventListener('click', function () {
+    setDefaultRecDates();
+    document.getElementById('rec-q-batch').value = '';
+    document.getElementById('rec-q-init-id').value = '';
+    document.getElementById('rec-q-init-name').value = '';
+    document.getElementById('rec-q-rcv-id').value = '';
+    document.getElementById('rec-q-rcv-name').value = '';
+    renderRecordsTable();
+  });
+
+  function closeOpenTransferModals() {
+    ['modal-step0', 'modal-step2', 'modal-step1', 'modal-otp', 'modal-result'].forEach(function (id) {
+      var el = document.getElementById(id);
+      if (el && el.classList.contains('open')) closeModal(id);
+    });
+  }
+  document.querySelectorAll('.js-transfer-records').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      closeOpenTransferModals();
+      document.querySelector('.page-tab[data-view="records"]').click();
+    });
+  });
+
+  document.getElementById('btn-submit-transfer').addEventListener('click', function () {
+    if (!otpSentFlag) {
+      alert('请先点击「获取验证码」');
+      return;
+    }
+    const otp = document.getElementById('otp-input').value.trim();
+    if (otp.length !== 6) { alert('请输入6位验证码'); return; }
+    var sns = Array.from(modalTransferSelected);
+    var receiverNo;
+    var receiverMask;
+    if (receiverTabActive === 'history' && historySelectedMerchantNo) {
+      receiverNo = historySelectedMerchantNo;
+      receiverMask = historySelectedFullname || historySelectedMerchantNo;
+    } else {
+      receiverNo = document.getElementById('receiver-merchant-no').value.trim();
+      receiverMask = document.getElementById('rcv-name-mask').textContent.trim();
+    }
+    var batchId = 'DT' + Date.now();
+    var devices = sns.map(function (sn) {
+      var m = demoMachines.filter(function (x) { return x.sn === sn; })[0];
+      return { sn: sn, type: m ? m.type : '—', result: '处理中', ownerMerchantNo: '—', failReason: '—' };
+    });
+    transferRecordsInitiated.unshift({
+      batchId: batchId,
+      initiatorName: '海南示例科技有限公司',
+      initiatorId: '46041621',
+      receiverName: receiverMask,
+      receiverId: receiverNo,
+      total: sns.length,
+      success: null,
+      fail: null,
+      status: 'processing',
+      createdAt: fmtNowTs(),
+      devices: devices
+    });
+    closeModal('modal-otp');
+    document.getElementById('result-batch').textContent = batchId;
+    document.getElementById('result-title').textContent = '批次已生成';
+    document.getElementById('result-banner').className = 'result-banner ok';
+    openModal('modal-result');
+    selected.clear();
+    modalTransferSelected.clear();
+    renderTable();
+  });
+
+  document.getElementById('btn-close-result').addEventListener('click', function () { closeModal('modal-result'); });
+  document.getElementById('btn-back-list').addEventListener('click', function () {
+    closeModal('modal-result');
+    document.querySelector('.page-tab[data-view="machines"]').click();
+  });
+  document.getElementById('btn-goto-records').addEventListener('click', function () {
+    closeModal('modal-result');
+    document.querySelector('.page-tab[data-view="records"]').click();
+  });
+
+  document.getElementById('btn-query').addEventListener('click', function () { renderTable(); });
+  document.getElementById('btn-refresh').addEventListener('click', function () {
+    document.getElementById('f-sn').value = '';
+    document.getElementById('f-code-type').selectedIndex = 0;
+    document.getElementById('f-status').value = '';
+    var allOwn = document.querySelector('input[name="own"][value="all"]');
+    if (allOwn) allOwn.checked = true;
+    document.getElementById('f-channel-select').value = '';
+    document.getElementById('f-bound-merchant').value = '';
+    document.getElementById('f-store').selectedIndex = 0;
+    selected.clear();
+    renderTable();
+  });
+
+  renderTable();
+})();
+  </script>
+</body>
+</html>

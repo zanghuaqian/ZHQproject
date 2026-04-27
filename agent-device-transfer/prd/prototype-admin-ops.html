@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>盛意旺运营后台 · 机具运营（原型）</title>
+  <style>
+    :root {
+      --primary: #1677ff;
+      --primary-hover: #4096ff;
+      --border: #e8e8e8;
+      --bg: #f0f2f5;
+      --text: #262626;
+      --muted: #8c8c8c;
+      --danger: #f5222d;
+      --success: #52c41a;
+      --warn: #faad14;
+      --radius: 4px;
+      --sider-bg: #001529;
+      --sider-text: rgba(255,255,255,0.65);
+      --sider-active: #1677ff;
+      --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans SC", sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: var(--font); font-size: 13px; color: var(--text); background: var(--bg); min-height: 100vh; }
+    a { color: var(--primary); text-decoration: none; cursor: pointer; }
+    a:hover { text-decoration: underline; }
+
+    .app { min-height: 100vh; display: flex; flex-direction: column; }
+    .app-header {
+      height: 48px; flex-shrink: 0; background: #fff; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; padding: 0 16px; gap: 16px;
+    }
+    .app-header-brand { font-weight: 600; font-size: 15px; color: var(--text); }
+    .app-header-brand .badge {
+      margin-left: 8px; font-size: 11px; font-weight: 500; color: #fff; background: #722ed1;
+      padding: 2px 6px; border-radius: 2px; vertical-align: middle;
+    }
+    .app-header-right { margin-left: auto; font-size: 13px; color: #595959; }
+
+    .app-body { flex: 1; display: flex; min-height: 0; }
+    .app-sider {
+      width: 216px; flex-shrink: 0; background: var(--sider-bg);
+      padding: 12px 0 24px; overflow-y: auto; font-size: 13px;
+    }
+    .nav-group-title {
+      padding: 12px 16px 6px; font-size: 12px; color: rgba(255,255,255,0.45); text-transform: none;
+    }
+    .nav-item {
+      padding: 10px 16px 10px 20px; color: var(--sider-text); cursor: pointer;
+      border-left: 3px solid transparent; display: flex; align-items: center; gap: 8px;
+    }
+    .nav-item:hover { color: #fff; background: rgba(255,255,255,0.08); }
+    .nav-item.active { color: #fff; background: var(--sider-active); border-left-color: #fff; font-weight: 500; }
+
+    .app-main { flex: 1; min-width: 0; padding: 16px 20px 24px; overflow: auto; }
+    .page-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+    .page-title { margin: 0; font-size: 18px; font-weight: 600; color: var(--text); }
+    .page-desc { margin: 6px 0 0; font-size: 12px; color: var(--muted); line-height: 1.5; max-width: 720px; }
+
+    .filter-box {
+      background: #fff; border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 12px 14px; margin-bottom: 12px;
+    }
+    .filters { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: flex-end; }
+    .field { display: flex; flex-direction: column; gap: 4px; }
+    .field label { font-size: 12px; color: #595959; }
+    input[type="text"], input[type="date"], select {
+      height: 32px; padding: 0 10px; border: 1px solid #d9d9d9; border-radius: var(--radius);
+      font-size: 13px; min-width: 140px;
+    }
+    .btn {
+      height: 32px; padding: 0 14px; border-radius: var(--radius); border: 1px solid #d9d9d9;
+      background: #fff; cursor: pointer; font-size: 13px;
+    }
+    .btn:hover { border-color: var(--primary); color: var(--primary); }
+    .btn-primary { background: var(--primary); color: #fff; border-color: var(--primary); }
+    .btn-primary:hover { background: var(--primary-hover); border-color: var(--primary-hover); color: #fff; }
+    .btn-sm { height: 28px; padding: 0 10px; font-size: 12px; }
+
+    .table-card { background: #fff; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+    .table-toolbar {
+      display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
+      gap: 10px; padding: 10px 14px; border-bottom: 1px solid #f0f0f0;
+    }
+    table.data { width: 100%; border-collapse: collapse; font-size: 13px; }
+    table.data th, table.data td { padding: 10px 12px; border-bottom: 1px solid #f0f0f0; text-align: left; vertical-align: top; }
+    table.data th { background: #fafafa; color: #8c8c8c; font-weight: 500; white-space: nowrap; }
+    table.data tr:hover td { background: #fafafa; }
+    .text-muted-cell { color: #595959; font-size: 12px; line-height: 1.5; }
+    .tag { display: inline-block; padding: 0 6px; border-radius: 2px; font-size: 11px; }
+    .tag-green { background: #f6ffed; color: var(--success); border: 1px solid #b7eb8f; }
+    .tag-blue { background: #e6f4ff; color: var(--primary); border: 1px solid #91caff; }
+    .tag-warn { background: #fffbe6; color: #d48806; border: 1px solid #ffe58f; }
+    .tag-gray { background: #f5f5f5; color: #666; border: 1px solid #d9d9d9; }
+
+    .modal-overlay {
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 1000;
+      align-items: center; justify-content: center; padding: 16px;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: #fff; border-radius: 8px; width: 100%; max-width: 560px; max-height: 90vh;
+      display: flex; flex-direction: column; box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+    }
+    .modal-lg { max-width: 800px; }
+    .modal-hd {
+      padding: 12px 16px; border-bottom: 1px solid var(--border); font-weight: 600; font-size: 15px;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .modal-bd { padding: 16px; overflow-y: auto; flex: 1; }
+    .modal-ft { padding: 10px 16px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 8px; }
+    .list-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    .list-table th, .list-table td { padding: 8px; border-bottom: 1px solid #f0f0f0; text-align: left; }
+    .list-table th { color: #888; font-weight: 500; }
+    .hidden { display: none !important; }
+    .hint { font-size: 12px; color: var(--muted); margin-top: 8px; line-height: 1.5; }
+  </style>
+</head>
+<body>
+  <div id="app-root">
+  <div class="app">
+    <header class="app-header">
+      <div class="app-header-brand">盛意旺 <span class="badge">运营后台</span></div>
+      <div class="app-header-right">运营管理员（示例）</div>
+    </header>
+    <div class="app-body">
+      <aside class="app-sider" aria-label="侧栏导航">
+        <div class="nav-group-title">机具运营</div>
+        <div class="nav-item active" data-view="relation" id="nav-relation">机具转移关系查询</div>
+        <div class="nav-item" data-view="records" id="nav-records">转移记录查询</div>
+      </aside>
+      <main class="app-main">
+        <!-- 视图1：转移关系（双向） -->
+        <section id="view-relation">
+          <div class="page-head">
+            <div>
+              <h1 class="page-title">机具转移关系查询</h1>
+              <p class="page-desc">
+                转移关系为<strong>双向</strong>：同一对代理商之间仅保留一条关系记录，不区分「谁发起绑定」；列表展示双方商户及<strong>绑定生效时间</strong>。支持运营在合规流程下<strong>人工补录</strong>绑定关系。
+              </p>
+            </div>
+            <button type="button" class="btn btn-primary" id="btn-add-relation">新增绑定关系</button>
+          </div>
+          <div class="filter-box">
+            <div class="filters">
+              <div class="field">
+                <label for="rel-q-party">商户号/名称</label>
+                <input type="text" id="rel-q-party" placeholder="任一方模糊查询" style="min-width:200px;" />
+              </div>
+              <div class="field">
+                <label for="rel-date-start">绑定时间起</label>
+                <input type="date" id="rel-date-start" />
+              </div>
+              <div class="field">
+                <label for="rel-date-end">绑定时间止</label>
+                <input type="date" id="rel-date-end" />
+              </div>
+              <div class="field">
+                <label for="rel-q-source">来源</label>
+                <select id="rel-q-source" style="min-width:120px;">
+                  <option value="">全部</option>
+                  <option value="system">系统建立</option>
+                  <option value="manual">人工补录</option>
+                </select>
+              </div>
+              <button type="button" class="btn btn-primary" id="btn-rel-query">查询</button>
+              <button type="button" class="btn" id="btn-rel-reset">重置</button>
+            </div>
+          </div>
+          <div class="table-card">
+            <div style="overflow-x:auto;">
+              <table class="data">
+                <thead>
+                  <tr>
+                    <th>关系编号</th>
+                    <th>甲方（商户号 / 名称）</th>
+                    <th>乙方（商户号 / 名称）</th>
+                    <th>绑定时间</th>
+                    <th>来源</th>
+                    <th>操作人</th>
+                    <th style="min-width:72px;">操作</th>
+                  </tr>
+                </thead>
+                <tbody id="relation-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- 视图2：全量转移记录 -->
+        <section id="view-records" class="hidden">
+          <div class="page-head">
+            <div>
+              <h1 class="page-title">转移记录查询</h1>
+              <p class="page-desc">查看全平台机具转移批次；支持按条件筛选并查看每台设备的处理结果与失败原因。</p>
+            </div>
+          </div>
+          <div class="filter-box">
+            <div class="filters">
+              <div class="field">
+                <label for="rec-date-start">创建时间起</label>
+                <input type="date" id="rec-date-start" />
+              </div>
+              <div class="field">
+                <label for="rec-date-end">创建时间止</label>
+                <input type="date" id="rec-date-end" />
+              </div>
+              <div class="field">
+                <label for="rec-q-batch">批次号</label>
+                <input type="text" id="rec-q-batch" placeholder="精准查询" />
+              </div>
+              <div class="field">
+                <label for="rec-q-init">发起方商户号</label>
+                <input type="text" id="rec-q-init" placeholder="精准" />
+              </div>
+              <div class="field">
+                <label for="rec-q-rcv">接收方商户号</label>
+                <input type="text" id="rec-q-rcv" placeholder="精准" />
+              </div>
+              <div class="field">
+                <label for="rec-q-status">状态</label>
+                <select id="rec-q-status" style="min-width:120px;">
+                  <option value="">全部</option>
+                  <option value="processing">处理中</option>
+                  <option value="success">成功</option>
+                  <option value="partial">部分成功</option>
+                  <option value="fail">失败</option>
+                </select>
+              </div>
+              <button type="button" class="btn btn-primary" id="btn-rec-query">查询</button>
+              <button type="button" class="btn" id="btn-rec-reset">重置</button>
+            </div>
+          </div>
+          <div class="table-card">
+            <div style="overflow-x:auto;">
+              <table class="data">
+                <thead>
+                  <tr>
+                    <th>批次号</th>
+                    <th>发起方</th>
+                    <th>接收方</th>
+                    <th>总台数</th>
+                    <th>状态</th>
+                    <th>创建时间</th>
+                    <th style="min-width:88px;">操作</th>
+                  </tr>
+                </thead>
+                <tbody id="records-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+  </div>
+
+  <!-- 新增绑定关系 -->
+  <div class="modal-overlay" id="modal-add-relation" aria-hidden="true">
+    <div class="modal" role="dialog">
+      <div class="modal-hd">
+        <span>新增转移绑定关系</span>
+        <button type="button" class="btn btn-sm" data-close="modal-add-relation">关闭</button>
+      </div>
+      <div class="modal-bd">
+        <p style="margin:0 0 12px;font-size:12px;color:#595959;line-height:1.6;">请填写双方代理商商户号。提交后关系为<strong>双向对等</strong>，列表中甲方/乙方仅按商户号升序展示，不代表发起方向。</p>
+        <div class="field" style="margin-bottom:12px;">
+          <label for="add-party-a">甲方商户号</label>
+          <input type="text" id="add-party-a" placeholder="10–15 位数字示例" style="width:100%;max-width:360px;" />
+        </div>
+        <div class="field" style="margin-bottom:12px;">
+          <label for="add-party-b">乙方商户号</label>
+          <input type="text" id="add-party-b" placeholder="须与甲方不同" style="width:100%;max-width:360px;" />
+        </div>
+        <div class="field">
+          <label for="add-remark">备注（可选）</label>
+          <input type="text" id="add-remark" placeholder="补录原因或工单号" style="width:100%;max-width:360px;" />
+        </div>
+      </div>
+      <div class="modal-ft">
+        <button type="button" class="btn" data-close="modal-add-relation">取消</button>
+        <button type="button" class="btn btn-primary" id="btn-add-relation-submit">确认添加</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 批次明细 -->
+  <div class="modal-overlay" id="modal-batch-detail" aria-hidden="true">
+    <div class="modal modal-lg" role="dialog">
+      <div class="modal-hd">
+        <span>转移批次明细 · <span id="detail-batch-id">—</span></span>
+        <button type="button" class="btn btn-sm" data-close="modal-batch-detail">关闭</button>
+      </div>
+      <div class="modal-bd">
+        <div class="filters" style="margin-bottom:12px;flex-wrap:wrap;">
+          <span style="font-size:13px;">发起方：<strong id="detail-init">—</strong></span>
+          <span style="font-size:13px;margin-left:16px;">接收方：<strong id="detail-rcv">—</strong></span>
+          <span style="font-size:13px;margin-left:16px;">成功 <strong id="detail-ok">—</strong> 台 / 失败 <strong id="detail-fail">—</strong> 台</span>
+        </div>
+        <div style="overflow:auto;max-height:min(420px,55vh);border:1px solid var(--border);border-radius:var(--radius);">
+          <table class="list-table" style="margin:0;">
+            <thead>
+              <tr>
+                <th>设备编号</th>
+                <th>设备类型</th>
+                <th>处理结果</th>
+                <th>归属商户号</th>
+                <th>失败原因</th>
+              </tr>
+            </thead>
+            <tbody id="batch-detail-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal-ft">
+        <button type="button" class="btn btn-primary" data-close="modal-batch-detail">关闭</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+(function () {
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  function partyCell(name, id) {
+    return '<div class="text-muted-cell">' + esc(name) + '<br/><span style="color:#8c8c8c;">' + esc(id) + '</span></div>';
+  }
+
+  var transferRelations = [
+    {
+      id: 'TR20260401001',
+      aId: '31011206', aName: '上海某某网络有限公司',
+      bId: '46041688', bName: '海南某某科技有限公司',
+      boundAt: '2026-04-01 09:30:00',
+      source: 'system',
+      operator: '—'
+    },
+    {
+      id: 'TR20260320002',
+      aId: '46041621', aName: '海南示例科技有限公司',
+      bId: '46041688', bName: '海南某某科技有限公司',
+      boundAt: '2026-03-20 14:12:33',
+      source: 'manual',
+      operator: '王运营'
+    }
+  ];
+
+  var allTransferBatches = [
+    {
+      batchId: 'DT20260417120001',
+      initiatorName: '海南示例科技有限公司', initiatorId: '46041621',
+      receiverName: '海南某某科技有限公司', receiverId: '46041688',
+      total: 3, success: 3, fail: 0, status: 'success',
+      createdAt: '2026-04-17 12:00:05',
+      devices: [
+        { sn: 'MP889012345679', type: '收款码牌', result: '成功', ownerMerchantNo: '46041688', failReason: '—' },
+        { sn: 'SN882736451902', type: '智能POS', result: '成功', ownerMerchantNo: '46041688', failReason: '—' },
+        { sn: 'SP776655443322', type: '云音箱', result: '成功', ownerMerchantNo: '46041688', failReason: '—' }
+      ]
+    },
+    {
+      batchId: 'DT20260417103022',
+      initiatorName: '海南示例科技有限公司', initiatorId: '46041621',
+      receiverName: '上海某某网络有限公司', receiverId: '31011206',
+      total: 120, success: 118, fail: 2, status: 'partial',
+      createdAt: '2026-04-17 10:30:00',
+      devices: [
+        { sn: 'MP889012345681', type: '收款码牌', result: '成功', ownerMerchantNo: '31011206', failReason: '—' },
+        { sn: 'MP889012345682', type: '收款码牌', result: '失败', ownerMerchantNo: '46041621', failReason: '终端类型不支持转移' },
+        { sn: 'SN882736451903', type: '智能POS', result: '成功', ownerMerchantNo: '31011206', failReason: '—' }
+      ]
+    },
+    {
+      batchId: 'DT20260416180000',
+      initiatorName: '华北某某服务商', initiatorId: 'A10001',
+      receiverName: '海南示例科技有限公司', receiverId: '46041621',
+      total: 8, success: null, fail: null, status: 'processing',
+      createdAt: '2026-04-16 18:05:22',
+      devices: [
+        { sn: 'PRT6600117788', type: '云打印机', result: '处理中', ownerMerchantNo: '—', failReason: '—' }
+      ]
+    }
+  ];
+
+  function sourceTag(src) {
+    if (src === 'manual') return '<span class="tag tag-warn">人工补录</span>';
+    return '<span class="tag tag-blue">系统建立</span>';
+  }
+
+  function statusTagRecord(st) {
+    if (st === 'processing') return '<span class="tag tag-blue">处理中</span>';
+    if (st === 'success') return '<span class="tag tag-green">成功</span>';
+    if (st === 'partial') return '<span class="tag tag-warn">部分成功</span>';
+    if (st === 'fail') return '<span class="tag" style="background:#fff2f0;color:#f5222d;border:1px solid #ffccc7;">失败</span>';
+    return '<span class="tag tag-gray">—</span>';
+  }
+
+  function inDateRange(isoStr, startStr, endStr) {
+    if (!startStr && !endStr) return true;
+    var d = new Date(String(isoStr).replace(' ', 'T'));
+    if (startStr) {
+      var s = new Date(startStr + 'T00:00:00');
+      if (d < s) return false;
+    }
+    if (endStr) {
+      var e = new Date(endStr + 'T23:59:59');
+      if (d > e) return false;
+    }
+    return true;
+  }
+
+  function normalizeRelationRow(r) {
+    var ids = [r.aId, r.bId].sort();
+    var map = {};
+    map[r.aId] = { id: r.aId, name: r.aName };
+    map[r.bId] = { id: r.bId, name: r.bName };
+    return { id: r.id, left: map[ids[0]], right: map[ids[1]], boundAt: r.boundAt, source: r.source, operator: r.operator };
+  }
+
+  function renderRelationTable() {
+    var q = (document.getElementById('rel-q-party').value || '').trim().toLowerCase();
+    var ds = document.getElementById('rel-date-start').value;
+    var de = document.getElementById('rel-date-end').value;
+    var src = document.getElementById('rel-q-source').value;
+
+    var rows = transferRelations.map(normalizeRelationRow).filter(function (row) {
+      if (!inDateRange(row.boundAt, ds, de)) return false;
+      if (src && row.source !== src) return false;
+      if (q) {
+        var blob = [row.left.id, row.left.name, row.right.id, row.right.name].join(' ').toLowerCase();
+        if (blob.indexOf(q) === -1) return false;
+      }
+      return true;
+    });
+
+    var tb = document.getElementById('relation-tbody');
+    if (rows.length === 0) {
+      tb.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:32px;color:#bfbfbf;">暂无数据</td></tr>';
+      return;
+    }
+    tb.innerHTML = rows.map(function (row) {
+      return '<tr>' +
+        '<td>' + esc(row.id) + '</td>' +
+        '<td>' + partyCell(row.left.name, row.left.id) + '</td>' +
+        '<td>' + partyCell(row.right.name, row.right.id) + '</td>' +
+        '<td style="color:#8c8c8c;font-size:12px;">' + esc(row.boundAt) + '</td>' +
+        '<td>' + sourceTag(row.source) + '</td>' +
+        '<td>' + esc(row.operator || '—') + '</td>' +
+        '<td><a href="#" class="rel-view" data-id="' + esc(row.id) + '">查看</a></td>' +
+        '</tr>';
+    }).join('');
+  }
+
+  function renderRecordsTable() {
+    var ds = document.getElementById('rec-date-start').value;
+    var de = document.getElementById('rec-date-end').value;
+    var batchQ = (document.getElementById('rec-q-batch').value || '').trim();
+    var initQ = (document.getElementById('rec-q-init').value || '').trim();
+    var rcvQ = (document.getElementById('rec-q-rcv').value || '').trim();
+    var st = document.getElementById('rec-q-status').value;
+
+    var list = allTransferBatches.filter(function (b) {
+      if (!inDateRange(b.createdAt, ds, de)) return false;
+      if (batchQ && b.batchId !== batchQ) return false;
+      if (initQ && b.initiatorId !== initQ) return false;
+      if (rcvQ && b.receiverId !== rcvQ) return false;
+      if (st && b.status !== st) return false;
+      return true;
+    });
+
+    var tb = document.getElementById('records-tbody');
+    if (list.length === 0) {
+      tb.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:32px;color:#bfbfbf;">暂无数据</td></tr>';
+      return;
+    }
+    tb.innerHTML = list.map(function (b) {
+      return '<tr>' +
+        '<td>' + esc(b.batchId) + '</td>' +
+        '<td>' + partyCell(b.initiatorName, b.initiatorId) + '</td>' +
+        '<td>' + partyCell(b.receiverName, b.receiverId) + '</td>' +
+        '<td>' + b.total + '</td>' +
+        '<td>' + statusTagRecord(b.status) + '</td>' +
+        '<td style="color:#8c8c8c;font-size:12px;">' + esc(b.createdAt) + '</td>' +
+        '<td><a href="#" class="batch-detail-link" data-batch="' + esc(b.batchId) + '">查看明细</a></td>' +
+        '</tr>';
+    }).join('');
+  }
+
+  function openModal(id) {
+    var el = document.getElementById(id);
+    el.classList.add('open');
+    el.setAttribute('aria-hidden', 'false');
+  }
+  function closeModal(id) {
+    var el = document.getElementById(id);
+    el.classList.remove('open');
+    el.setAttribute('aria-hidden', 'true');
+  }
+
+  function openBatchDetail(batch) {
+    document.getElementById('detail-batch-id').textContent = batch.batchId;
+    document.getElementById('detail-init').textContent = batch.initiatorName + '（' + batch.initiatorId + '）';
+    document.getElementById('detail-rcv').textContent = batch.receiverName + '（' + batch.receiverId + '）';
+    document.getElementById('detail-ok').textContent = batch.success == null ? '—' : String(batch.success);
+    document.getElementById('detail-fail').textContent = batch.fail == null ? '—' : String(batch.fail);
+    var tbody = document.getElementById('batch-detail-tbody');
+    tbody.innerHTML = (batch.devices || []).map(function (d) {
+      var failCell = d.result === '失败' ? (d.failReason || '—') : '—';
+      return '<tr><td>' + esc(d.sn) + '</td><td>' + esc(d.type) + '</td><td>' + esc(d.result) + '</td><td>' + esc(d.ownerMerchantNo) + '</td><td>' + esc(failCell) + '</td></tr>';
+    }).join('');
+    openModal('modal-batch-detail');
+  }
+
+  function setDefaultRelDates() {
+    var end = new Date();
+    var start = new Date(end.getTime() - 90 * 24 * 60 * 60 * 1000);
+    function fmt(d) {
+      function p(n) { return n < 10 ? '0' + n : String(n); }
+      return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate());
+    }
+    document.getElementById('rel-date-end').value = fmt(end);
+    document.getElementById('rel-date-start').value = fmt(start);
+  }
+
+  function setDefaultRecDates() {
+    var end = new Date();
+    var start = new Date(end.getTime() - 30 * 24 * 60 * 60 * 1000);
+    function fmt(d) {
+      function p(n) { return n < 10 ? '0' + n : String(n); }
+      return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate());
+    }
+    document.getElementById('rec-date-end').value = fmt(end);
+    document.getElementById('rec-date-start').value = fmt(start);
+  }
+
+  document.querySelectorAll('.app-sider .nav-item[data-view]').forEach(function (nav) {
+    nav.addEventListener('click', function () {
+      document.querySelectorAll('.app-sider .nav-item').forEach(function (n) { n.classList.remove('active'); });
+      nav.classList.add('active');
+      var v = nav.getAttribute('data-view');
+      document.getElementById('view-relation').classList.toggle('hidden', v !== 'relation');
+      document.getElementById('view-records').classList.toggle('hidden', v !== 'records');
+    });
+  });
+
+  document.getElementById('btn-rel-query').addEventListener('click', renderRelationTable);
+  document.getElementById('btn-rel-reset').addEventListener('click', function () {
+    document.getElementById('rel-q-party').value = '';
+    document.getElementById('rel-q-source').value = '';
+    setDefaultRelDates();
+    renderRelationTable();
+  });
+
+  document.getElementById('btn-rec-query').addEventListener('click', renderRecordsTable);
+  document.getElementById('btn-rec-reset').addEventListener('click', function () {
+    document.getElementById('rec-q-batch').value = '';
+    document.getElementById('rec-q-init').value = '';
+    document.getElementById('rec-q-rcv').value = '';
+    document.getElementById('rec-q-status').value = '';
+    setDefaultRecDates();
+    renderRecordsTable();
+  });
+
+  document.getElementById('btn-add-relation').addEventListener('click', function () {
+    document.getElementById('add-party-a').value = '';
+    document.getElementById('add-party-b').value = '';
+    document.getElementById('add-remark').value = '';
+    openModal('modal-add-relation');
+  });
+
+  document.querySelectorAll('[data-close]').forEach(function (b) {
+    b.addEventListener('click', function () { closeModal(b.getAttribute('data-close')); });
+  });
+
+  document.getElementById('btn-add-relation-submit').addEventListener('click', function () {
+    var a = document.getElementById('add-party-a').value.trim();
+    var b = document.getElementById('add-party-b').value.trim();
+    if (!a || !b) {
+      alert('请填写双方商户号');
+      return;
+    }
+    if (a === b) {
+      alert('甲方与乙方商户号不能相同');
+      return;
+    }
+    var id = 'TR' + Date.now();
+    var nowStr = new Date();
+    function pad(n) { return n < 10 ? '0' + n : String(n); }
+    var ts = nowStr.getFullYear() + '-' + pad(nowStr.getMonth() + 1) + '-' + pad(nowStr.getDate()) + ' ' +
+      pad(nowStr.getHours()) + ':' + pad(nowStr.getMinutes()) + ':' + pad(nowStr.getSeconds());
+    transferRelations.unshift({
+      id: id,
+      aId: a, aName: '商户名称（待同步）',
+      bId: b, bName: '商户名称（待同步）',
+      boundAt: ts,
+      source: 'manual',
+      operator: '当前运营'
+    });
+    closeModal('modal-add-relation');
+    renderRelationTable();
+    alert('已添加绑定关系（原型：名称展示为占位，实际由系统反查商户资料）。');
+  });
+
+  document.getElementById('relation-tbody').addEventListener('click', function (e) {
+    var a = e.target.closest('a.rel-view');
+    if (!a) return;
+    e.preventDefault();
+    alert('原型：可跳转关系详情/审计日志（未实现）。关系编号：' + a.getAttribute('data-id'));
+  });
+
+  document.getElementById('records-tbody').addEventListener('click', function (e) {
+    var a = e.target.closest('a.batch-detail-link');
+    if (!a) return;
+    e.preventDefault();
+    var bid = a.getAttribute('data-batch');
+    var batch = allTransferBatches.filter(function (x) { return x.batchId === bid; })[0];
+    if (batch) openBatchDetail(batch);
+  });
+
+  setDefaultRelDates();
+  setDefaultRecDates();
+  renderRelationTable();
+  renderRecordsTable();
+})();
+  </script>
+</body>
+</html>

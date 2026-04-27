@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>转移关系确认 - 接收方管理员</title>
+  <style>
+    :root {
+      --primary: #0f8de9;
+      --primary-focus: rgba(15, 141, 233, 0.15);
+      --border: #e8e8e8;
+      --bg: #f5f6f8;
+      --text: #333333;
+      --muted: #8c8c8c;
+      --danger: #f5222d;
+      --success: #52c41a;
+      --radius: 8px;
+      --font: "PingFang SC", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Microsoft YaHei", "Noto Sans SC", sans-serif;
+      --login-gradient: linear-gradient(125.53deg, #0088eb 0%, #76bcef 79.73%);
+      --login-shadow-card: 0 -4px 80px rgba(0, 100, 212, 0.13);
+      --login-line: #eaeef1;
+      --login-placeholder: #b2b2b2;
+      --login-secondary-bg: #f4f7f9;
+      --login-secondary-text: #666666;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; font-family: var(--font); font-size: 15px; color: var(--text);
+      background: var(--bg); min-height: 100vh; min-height: 100dvh; line-height: 1.55;
+    }
+
+    /* —— 登录全屏（Figma node 4847:25654：默认验证码登录，可切换账号密码） —— */
+    .login-screen {
+      display: flex; min-height: 100vh; min-height: 100dvh; font-family: var(--font);
+      background: #fff; -webkit-overflow-scrolling: touch;
+    }
+    .login-aside {
+      display: none; width: 42%; min-width: 360px; max-width: 520px;
+      background: var(--login-gradient); color: #fff; position: relative; overflow: hidden;
+    }
+    @media (min-width: 900px) {
+      .login-aside { display: flex; flex-direction: column; justify-content: center; }
+    }
+    .login-aside-deco {
+      position: absolute; right: -6%; top: 2%; width: min(52%, 280px); aspect-ratio: 198 / 165;
+      pointer-events: none; opacity: 0.95;
+    }
+    .login-aside-deco img { display: block; width: 100%; height: 100%; object-fit: contain; }
+    .login-aside-inner { position: relative; z-index: 1; padding: 48px 40px 48px 56px; }
+    .login-logo-img {
+      width: 60px; height: 60px; display: block; object-fit: contain; margin-bottom: 12px; border-radius: 12px;
+    }
+    .login-aside-title { margin: 0; font-size: 22px; font-weight: 500; line-height: 30px; }
+    .login-aside-sub { margin: 10px 0 0; font-size: 14px; opacity: 0.92; line-height: 1.6; max-width: 320px; }
+    .login-aside-hint { margin-top: 24px; font-size: 13px; opacity: 0.78; line-height: 1.65; max-width: 300px; }
+
+    .login-main {
+      flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+      padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right))
+        max(24px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+      background: #fff; min-width: 0; overflow-y: auto;
+    }
+    .login-mobile-wrap { width: 100%; max-width: 440px; position: relative; flex-shrink: 0; }
+    .login-hero-deco {
+      display: none; position: absolute; right: -12px; top: -8px; width: 198px; height: 165px; pointer-events: none;
+    }
+    .login-hero-deco img { width: 100%; height: 100%; object-fit: contain; display: block; }
+    .login-mobile-hero {
+      display: none; flex-direction: column; align-items: flex-start; color: #fff;
+      padding: 12px 8px 8px 32px; position: relative; z-index: 1;
+    }
+    .login-mobile-hero .login-logo-img { margin-bottom: 12px; }
+    .login-mh-title { font-size: 22px; font-weight: 500; line-height: 30px; margin: 0; }
+
+    @media (max-width: 899px) {
+      .login-screen { flex-direction: column; align-items: stretch; background: var(--login-gradient); }
+      .login-main {
+        flex: 1; justify-content: flex-start; background: transparent;
+        padding-left: 0; padding-right: 0; padding-top: max(8px, env(safe-area-inset-top));
+      }
+      .login-mobile-wrap { max-width: none; }
+      .login-hero-deco { display: block; }
+      .login-mobile-hero { display: flex; }
+    }
+
+    .login-panel {
+      width: 100%; max-width: 420px; background: #fff; border-radius: 16px;
+      box-shadow: 0 4px 24px rgba(15, 40, 80, 0.06);
+      padding: clamp(24px, 5vw, 32px) clamp(20px, 5vw, 32px) clamp(22px, 4vw, 32px);
+    }
+    @media (max-width: 899px) {
+      .login-panel {
+        max-width: none; border-radius: 16px 16px 0 0; box-shadow: var(--login-shadow-card);
+        padding: 32px 32px max(28px, env(safe-area-inset-bottom)); flex: 1; margin-top: 8px;
+      }
+    }
+    @media (min-width: 900px) {
+      .login-main .login-panel { margin: 0 24px; }
+    }
+
+    .login-panel-title {
+      display: none; margin: 0 0 12px; font-size: 28px; font-weight: 600; line-height: normal; color: var(--text);
+    }
+    @media (max-width: 899px) {
+      .login-panel-title { display: block; }
+    }
+    .login-panel-lead {
+      margin: 0 0 16px; font-size: 14px; color: var(--login-secondary-text); line-height: 1.55;
+    }
+    @media (max-width: 899px) {
+      .login-panel-lead { text-align: left; font-size: 13px; }
+    }
+    .login-panel-lead strong { color: var(--text); font-weight: 600; }
+
+    .login-tabs {
+      display: flex; gap: 0; border-bottom: 1px solid var(--login-line); margin-bottom: 20px;
+    }
+    @media (max-width: 899px) {
+      .login-tabs { display: none; }
+    }
+    .login-tab {
+      flex: 1; padding: 12px 8px; border: none; background: none; cursor: pointer;
+      font-size: 15px; color: var(--login-placeholder); font-family: inherit; position: relative; margin-bottom: -1px;
+      touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+    }
+    .login-tab:hover { color: var(--primary); }
+    .login-tab.active { color: var(--text); font-weight: 600; }
+    .login-tab.active::after {
+      content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 2px;
+      background: var(--primary); border-radius: 2px 2px 0 0;
+    }
+
+    .login-form-block.hidden { display: none !important; }
+
+    .login-field-row { display: flex; gap: 10px; align-items: flex-end; }
+    .login-field-row input { flex: 1; }
+    .login-field-row .btn-code {
+      flex-shrink: 0; height: 44px; min-height: 44px; padding: 0 14px; border-radius: 4px;
+      border: 1px solid var(--primary); background: #fff; color: var(--primary);
+      font-size: 14px; font-weight: 500; cursor: pointer; white-space: nowrap; font-family: inherit;
+      touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+    }
+    .login-field-row .btn-code:hover { background: rgba(15, 141, 233, 0.06); }
+    @media (max-width: 420px) {
+      .login-field-row { flex-direction: column; align-items: stretch; }
+      .login-field-row .btn-code { width: 100%; }
+    }
+
+    .login-mode-secondary {
+      width: 100%; height: 44px; min-height: 44px; margin-top: 24px; border: none; border-radius: 4px;
+      background: var(--login-secondary-bg); color: var(--login-secondary-text);
+      font-size: 16px; font-weight: 500; cursor: pointer; font-family: inherit;
+      touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+    }
+    .login-mode-secondary:hover { filter: brightness(0.98); }
+    @media (min-width: 900px) {
+      .login-mode-secondary { display: none; }
+    }
+
+    .demo-bar {
+      font-size: 12px; color: #595959; padding: 10px 12px; background: #fffbe6; border: 1px solid #ffe58f;
+      border-radius: 4px; margin-bottom: 14px; line-height: 1.5;
+    }
+    .demo-bar strong { color: var(--text); }
+
+    .alert {
+      padding: 10px 12px; border-radius: 4px; font-size: 13px; margin-bottom: 14px;
+    }
+    .alert-danger { background: #fff2f0; border: 1px solid #ffccc7; color: #a8071a; }
+    .alert-muted { background: #fafafa; border: 1px solid #f0f0f0; color: #595959; font-size: 13px; }
+
+    .login-field { margin-bottom: 18px; }
+    .login-field label {
+      display: block; font-size: 13px; color: var(--login-secondary-text); margin-bottom: 8px; font-weight: 500;
+    }
+    .login-field input {
+      width: 100%; height: 44px; min-height: 44px; padding: 0 14px; border: 1px solid #e0e0e0; border-radius: 8px;
+      font-size: 16px; font-family: inherit; color: var(--text); transition: border-color 0.2s;
+    }
+    .login-field input::placeholder { color: var(--login-placeholder); }
+    .login-field input:focus {
+      outline: none; border-color: var(--primary); box-shadow: 0 0 0 2px var(--primary-focus);
+    }
+    @media (min-width: 900px) {
+      .login-field input { font-size: 15px; }
+    }
+
+    .login-field.login-field-line input {
+      border: none; border-radius: 0; border-bottom: 1px solid var(--login-line);
+      padding: 16px 0; height: auto; min-height: 56px; box-shadow: none;
+    }
+    .login-field.login-field-line input:focus { box-shadow: none; border-color: var(--primary); }
+    /* 验证码行内输入框与手机号同一套底线 / PC 圆角框 */
+    .login-field.login-field-line .login-field-row input {
+      border: none; border-radius: 0; border-bottom: 1px solid var(--login-line);
+      padding: 16px 0; height: auto; min-height: 56px; box-shadow: none;
+    }
+    .login-field.login-field-line .login-field-row input:focus {
+      outline: none; box-shadow: none; border-color: var(--primary);
+    }
+    @media (max-width: 899px) {
+      .login-field.login-field-line label {
+        position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden;
+        clip: rect(0, 0, 0, 0); border: 0;
+      }
+    }
+    @media (min-width: 900px) {
+      .login-field.login-field-line input {
+        border: 1px solid #e8e8e8; border-radius: 8px; padding: 0 14px; height: 44px; min-height: 44px;
+      }
+      .login-field.login-field-line input:focus { box-shadow: 0 0 0 2px var(--primary-focus); }
+      .login-field.login-field-line .login-field-row input {
+        border: 1px solid #e8e8e8; border-radius: 8px; padding: 0 14px; height: 44px; min-height: 44px;
+      }
+      .login-field.login-field-line .login-field-row input:focus {
+        box-shadow: 0 0 0 2px var(--primary-focus);
+      }
+    }
+
+    .login-submit {
+      width: 100%; height: 44px; min-height: 44px; margin-top: 16px; border: none; border-radius: 4px;
+      background: var(--primary); color: #fff; font-size: 16px; font-weight: 500; cursor: pointer; font-family: inherit;
+      touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+    }
+    .login-submit:hover { filter: brightness(1.06); }
+    .login-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .login-footer-outer { width: 100%; max-width: 420px; padding: 0 16px; margin-top: 8px; }
+    @media (max-width: 899px) {
+      .login-footer-outer { max-width: none; padding: 12px 24px 20px; text-align: center; }
+      .login-footnote { color: rgba(255, 255, 255, 0.8); font-size: 12px; line-height: 1.5; margin: 0; }
+      .login-footnote a { color: #fff; }
+    }
+    @media (min-width: 900px) {
+      .login-footnote { font-size: 12px; color: #bfbfbf; text-align: center; margin: 8px 0 0; }
+      .login-footnote a { color: var(--primary); }
+    }
+
+    /* —— 登录后 / 无效链接等常规页 —— */
+    .stage {
+      min-height: 100vh; min-height: 100dvh; padding: max(20px, env(safe-area-inset-top)) 16px max(40px, env(safe-area-inset-bottom));
+      box-sizing: border-box;
+    }
+    .stage-inner { max-width: 640px; margin: 0 auto; }
+    .brand-top {
+      text-align: center; font-size: 13px; color: var(--muted); margin-bottom: 8px;
+    }
+    h1.page-h1 {
+      font-size: 18px; font-weight: 600; margin: 0 0 12px; text-align: center;
+    }
+    @media (min-width: 900px) {
+      h1.page-h1 { font-size: 20px; }
+    }
+    .card {
+      background: #fff; border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 18px 16px; margin-bottom: 14px;
+    }
+    @media (min-width: 900px) {
+      .card { padding: 22px 24px; border-radius: 12px; }
+    }
+    label { display: block; font-size: 13px; color: #595959; margin-bottom: 6px; }
+    input[type="text"], input[type="password"] {
+      width: 100%; height: 44px; padding: 0 12px; border: 1px solid #d9d9d9; border-radius: var(--radius);
+      font-size: 16px; font-family: inherit;
+    }
+    .field { margin-bottom: 14px; }
+    .btn {
+      display: block; width: 100%; height: 44px; border: none; border-radius: 4px;
+      font-size: 15px; font-weight: 500; cursor: pointer; font-family: inherit;
+    }
+    .btn-primary { background: var(--primary); color: #fff; }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+    .kv { display: flex; gap: 10px; font-size: 14px; margin-bottom: 10px; }
+    .kv .k { color: var(--muted); width: 100px; flex-shrink: 0; }
+    .kv .v { flex: 1; word-break: break-all; }
+    table.summary {
+      width: 100%; border-collapse: collapse; font-size: 14px; margin-top: 8px;
+    }
+    table.summary th, table.summary td {
+      padding: 10px 8px; border-bottom: 1px solid #f0f0f0; text-align: left;
+    }
+    table.summary th { color: var(--muted); font-weight: 500; font-size: 13px; }
+    .total-row { font-weight: 600; background: #fafafa; }
+    .checkbox-row {
+      display: flex; align-items: flex-start; gap: 10px; margin: 16px 0; font-size: 14px;
+    }
+    .checkbox-row input { margin-top: 3px; width: 18px; height: 18px; flex-shrink: 0; }
+    .result-ok { text-align: center; padding: 24px 12px; }
+    .result-ok .icon { font-size: 48px; line-height: 1; margin-bottom: 8px; }
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+  <div id="screen-login" class="login-screen" aria-label="登录">
+    <div class="login-aside">
+      <div class="login-aside-deco" aria-hidden="true">
+        <img src="https://www.figma.com/api/mcp/asset/1f5f17ec-310d-4c4d-8fa0-4c511c6e16e5" alt="" width="198" height="165" />
+      </div>
+      <div class="login-aside-inner">
+        <img class="login-logo-img" src="https://www.figma.com/api/mcp/asset/f5ec8213-0d6c-44d4-bb84-a46dc69ab3c5" alt="盛意旺" width="60" height="60" />
+        <h2 class="login-aside-title">欢迎使用盛意旺</h2>
+        <p class="login-aside-sub">合作伙伴平台 · 转移关系确认</p>
+        <p class="login-aside-hint">请使用接收方管理员账号登录，核对发起方与机具概况后完成确认。</p>
+      </div>
+    </div>
+    <div class="login-main">
+      <div class="login-mobile-wrap">
+        <div class="login-hero-deco" aria-hidden="true">
+          <img src="https://www.figma.com/api/mcp/asset/1f5f17ec-310d-4c4d-8fa0-4c511c6e16e5" alt="" width="198" height="165" />
+        </div>
+        <div class="login-mobile-hero" aria-hidden="true">
+          <img class="login-logo-img" src="https://www.figma.com/api/mcp/asset/f5ec8213-0d6c-44d4-bb84-a46dc69ab3c5" alt="" width="60" height="60" />
+          <p class="login-mh-title">欢迎使用盛意旺</p>
+        </div>
+      </div>
+      <div class="login-panel">
+        <h1 class="login-panel-title" id="login-panel-title">验证码登录</h1>
+        <p class="login-panel-lead">请使用<strong>接收方代理商管理员</strong>身份登录，核对信息后确认本笔转移关系。</p>
+        <div class="demo-bar" id="demo-bar">
+          <strong>原型说明：</strong><strong>验证码登录</strong>——任意 11 位手机号 + 6 位数字验证码即可进入确认页（演示用，正式环境将校验接收方身份）。<strong>账号密码登录</strong>——请使用下方展示的「本笔接收方商户号」作为登录账号，密码可任意填写；使用其他商户号将提示无法操作。
+        </div>
+        <div class="alert alert-muted" style="margin-bottom:14px;">
+          本笔转移接收方商户号：<strong id="hint-receiver">—</strong>
+        </div>
+        <div id="login-error" class="alert alert-danger hidden"></div>
+        <div class="login-tabs" role="tablist" aria-label="登录方式">
+          <button type="button" class="login-tab active" id="login-tab-sms" role="tab" aria-selected="true" data-login-mode="sms">验证码登录</button>
+          <button type="button" class="login-tab" id="login-tab-pwd" role="tab" aria-selected="false" data-login-mode="pwd">账号密码登录</button>
+        </div>
+        <div id="login-form-sms" class="login-form-block" role="tabpanel">
+          <div class="login-field login-field-line">
+            <label for="login-phone">手机号</label>
+            <input type="tel" id="login-phone" maxlength="11" autocomplete="tel" inputmode="numeric" placeholder="请输入手机号" />
+          </div>
+          <div class="login-field login-field-line">
+            <label for="login-sms-code">验证码</label>
+            <div class="login-field-row">
+              <input type="text" id="login-sms-code" maxlength="6" inputmode="numeric" autocomplete="one-time-code" placeholder="请输入验证码" />
+              <button type="button" class="btn-code" id="btn-login-send-code">获取验证码</button>
+            </div>
+          </div>
+          <button type="button" class="login-submit" id="btn-login-sms-submit">登 录</button>
+          <button type="button" class="login-mode-secondary" id="btn-switch-to-pwd" data-login-mode="pwd">账号密码登录</button>
+        </div>
+        <div id="login-form-pwd" class="login-form-block hidden" role="tabpanel">
+          <div class="login-field login-field-line">
+            <label for="login-merchant">商户号</label>
+            <input type="text" id="login-merchant" inputmode="numeric" autocomplete="username" placeholder="请输入登录商户号" />
+          </div>
+          <div class="login-field login-field-line">
+            <label for="login-pwd">密码</label>
+            <input type="password" id="login-pwd" autocomplete="current-password" placeholder="请输入密码" />
+          </div>
+          <button type="button" class="login-submit" id="btn-login-pwd-submit">登 录</button>
+          <button type="button" class="login-mode-secondary" id="btn-switch-to-sms" data-login-mode="sms">验证码登录</button>
+        </div>
+      </div>
+      <div class="login-footer-outer">
+        <p class="login-footnote">界面参考：<a href="https://www.figma.com/design/2ARLCPPgNR6rxs0dkGU88R/%E7%9B%9B%E6%84%8F%E6%97%BA%E8%A7%86%E8%A7%89?node-id=4847-25654" target="_blank" rel="noopener noreferrer">Figma 盛意旺视觉</a></p>
+      </div>
+    </div>
+  </div>
+
+  <div id="screen-invalid" class="stage hidden">
+    <div class="stage-inner">
+      <div class="brand-top">盛意旺 · 合作伙伴平台</div>
+      <h1 class="page-h1">链接无效</h1>
+      <div class="card">
+        <p style="margin:0;color:#595959;font-size:14px;line-height:1.6;">缺少必要参数或链接已失效，请从短信/消息通知重新打开，或联系发起方重新发起。</p>
+      </div>
+    </div>
+  </div>
+
+  <div id="screen-wrong-receiver" class="stage hidden">
+    <div class="stage-inner">
+      <div class="brand-top">盛意旺 · 合作伙伴平台</div>
+      <h1 class="page-h1">无法操作</h1>
+      <div class="card">
+        <p id="wrong-receiver-msg" style="margin:0;font-size:14px;color:#a8071a;line-height:1.65;padding:12px;background:#fff2f0;border:1px solid #ffccc7;border-radius:var(--radius);">
+          当前登录账号非接收方管理，无法操作本笔转移关系确认。
+        </p>
+        <p style="margin:16px 0 0;font-size:13px;color:#595959;line-height:1.6;">请使用本笔指定的接收方商户号登录，或关闭页面后由正确账号重新打开确认链接。</p>
+        <button type="button" class="btn btn-primary" id="btn-wrong-receiver-back" style="margin-top:20px;">返回重新登录</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="screen-confirm" class="stage hidden">
+    <div class="stage-inner">
+      <div class="brand-top">盛意旺 · 合作伙伴平台</div>
+      <h1 class="page-h1">确认转移关系</h1>
+      <div class="card">
+        <p style="margin:0 0 12px;font-size:14px;color:#595959;line-height:1.6;">发起方拟将下列机具转移至贵司名下，请核对后确认绑定<strong>转移关系</strong>（非机具归属立即变更，以系统处理结果为准）。</p>
+        <div class="kv"><span class="k">发起方名称</span><span class="v" id="c-init-name">—</span></div>
+        <div class="kv"><span class="k">发起方商户号</span><span class="v" id="c-init-id">—</span></div>
+        <div class="kv"><span class="k">接收方商户号</span><span class="v" id="c-receiver">—</span></div>
+        <div class="kv"><span class="k">令牌</span><span class="v" style="font-size:12px;color:var(--muted);" id="c-token">—</span></div>
+        <p style="margin:14px 0 6px;font-size:13px;font-weight:600;">转移机具概况</p>
+        <table class="summary">
+          <thead>
+            <tr><th>机具类型</th><th>台数</th></tr>
+          </thead>
+          <tbody id="c-type-tbody"></tbody>
+          <tbody>
+            <tr class="total-row"><td>合计</td><td id="c-total">0</td></tr>
+          </tbody>
+        </table>
+        <div class="checkbox-row">
+          <input type="checkbox" id="ack-bind" />
+          <label for="ack-bind" style="margin:0;cursor:pointer;">我已阅读并确认与上述发起方建立<strong>机具转移关联关系</strong></label>
+        </div>
+        <button type="button" class="btn btn-primary" id="btn-confirm-bind" disabled>确认绑定</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="screen-result" class="stage hidden">
+    <div class="stage-inner">
+      <div class="brand-top">盛意旺 · 合作伙伴平台</div>
+      <div class="card result-ok">
+        <div class="icon" aria-hidden="true">✓</div>
+        <h1 class="page-h1" style="margin-bottom:8px;">绑定已确认</h1>
+        <p style="margin:0;font-size:14px;color:#595959;line-height:1.6;" id="result-msg">
+          接收方管理员已确认，转移关系绑定成功。发起方可继续在合作伙伴后台完成后续验证与提交。
+        </p>
+        <button type="button" class="btn btn-primary" id="btn-close-page" style="margin-top:20px;">关闭页面</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+(function () {
+  var params = new URLSearchParams(window.location.search);
+  var token = params.get('token') || '';
+  var receiver = (params.get('receiver') || '').trim();
+  var initId = params.get('initId') || '';
+  var initName = params.get('initName') || '';
+  var totalParam = parseInt(params.get('total') || '0', 10);
+  var bd = {};
+  try {
+    var bdRaw = params.get('bd');
+    if (bdRaw) bd = JSON.parse(bdRaw);
+  } catch (e) {}
+
+  function esc(s) {
+    if (s == null) return '';
+    var d = document.createElement('div');
+    d.textContent = s;
+    return d.innerHTML;
+  }
+
+  var invalid = document.getElementById('screen-invalid');
+  var loginEl = document.getElementById('screen-login');
+  var wrongReceiverEl = document.getElementById('screen-wrong-receiver');
+  var confirmEl = document.getElementById('screen-confirm');
+  var resultEl = document.getElementById('screen-result');
+
+  if (!token || !receiver) {
+    invalid.classList.remove('hidden');
+    loginEl.classList.add('hidden');
+    return;
+  }
+
+  document.getElementById('hint-receiver').textContent = receiver;
+
+  function showLoginError(msg) {
+    var el = document.getElementById('login-error');
+    el.textContent = msg;
+    el.classList.remove('hidden');
+  }
+  function hideLoginError() {
+    document.getElementById('login-error').classList.add('hidden');
+  }
+
+  function proceedToConfirm() {
+    loginEl.classList.add('hidden');
+    document.getElementById('c-init-name').textContent = initName || '—';
+    document.getElementById('c-init-id').textContent = initId || '—';
+    document.getElementById('c-receiver').textContent = receiver;
+    document.getElementById('c-token').textContent = token;
+    var tbody = document.getElementById('c-type-tbody');
+    tbody.innerHTML = '';
+    var sum = 0;
+    Object.keys(bd).forEach(function (k) {
+      var n = parseInt(bd[k], 10) || 0;
+      sum += n;
+      var tr = document.createElement('tr');
+      tr.innerHTML = '<td>' + esc(k) + '</td><td>' + n + '</td>';
+      tbody.appendChild(tr);
+    });
+    if (tbody.children.length === 0) {
+      var tr0 = document.createElement('tr');
+      tr0.innerHTML = '<td colspan="2" style="color:#bfbfbf;">暂无类型明细（请从发起页重新生成二维码）</td>';
+      tbody.appendChild(tr0);
+    }
+    var total = totalParam > 0 ? totalParam : sum;
+    document.getElementById('c-total').textContent = String(total);
+    confirmEl.classList.remove('hidden');
+  }
+
+  function setLoginMode(mode) {
+    var smsTab = document.getElementById('login-tab-sms');
+    var pwdTab = document.getElementById('login-tab-pwd');
+    var smsForm = document.getElementById('login-form-sms');
+    var pwdForm = document.getElementById('login-form-pwd');
+    var panelTitle = document.getElementById('login-panel-title');
+    var isSms = mode === 'sms';
+    smsTab.classList.toggle('active', isSms);
+    pwdTab.classList.toggle('active', !isSms);
+    smsTab.setAttribute('aria-selected', isSms ? 'true' : 'false');
+    pwdTab.setAttribute('aria-selected', isSms ? 'false' : 'true');
+    smsForm.classList.toggle('hidden', !isSms);
+    pwdForm.classList.toggle('hidden', isSms);
+    if (panelTitle) {
+      panelTitle.textContent = isSms ? '验证码登录' : '账号密码登录';
+    }
+    hideLoginError();
+  }
+
+  document.querySelectorAll('.login-tab[data-login-mode]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      setLoginMode(btn.getAttribute('data-login-mode'));
+    });
+  });
+  document.querySelectorAll('.login-mode-secondary[data-login-mode]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      setLoginMode(btn.getAttribute('data-login-mode'));
+    });
+  });
+
+  document.getElementById('btn-login-send-code').addEventListener('click', function () {
+    hideLoginError();
+    var phone = (document.getElementById('login-phone').value || '').trim();
+    if (!/^1\d{10}$/.test(phone)) {
+      showLoginError('请输入正确的 11 位手机号');
+      return;
+    }
+    alert('验证码已发送（原型演示）');
+  });
+
+  document.getElementById('btn-login-sms-submit').addEventListener('click', function () {
+    hideLoginError();
+    var phone = (document.getElementById('login-phone').value || '').trim();
+    var code = (document.getElementById('login-sms-code').value || '').trim();
+    if (!/^1\d{10}$/.test(phone)) {
+      showLoginError('请输入正确的 11 位手机号');
+      return;
+    }
+    if (code.length !== 6 || !/^\d{6}$/.test(code)) {
+      showLoginError('请输入 6 位数字验证码');
+      return;
+    }
+    proceedToConfirm();
+  });
+
+  document.getElementById('btn-login-pwd-submit').addEventListener('click', function () {
+    hideLoginError();
+    var acc = document.getElementById('login-merchant').value.trim();
+    if (!acc) {
+      showLoginError('请输入商户号');
+      return;
+    }
+    if (acc !== receiver) {
+      loginEl.classList.add('hidden');
+      wrongReceiverEl.classList.remove('hidden');
+      return;
+    }
+    proceedToConfirm();
+  });
+
+  document.getElementById('btn-wrong-receiver-back').addEventListener('click', function () {
+    wrongReceiverEl.classList.add('hidden');
+    loginEl.classList.remove('hidden');
+    document.getElementById('login-merchant').value = '';
+    document.getElementById('login-pwd').value = '';
+    hideLoginError();
+  });
+
+  document.getElementById('ack-bind').addEventListener('change', function () {
+    document.getElementById('btn-confirm-bind').disabled = !this.checked;
+  });
+
+  document.getElementById('btn-confirm-bind').addEventListener('click', function () {
+    if (!document.getElementById('ack-bind').checked) return;
+    confirmEl.classList.add('hidden');
+    resultEl.classList.remove('hidden');
+  });
+
+  document.getElementById('btn-close-page').addEventListener('click', function () {
+    window.close();
+    setTimeout(function () {
+      alert('若浏览器未自动关闭，请手动关闭本页。');
+    }, 200);
+  });
+
+  ['login-phone', 'login-sms-code'].forEach(function (id) {
+    document.getElementById(id).addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') document.getElementById('btn-login-sms-submit').click();
+    });
+  });
+  ['login-merchant', 'login-pwd'].forEach(function (id) {
+    document.getElementById(id).addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') document.getElementById('btn-login-pwd-submit').click();
+    });
+  });
+})();
+  </script>
+</body>
+</html>
