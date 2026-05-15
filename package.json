@@ -1,0 +1,31 @@
+{
+  "name": "aiproject",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "directories": {
+    "lib": "lib"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "npx --yes serve -l 3000",
+    "dev": "npx --yes serve -l 3000"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zanghuaqian/excel-transformer-skill.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/zanghuaqian/excel-transformer-skill/issues"
+  },
+  "homepage": "https://github.com/zanghuaqian/excel-transformer-skill#readme",
+  "dependencies": {
+    "element-plus": "^2.4.4",
+    "sortablejs": "^1.15.7",
+    "vue": "^3.3.11"
+  }
+}
