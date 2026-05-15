@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>新增商品</title>
+  <!-- 使用本地 node_modules，需先执行 npm install vue element-plus sortablejs -->
+  <link rel="stylesheet" href="node_modules/element-plus/dist/index.css">
+  <script src="node_modules/vue/dist/vue.global.prod.js"></script>
+  <script src="node_modules/element-plus/dist/index.full.min.js"></script>
+  <script src="node_modules/sortablejs/Sortable.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      min-height: 100vh;
+      background: #f5f7fa;
+      font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    }
+    .form-container {
+      max-width: 1100px;
+      margin: 24px auto;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+      padding: 24px;
+    }
+    .form-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid #ebeef5;
+    }
+    .form-header h1 {
+      font-size: 18px;
+      font-weight: 600;
+      color: #303133;
+    }
+    .close-btn {
+      font-size: 24px;
+      cursor: pointer;
+      color: #909399;
+      line-height: 1;
+    }
+    .close-btn:hover { color: #303133; }
+    .el-form-item__label .required {
+      color: #f56c6c;
+      margin-right: 4px;
+    }
+    .upload-tip {
+      font-size: 12px;
+      color: #e6a23c;
+      margin-top: 4px;
+    }
+    .upload-plus {
+      font-size: 28px;
+      color: #8c939d;
+      line-height: 1;
+    }
+    .upload-horizontal .el-upload-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .upload-horizontal .el-upload-list__item {
+      cursor: move;
+    }
+    .thumbnail-upload-box {
+      display: flex;
+      flex-direction: column;
+    }
+    .thumbnail-upload-box .upload-tip {
+      margin-top: 8px;
+    }
+    .form-footer {
+      margin-top: 24px;
+      padding-top: 20px;
+      border-top: 1px solid #ebeef5;
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div class="form-container">
+      <div class="form-header">
+        <h1>新增商品</h1>
+        <span class="close-btn" @click="handleClose">×</span>
+      </div>
+
+      <el-form
+        ref="formRef"
+        :model="form"
+        :rules="rules"
+        label-width="120px"
+        label-position="top"
+      >
+        <el-row :gutter="32">
+          <!-- 左侧列 -->
+          <el-col :span="12">
+            <el-form-item label="品牌" prop="brand" required>
+              <el-select v-model="form.brand" placeholder="请选择品牌" style="width: 100%">
+                <el-option v-for="item in brandOptions" :key="item" :label="item" :value="item" />
+              </el-select>
+            </el-form-item>
+            <el-form-item label="商品名称" prop="name" required>
+              <el-input v-model="form.name" placeholder="请输入商品名称" />
+            </el-form-item>
+            <el-form-item label="市场指导价（划线价）/元" prop="originalPrice" required>
+              <el-input v-model="form.originalPrice" placeholder="请输入市场指导价" />
+            </el-form-item>
+            <el-form-item label="商品单位" prop="unit">
+              <el-input v-model="form.unit" placeholder="请输入商品单位,如:件、个、箱" />
+            </el-form-item>
+            <el-form-item label="物流发货" prop="logistics">
+              <el-radio-group v-model="form.logistics">
+                <el-radio label="是">是</el-radio>
+                <el-radio label="否">否</el-radio>
+              </el-radio-group>
+            </el-form-item>
+            <el-form-item label="库存" prop="stock" required>
+              <el-input v-model="form.stock" placeholder="请输入库存" />
+            </el-form-item>
+            <el-form-item label="下单数量限制" prop="orderLimit">
+              <el-input v-model="form.orderLimit" placeholder="请输入用户下单数量限制" />
+            </el-form-item>
+            <el-form-item label="商品描述" prop="description">
+              <el-input
+                v-model="form.description"
+                type="textarea"
+                :rows="4"
+                placeholder="请输入商品描述"
+                maxlength="500"
+                show-word-limit
+              />
+            </el-form-item>
+          </el-col>
+
+          <!-- 右侧列 -->
+          <el-col :span="12">
+            <el-form-item label="商品分类" prop="category" required>
+              <el-select v-model="form.category" placeholder="请选择商品分类" style="width: 100%">
+                <el-option v-for="item in categoryOptions" :key="item" :label="item" :value="item" />
+              </el-select>
+            </el-form-item>
+            <el-form-item label="发货方" prop="shipper" required>
+              <el-select v-model="form.shipper" placeholder="请选择发货方" style="width: 100%">
+                <el-option v-for="item in shipperOptions" :key="item" :label="item" :value="item" />
+              </el-select>
+            </el-form-item>
+            <el-form-item label="上架状态" prop="status">
+              <el-radio-group v-model="form.status">
+                <el-radio label="已上架">已上架</el-radio>
+                <el-radio label="未上架">未上架</el-radio>
+              </el-radio-group>
+            </el-form-item>
+            <el-form-item label="最小起订数量" prop="minOrder" required>
+              <el-input v-model="form.minOrder" placeholder="请输入最小起订数量" />
+            </el-form-item>
+            <el-form-item label="库存预警阀值" prop="stockThreshold" required>
+              <el-input v-model="form.stockThreshold" placeholder="请输入库存预警阀值" />
+            </el-form-item>
+          </el-col>
+        </el-row>
+
+        <!-- 缩略图、查询列表图 并排展示 -->
+        <el-row :gutter="24" style="margin-top: 20px;">
+          <el-col :span="12">
+            <el-form-item label="缩略图">
+              <div class="thumbnail-upload-box">
+                <el-upload
+                  action="#"
+                  list-type="picture-card"
+                  :auto-upload="false"
+                  :limit="1"
+                  accept=".png"
+                  :on-exceed="() => handleExceed('缩略图', 1)"
+                >
+                  <span class="upload-plus">+</span>
+                </el-upload>
+                <div class="upload-tip">移动端的图片最大不能超过30kb, png格式</div>
+              </div>
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="查询列表图">
+              <el-upload
+                action="#"
+                list-type="picture-card"
+                :auto-upload="false"
+                :limit="1"
+                :on-exceed="() => handleExceed('查询列表图', 1)"
+              >
+                <span class="upload-plus">+</span>
+              </el-upload>
+            </el-form-item>
+          </el-col>
+        </el-row>
+
+        <!-- 详情头图 单独一行，图片横向展示，支持拖动排序 -->
+        <el-row style="margin-top: 20px;">
+          <el-col :span="24">
+            <el-form-item label="详情头图">
+              <div ref="detailHeaderUploadRef" class="upload-horizontal">
+                <el-upload
+                  v-model:file-list="detailHeaderFileList"
+                  action="#"
+                  list-type="picture-card"
+                  :auto-upload="false"
+                  :limit="3"
+                  :on-exceed="() => handleExceed('详情头图', 3)"
+                >
+                  <span class="upload-plus">+</span>
+                </el-upload>
+              </div>
+            </el-form-item>
+          </el-col>
+        </el-row>
+
+        <!-- 详情图 单独一行，图片横向展示，支持拖动排序 -->
+        <el-row style="margin-top: 20px;">
+          <el-col :span="24">
+            <el-form-item label="详情图">
+              <div ref="detailUploadRef" class="upload-horizontal">
+                <el-upload
+                  v-model:file-list="detailFileList"
+                  action="#"
+                  list-type="picture-card"
+                  :auto-upload="false"
+                >
+                  <span class="upload-plus">+</span>
+                </el-upload>
+              </div>
+            </el-form-item>
+          </el-col>
+        </el-row>
+
+        <!-- 业务通知地址 -->
+        <el-form-item label="业务通知地址" prop="noticeUrl">
+          <el-input v-model="form.noticeUrl" placeholder="请输入业务通知地址" />
+        </el-form-item>
+
+        <!-- 底部按钮 -->
+        <div class="form-footer">
+          <el-button @click="handleCancel">取消</el-button>
+          <el-button type="primary" @click="handleSubmit">确定</el-button>
+        </div>
+      </el-form>
+    </div>
+  </div>
+
+  <script>
+    const { createApp, ref, reactive, onMounted, nextTick } = Vue;
+    const { ElMessage } = ElementPlus;
+
+    createApp({
+      setup() {
+        const formRef = ref(null);
+        const detailHeaderUploadRef = ref(null);
+        const detailUploadRef = ref(null);
+        const detailHeaderFileList = ref([]);
+        const detailFileList = ref([]);
+        const brandOptions = ['自营', '华智融', '商米', '联迪', '升腾', '天喻', '魔方', '博实结'];
+        const categoryOptions = ['码牌', '云音箱', '智能POS', '电子发票服务', 'SaaS软件', '云打印机', '扫码王', '电子码牌', '小程序收银台', '泛智能POS', '传统POS'];
+        const shipperOptions = ['盛意旺自营', 'system', 'MSP', '厂商-盛意旺', '厂商-天喻', '厂商-联迪', '厂商-魔方', '厂商-博实结'];
+
+        const form = reactive({
+          brand: '',
+          name: '',
+          originalPrice: '',
+          unit: '',
+          logistics: '是',
+          stock: '',
+          orderLimit: '',
+          description: '',
+          category: '',
+          shipper: '',
+          status: '未上架',
+          minOrder: '',
+          stockThreshold: '0',
+          noticeUrl: ''
+        });
+
+        const rules = {
+          brand: [{ required: true, message: '请选择品牌', trigger: 'change' }],
+          name: [{ required: true, message: '请输入商品名称', trigger: 'blur' }],
+          originalPrice: [{ required: true, message: '请输入市场指导价', trigger: 'blur' }],
+          stock: [{ required: true, message: '请输入库存', trigger: 'blur' }],
+          category: [{ required: true, message: '请选择商品分类', trigger: 'change' }],
+          shipper: [{ required: true, message: '请选择发货方', trigger: 'change' }],
+          minOrder: [{ required: true, message: '请输入最小起订数量', trigger: 'blur' }],
+          stockThreshold: [{ required: true, message: '请输入库存预警阀值', trigger: 'blur' }]
+        };
+
+        const initSortable = (el, fileListRef) => {
+          if (!el) return;
+          const listEl = el.querySelector('.el-upload-list');
+          if (!listEl || listEl._sortable) return;
+          const sortable = Sortable.create(listEl, {
+            animation: 150,
+            filter: '.el-upload',  // 排除上传按钮，不可拖动
+            onEnd(evt) {
+              const list = [...fileListRef.value];
+              const [item] = list.splice(evt.oldIndex, 1);
+              list.splice(evt.newIndex, 0, item);
+              fileListRef.value = list;
+            }
+          });
+          listEl._sortable = sortable;
+        };
+
+        onMounted(() => {
+          nextTick(() => {
+            initSortable(detailHeaderUploadRef.value, detailHeaderFileList);
+            initSortable(detailUploadRef.value, detailFileList);
+          });
+        });
+
+        const handleExceed = (name, limit) => {
+          ElMessage.warning(`${name}最多上传${limit}张`);
+        };
+        const handleClose = () => {
+          ElMessage.info('关闭');
+        };
+
+        const handleCancel = () => {
+          ElMessage.info('已取消');
+        };
+
+        const handleSubmit = async () => {
+          try {
+            await formRef.value.validate();
+            ElMessage.success('提交成功');
+            console.log('表单数据:', form);
+          } catch (e) {
+            ElMessage.warning('请完善必填项');
+          }
+        };
+
+        return { formRef, form, rules, brandOptions, categoryOptions, shipperOptions, detailHeaderUploadRef, detailUploadRef, detailHeaderFileList, detailFileList, handleExceed, handleClose, handleCancel, handleSubmit };
+      }
+    }).use(ElementPlus).mount('#app');
+  </script>
+</body>
+</html>
