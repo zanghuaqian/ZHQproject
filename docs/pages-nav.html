@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ZHQproject · 页面导航（docs 发布源）</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: #f5f7fa;
+      color: #303133;
+      line-height: 1.6;
+      padding: 32px 20px 48px;
+    }
+    .wrap { max-width: 720px; margin: 0 auto; }
+    h1 { font-size: 22px; font-weight: 600; margin-bottom: 8px; }
+    .sub { color: #909399; font-size: 14px; margin-bottom: 28px; }
+    section { margin-bottom: 28px; }
+    h2 {
+      font-size: 15px;
+      font-weight: 600;
+      color: #606266;
+      margin-bottom: 12px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid #e4e7ed;
+    }
+    ul { list-style: none; }
+    li { margin-bottom: 10px; }
+    a { color: #409eff; text-decoration: none; word-break: break-all; }
+    a:hover { text-decoration: underline; }
+    .path { font-size: 13px; color: #909399; margin-left: 6px; }
+    .note {
+      margin-top: 24px;
+      padding: 12px 14px;
+      background: #fdf6ec;
+      border-radius: 6px;
+      font-size: 13px;
+      color: #b88230;
+    }
+    code { font-size: 12px; background: rgba(0,0,0,.06); padding: 2px 6px; border-radius: 4px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>ZHQproject · 静态页面导航</h1>
+    <p class="sub">适用于 GitHub Pages 发布来源为仓库 <strong>/docs</strong>；下列路径均以站点根为 <code>docs/</code>。</p>
+
+    <section>
+      <h2>页面入口</h2>
+      <ul>
+        <li><a href="product-list.html">采购商城 · 商品列表 / 策略中心 / 基础数据</a> <span class="path">/product-list.html</span></li>
+        <li><a href="procurement-mall-order-admin.html">采购商城 · 订单管理（独立文件）</a> <span class="path">/procurement-mall-order-admin.html</span></li>
+        <li><a href="index.html">采购商城 · 订单管理（默认首页）</a> <span class="path">/</span></li>
+        <li><a href="confirm-order.html">确认订单</a> <span class="path">/confirm-order.html</span></li>
+        <li><a href="add-product-form.html">新增商品表单</a> <span class="path">/add-product-form.html</span></li>
+      </ul>
+    </section>
+
+    <p class="note"><strong>说明：</strong>若 GitHub Pages 改为发布「仓库根目录」而非 <code>/docs</code>，请使用仓库根目录的 <code>index.html</code> 导航；机具转移等原型在仓库 <code>agent-device-transfer/</code> 下，仅根目录发布时可通过对应相对路径访问，或拷贝到 <code>docs/</code> 后再打开。</p>
+  </div>
+</body>
+</html>

@@ -1,0 +1,2468 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>商品列表 - 采购商城</title>
+  <!-- 使用 CDN，可直接部署或本地 HTTP 服务访问 -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/element-plus@2.4.4/dist/index.css">
+  <script src="https://cdn.jsdelivr.net/npm/vue@3/dist/vue.global.prod.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/element-plus@2.4.4/dist/index.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    }
+    .app-layout {
+      display: flex;
+      height: 100vh;
+    }
+    .el-aside {
+      background: #304156;
+      color: #bfcbd9;
+    }
+    .logo {
+      height: 50px;
+      line-height: 50px;
+      text-align: center;
+      font-size: 18px;
+      font-weight: 600;
+      color: #fff;
+      background: rgba(0,0,0,0.2);
+    }
+    .el-menu {
+      border-right: none;
+    }
+    .el-menu-item.is-active {
+      background: #409eff !important;
+      color: #fff !important;
+    }
+    .main-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .el-header {
+      background: #fff;
+      border-bottom: 1px solid #e6e6e6;
+      padding: 0 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .breadcrumb-wrap {
+      display: flex;
+      align-items: center;
+    }
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .header-right .el-icon {
+      font-size: 18px;
+      cursor: pointer;
+      color: #606266;
+    }
+    .header-right .el-icon:hover {
+      color: #409eff;
+    }
+    .el-main {
+      background: #f0f2f5;
+      padding: 20px;
+      overflow-y: auto;
+    }
+    .content-card {
+      background: #fff;
+      border-radius: 4px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    .search-form .el-form-item {
+      margin-bottom: 18px;
+    }
+    .table-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    .table-header h3 {
+      font-size: 16px;
+      font-weight: 600;
+      color: #303133;
+    }
+    .product-img {
+      width: 50px;
+      height: 50px;
+      object-fit: cover;
+      border-radius: 4px;
+    }
+    .product-img-placeholder {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 50px;
+      height: 50px;
+      background: #f5f7fa;
+      border-radius: 4px;
+      color: #c0c4cc;
+      font-size: 14px;
+    }
+    .table-wrapper {
+      overflow-x: auto;
+      margin-bottom: 16px;
+    }
+    .table-wrapper .el-table {
+      min-width: 1100px;
+    }
+    .table-wrapper .el-table .el-table__header th .cell { white-space: nowrap; }
+    .price-sale {
+      color: #f56c6c;
+      font-weight: 500;
+    }
+    .price-original {
+      color: #909399;
+      text-decoration: line-through;
+    }
+    .shelf-status-text { margin-left: 6px; font-size: 13px; color: #606266; }
+    .pagination-wrap {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 16px;
+    }
+    .el-tabs__item.is-active {
+      color: #409eff;
+    }
+    .tabs-wrap {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .tab-item {
+      padding: 4px 12px;
+      font-size: 14px;
+      color: #606266;
+      cursor: pointer;
+      border: 1px solid #e4e7ed;
+      border-radius: 4px;
+      background: #fff;
+    }
+    .tab-item.active {
+      color: #409eff;
+      border-color: #409eff;
+      background: #ecf5ff;
+    }
+    .strategy-dialog-title { margin-bottom: 16px; font-weight: 600; color: #303133; }
+    .strategy-form .el-divider__text { font-size: 14px; }
+    .tier-list { display: flex; flex-direction: column; gap: 8px; }
+    .tier-row { display: flex; align-items: center; gap: 12px; flex-wrap: nowrap; }
+    .tier-row.tier-header { font-size: 12px; color: #909399; margin-bottom: 4px; }
+    .tier-row.tier-header .tier-label:nth-child(1) { width: 110px; }
+    .tier-row.tier-header .tier-label:nth-child(2) { width: 110px; }
+    .tier-row.tier-header .tier-label:nth-child(3) { width: 120px; }
+    .tier-row.tier-header .tier-label:nth-child(4) { width: 60px; }
+    .tier-sep { color: #909399; margin: 0 4px; font-size: 12px; }
+    .limit-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .limit-tip { font-size: 12px; color: #909399; margin-top: 4px; }
+    .limit-label { font-size: 12px; color: #606266; margin-right: 4px; min-width: 70px; }
+    .limit-strategy-section { margin-bottom: 16px; }
+    .limit-global-card, .limit-targeted-section { background: #fafafa; border-radius: 4px; padding: 12px; margin-bottom: 12px; }
+    .limit-card-title { font-weight: 600; margin-bottom: 12px; color: #303133; }
+    .limit-rule-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 8px; }
+    .limit-rule-card { border: 1px solid #e4e7ed; border-radius: 4px; padding: 10px; background: #fff; }
+    .limit-rule-header { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .limit-rule-name { font-weight: 500; margin-right: 8px; }
+    .limit-rule-prio-tip { font-size: 11px; color: #909399; }
+    .limit-rule-summary { font-size: 12px; color: #606266; margin-top: 4px; }
+    .display-strategy-row { margin-bottom: 8px; }
+    .sales-formula { padding: 8px 12px; background: #f5f7fa; border-radius: 4px; color: #606266; }
+    .add-strategy-dialog .el-dialog__body { max-height: 70vh; overflow-y: auto; }
+    .upload-tip { font-size: 12px; color: #e6a23c; margin-top: 4px; }
+    .upload-plus { font-size: 28px; color: #8c939d; line-height: 1; }
+    .thumbnail-upload-box .upload-tip { margin-top: 8px; }
+    .upload-horizontal .el-upload-list { display: flex; flex-wrap: wrap; gap: 8px; }
+    .upload-horizontal .el-upload-list__item { cursor: move; }
+    .add-product-dialog .el-dialog__body { max-height: 75vh; overflow-y: auto; }
+    .add-product-dialog__body { display: flex; gap: 24px; align-items: flex-start; }
+    .add-product-dialog .el-dialog__body-inner { display: flex; gap: 24px; }
+    .add-product-form-col { flex: 1; min-width: 0; }
+    /* 详情页预览 UI - 按 Figma 盛意旺商户小程序 详情页(906:20699) 规格实现
+       fill_FA57WQ=#F5F6F7, layout 375×864, 头图 layout_NMQDIE 375×375,
+       fill_FXPM0U=渐变(-45deg #F29324→#FA4F4F), 导航栏 Dark */
+    .mobile-preview-col { flex-shrink: 0; width: 320px; position: sticky; top: 0; }
+    .mobile-phone-frame { width: 280px; margin: 0 auto; border: 10px solid #1a1a1a; border-radius: 32px; overflow: hidden; box-shadow: 0 12px 40px rgba(0,0,0,0.12); }
+    .mobile-phone-screen { width: 100%; height: 600px; background: #F5F6F7; display: flex; flex-direction: column; overflow: hidden; gap: 0; }
+    .mobile-status-bar { height: 22px; min-height: 22px; background: #fff; display: flex; align-items: center; justify-content: space-between; padding: 0 14px; font-size: 11px; color: #323233; flex-shrink: 0; }
+    .mobile-nav-bar { height: 44px; min-height: 44px; background: #fff; display: flex; align-items: center; justify-content: space-between; padding: 0 14px; flex-shrink: 0; border-bottom: 1px solid #ebedf0; }
+    .mobile-nav-bar .nav-back { font-size: 22px; color: #323233; line-height: 1; font-weight: 300; }
+    .mobile-nav-bar .nav-title { font-size: 17px; font-weight: 600; color: #323233; }
+    .mobile-nav-bar .nav-icons { font-size: 18px; color: #646566; }
+    .mobile-preview-scroll { flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+    .mobile-preview-img { width: 100%; aspect-ratio: 1/1; background: #ebedf0; display: flex; align-items: center; justify-content: center; color: #969799; font-size: 12px; overflow: hidden; flex-shrink: 0; }
+    .mobile-preview-img img { width: 100%; height: 100%; object-fit: cover; }
+    .mobile-preview-price-bar { background: linear-gradient(-45deg, #F29324 0%, #FA4F4F 100%); padding: 12px 14px; display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 6px; flex-shrink: 0; }
+    .mobile-preview-price-bar .price-label { font-size: 14px; color: rgba(255,255,255,0.95); margin-right: 4px; }
+    .mobile-preview-price-bar .price { font-size: 20px; font-weight: 700; color: #fff; }
+    .mobile-preview-price-bar .original { font-size: 12px; color: rgba(255,255,255,0.85); text-decoration: line-through; margin-left: 4px; }
+    .mobile-preview-price-bar .sales { font-size: 14px; color: rgba(255,255,255,0.95); margin-left: auto; }
+    .mobile-preview-detail { background: #fff; padding: 14px 14px 20px; }
+    .mobile-preview-detail .detail-title { font-size: 18px; font-weight: 600; color: #323233; margin-bottom: 6px; line-height: 1.4; }
+    .mobile-preview-detail .detail-desc { font-size: 13px; color: #969799; margin-bottom: 14px; line-height: 1.5; }
+    .mobile-preview-detail .detail-section-title { font-size: 14px; font-weight: 600; color: #323233; margin: 16px 0 10px; padding-top: 12px; border-top: 1px solid #ebedf0; }
+    .mobile-preview-attr-delivery { border-bottom: none; }
+    .mobile-preview-detail-img { width: 100%; background: #f7f8fa; overflow: hidden; margin-bottom: 8px; border-radius: 4px; line-height: 0; }
+    .mobile-preview-detail-img img { width: 100%; height: auto; display: block; vertical-align: top; }
+    .mobile-preview-attr { display: flex; align-items: center; gap: 10px; font-size: 13px; color: #646566; padding: 10px 0; border-bottom: 1px solid #ebedf0; min-height: 40px; box-sizing: border-box; }
+    .mobile-preview-attr:last-of-type { border-bottom: none; }
+    .mobile-preview-attr .attr-icon { font-size: 16px; flex-shrink: 0; }
+    .mobile-preview-bottom { height: 52px; min-height: 52px; background: #fff; border-top: 1px solid #ebedf0; display: flex; align-items: center; justify-content: space-between; padding: 0 14px; flex-shrink: 0; }
+    .mobile-preview-bottom .link-service { font-size: 13px; color: #646566; }
+    .mobile-preview-bottom .btn-buy { background: #0094FF; color: #fff; border: none; padding: 10px 28px; border-radius: 22px; font-size: 15px; font-weight: 500; cursor: default; }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <el-container class="app-layout">
+      <!-- 左侧导航 -->
+      <el-aside width="200px">
+        <div class="logo">采购商城</div>
+        <el-menu
+          :default-active="activeMenu"
+          background-color="#304156"
+          text-color="#bfcbd9"
+          active-text-color="#fff"
+          @select="onMenuSelect"
+        >
+          <el-menu-item index="home">
+            <el-icon><span style="font-size:18px">⌂</span></el-icon>
+            <span>首页</span>
+          </el-menu-item>
+          <el-menu-item index="product-list">
+            <el-icon><span style="font-size:18px">📦</span></el-icon>
+            <span>商品列表</span>
+          </el-menu-item>
+          <el-menu-item index="strategy-center">
+            <el-icon><span style="font-size:18px">📋</span></el-icon>
+            <span>策略中心</span>
+          </el-menu-item>
+          <el-sub-menu index="order">
+            <template #title>
+              <el-icon><span style="font-size:18px">📄</span></el-icon>
+              <span>订单管理</span>
+            </template>
+            <el-menu-item index="order-1">订单列表</el-menu-item>
+          </el-sub-menu>
+          <el-sub-menu index="system">
+            <template #title>
+              <el-icon><span style="font-size:18px">⚙</span></el-icon>
+              <span>系统管理</span>
+            </template>
+            <el-menu-item index="system-1">用户管理</el-menu-item>
+            <el-menu-item index="system-basic-data">基础数据配置</el-menu-item>
+          </el-sub-menu>
+        </el-menu>
+      </el-aside>
+
+      <!-- 主内容区 -->
+      <el-container direction="vertical" class="main-container">
+        <!-- 顶部 -->
+        <el-header>
+          <div class="breadcrumb-wrap">
+            <el-breadcrumb separator="/">
+              <el-breadcrumb-item>商品管理</el-breadcrumb-item>
+              <el-breadcrumb-item>商品列表</el-breadcrumb-item>
+            </el-breadcrumb>
+          </div>
+          <div class="header-right">
+            <div class="tabs-wrap">
+              <span class="tab-item">首页</span>
+              <span class="tab-item">订单查询</span>
+              <span class="tab-item active">商品列表 ×</span>
+            </div>
+            <el-icon :size="18"><span>👤</span></el-icon>
+            <el-icon :size="18"><span>🔔</span></el-icon>
+            <el-icon :size="18"><span>⚙</span></el-icon>
+            <el-icon :size="18"><span>⛶</span></el-icon>
+          </div>
+        </el-header>
+
+        <!-- 主内容 -->
+        <el-main>
+          <!-- 商品列表页 -->
+          <template v-if="activeMenu === 'product-list'">
+          <!-- 搜索表单 -->
+          <div class="content-card">
+            <el-form :model="searchForm" class="search-form" label-width="80px" inline>
+              <el-form-item label="商品名称">
+                <el-input v-model="searchForm.name" placeholder="请输入商品名称" clearable style="width: 200px" />
+              </el-form-item>
+              <el-form-item label="商品SN">
+                <el-input v-model="searchForm.sn" placeholder="请输入商品SN" clearable style="width: 200px" />
+              </el-form-item>
+              <el-form-item label="商品类型">
+                <el-select v-model="searchForm.type" placeholder="请选择商品类型" clearable style="width: 200px">
+                  <el-option v-for="item in typeOptions" :key="item" :label="item" :value="item" />
+                </el-select>
+              </el-form-item>
+              <el-form-item label="品牌">
+                <el-select v-model="searchForm.brand" placeholder="请选择品牌" clearable style="width: 200px">
+                  <el-option v-for="item in brandOptions" :key="item" :label="item" :value="item" />
+                </el-select>
+              </el-form-item>
+              <el-form-item>
+                <el-button type="primary" @click="handleSearch">查询</el-button>
+                <el-button @click="handleReset">重置</el-button>
+              </el-form-item>
+            </el-form>
+          </div>
+
+          <!-- 商品列表表格 -->
+          <div class="content-card">
+            <div class="table-header">
+              <h3>商品列表</h3>
+              <el-button type="primary" @click="openAddProduct">新增商品</el-button>
+            </div>
+            <div class="table-wrapper">
+              <el-table :data="tableData" stripe border style="width: 100%">
+                <el-table-column type="index" label="序号" width="60" align="left"></el-table-column>
+                <el-table-column label="商品图片" width="72" align="center">
+                  <template #default="{ row }">
+                    <el-image
+                      :src="row.image || sampleImage"
+                      class="product-img"
+                      fit="cover"
+                    ></el-image>
+                  </template>
+                </el-table-column>
+                <el-table-column prop="name" label="商品名称" min-width="180" show-overflow-tooltip></el-table-column>
+                <el-table-column prop="sn" label="商品SN" width="110"></el-table-column>
+                <el-table-column prop="brand" label="品牌" width="100"></el-table-column>
+                <el-table-column prop="category" label="分类" width="100"></el-table-column>
+                <el-table-column label="售价" width="90" align="right">
+                  <template #default="{ row }"><span class="price-sale">¥{{ row.price }}</span></template>
+                </el-table-column>
+                <el-table-column label="原价" width="90" align="right">
+                  <template #default="{ row }"><span class="price-original">¥{{ row.originalPrice }}</span></template>
+                </el-table-column>
+                <el-table-column prop="sales" label="销量" width="80" align="center"></el-table-column>
+                <el-table-column label="上架状态" width="120" align="center">
+                  <template #default="{ row }">
+                    <el-switch v-model="row.status" active-value="已上架" inactive-value="未上架" @change="onShelfChange(row)" />
+                    <span class="shelf-status-text">{{ row.status }}</span>
+                  </template>
+                </el-table-column>
+                <el-table-column prop="logistics" label="物流发货" width="90" align="center"></el-table-column>
+                <el-table-column prop="shipper" label="发货方" width="120" show-overflow-tooltip></el-table-column>
+                <el-table-column label="操作" width="120" align="center">
+                  <template #default="{ row }">
+                    <el-link type="primary" :underline="false" @click="openEdit(row)">编辑</el-link>
+                  </template>
+                </el-table-column>
+              </el-table>
+            </div>
+            <div class="pagination-wrap">
+              <el-pagination
+                v-model:current-page="currentPage"
+                v-model:page-size="pageSize"
+                :total="total"
+                :page-sizes="[10, 20, 50]"
+                layout="total, sizes, prev, pager, next"
+              />
+            </div>
+          </div>
+          </template>
+          <template v-if="activeMenu === 'strategy-center'">
+          <div class="content-card">
+            <h3 style="margin-bottom:16px">策略中心</h3>
+            <el-tabs v-model="strategyCenterTab" type="card">
+              <el-tab-pane label="价格策略" name="price"></el-tab-pane>
+              <el-tab-pane label="展示与投放策略" name="display"></el-tab-pane>
+              <el-tab-pane label="限购策略" name="limit"></el-tab-pane>
+              <el-tab-pane label="物流运费策略" name="logistics"></el-tab-pane>
+              <el-tab-pane label="销量修饰策略" name="sales"></el-tab-pane>
+            </el-tabs>
+            <div class="table-header">
+              <span></span>
+              <span>
+                <el-button v-if="strategyCenterTab === 'logistics'" type="success" plain @click="triggerLogisticsExcelImport" style="margin-right:8px">导入Excel</el-button>
+                <el-button type="primary" @click="openAddStrategy">添加策略</el-button>
+              </span>
+            </div>
+            <input ref="logisticsExcelInput" type="file" accept=".xlsx,.xls" style="display:none" @change="onLogisticsExcelFileChange">
+            <div class="table-wrapper">
+              <el-table :data="currentStrategyList" stripe border style="width: 100%">
+                <el-table-column prop="id" label="策略ID" width="100"></el-table-column>
+                <el-table-column prop="name" label="策略名称" min-width="140"></el-table-column>
+                <el-table-column label="状态" width="90" align="center">
+                  <template #default="{ row }">
+                    <el-tag :type="row.status === '有效' ? 'success' : 'info'" size="small">{{ row.status }}</el-tag>
+                  </template>
+                </el-table-column>
+                <el-table-column prop="createdAt" label="创建时间" width="160"></el-table-column>
+                <el-table-column prop="updatedAt" label="修改时间" width="160"></el-table-column>
+                <el-table-column prop="creator" label="创建人" width="100"></el-table-column>
+                <el-table-column prop="updater" label="修改人" width="100"></el-table-column>
+                <el-table-column label="操作" width="320" align="center" fixed="right">
+                  <template #default="{ row }">
+                    <el-link type="primary" :underline="false" @click="viewStrategy(row)">查看</el-link>
+                    <el-divider direction="vertical"></el-divider>
+                    <el-link type="primary" :underline="false" @click="editStrategy(row)">编辑</el-link>
+                    <el-divider direction="vertical"></el-divider>
+                    <el-link type="primary" :underline="false" @click="copyStrategy(row)">复制</el-link>
+                    <el-divider direction="vertical"></el-divider>
+                    <el-link v-if="row.status === '有效'" type="warning" :underline="false" @click="toggleStrategyStatus(row)">失效</el-link>
+                    <el-link v-else type="success" :underline="false" @click="toggleStrategyStatus(row)">生效</el-link>
+                    <el-divider direction="vertical"></el-divider>
+                    <el-link type="danger" :underline="false" @click="deleteStrategy(row)">删除</el-link>
+                  </template>
+                </el-table-column>
+              </el-table>
+            </div>
+          </div>
+          </template>
+          <!-- 基础数据配置页 -->
+          <template v-if="activeMenu === 'system-basic-data'">
+          <div class="content-card">
+            <h3 style="margin-bottom:16px">基础数据配置</h3>
+            <el-tabs v-model="basicDataTab" type="card">
+              <el-tab-pane label="商品品牌" name="brand"></el-tab-pane>
+              <el-tab-pane label="商品分类" name="category"></el-tab-pane>
+              <el-tab-pane label="发货方" name="shipper"></el-tab-pane>
+              <el-tab-pane label="收款主体" name="payEntity"></el-tab-pane>
+            </el-tabs>
+            <div class="table-header">
+              <span></span>
+              <el-button type="primary" @click="openAddBasicData">新增</el-button>
+            </div>
+            <div v-if="basicDataTab !== 'payEntity'" class="table-wrapper">
+              <el-table :data="currentBasicDataList" stripe border style="width: 100%">
+                <el-table-column type="index" label="序号" width="60" align="center"></el-table-column>
+                <el-table-column prop="name" label="名称" min-width="200"></el-table-column>
+                <el-table-column label="操作" width="180" align="center" fixed="right">
+                  <template #default="{ row, $index }">
+                    <el-link type="primary" :underline="false" @click="openEditBasicData(row, $index)">编辑</el-link>
+                    <el-divider direction="vertical"></el-divider>
+                    <el-link type="danger" :underline="false" @click="deleteBasicData($index)">删除</el-link>
+                  </template>
+                </el-table-column>
+              </el-table>
+            </div>
+            <div v-else class="table-wrapper">
+              <el-table :data="payEntityConfigs" stripe border style="width: 100%">
+                <el-table-column type="index" label="序号" width="60" align="center"></el-table-column>
+                <el-table-column prop="name" label="配置名称" min-width="120"></el-table-column>
+                <el-table-column prop="merchantNo" label="商户号" min-width="160" show-overflow-tooltip></el-table-column>
+                <el-table-column label="支持的收款方式" min-width="200">
+                  <template #default="{ row }">
+                    <span>{{ (row.supportedPayMethods || []).join('、') || '—' }}</span>
+                  </template>
+                </el-table-column>
+                <el-table-column label="操作" width="180" align="center" fixed="right">
+                  <template #default="{ row, $index }">
+                    <el-link type="primary" :underline="false" @click="openEditBasicData(row, $index)">编辑</el-link>
+                    <el-divider direction="vertical"></el-divider>
+                    <el-link type="danger" :underline="false" @click="deleteBasicData($index)">删除</el-link>
+                  </template>
+                </el-table-column>
+              </el-table>
+            </div>
+          </div>
+          </template>
+        </el-main>
+      </el-container>
+    </el-container>
+
+    <!-- 新增商品弹窗 -->
+    <el-dialog v-model="addProductVisible" title="新增商品" width="1200px" destroy-on-close class="add-product-dialog" @close="closeAddProduct" @opened="onAddProductOpened">
+      <div class="add-product-dialog__body">
+        <div class="add-product-form-col">
+      <el-form ref="addProductFormRef" :model="addProductForm" :rules="addProductRules" label-width="140px" label-position="top">
+        <el-row :gutter="32">
+          <el-col :span="12">
+            <el-form-item label="品牌" prop="brand" required>
+              <el-select v-model="addProductForm.brand" placeholder="请选择品牌" style="width: 100%">
+                <el-option v-for="item in brandOptions" :key="item" :label="item" :value="item"></el-option>
+              </el-select>
+            </el-form-item>
+            <el-form-item label="商品名称" prop="name" required>
+              <el-input v-model="addProductForm.name" placeholder="请输入商品名称"></el-input>
+            </el-form-item>
+            <el-form-item label="市场指导价（划线价）/元" prop="originalPrice" required>
+              <el-input v-model="addProductForm.originalPrice" placeholder="请输入市场指导价"></el-input>
+            </el-form-item>
+            <el-form-item label="售价/元" prop="sellingPrice" required>
+              <el-input v-model="addProductForm.sellingPrice" placeholder="请输入售价，不得高于市场指导价"></el-input>
+            </el-form-item>
+            <el-form-item label="商品单位" prop="unit">
+              <el-input v-model="addProductForm.unit" placeholder="请输入商品单位,如:件、个、箱"></el-input>
+            </el-form-item>
+            <el-form-item label="物流发货" prop="logistics">
+              <el-radio-group v-model="addProductForm.logistics">
+                <el-radio label="是">是</el-radio>
+                <el-radio label="否">否</el-radio>
+              </el-radio-group>
+            </el-form-item>
+            <el-form-item label="库存" prop="stock" required>
+              <el-input v-model="addProductForm.stock" placeholder="请输入库存"></el-input>
+            </el-form-item>
+            <el-form-item label="商品描述" prop="description">
+              <el-input v-model="addProductForm.description" type="textarea" :rows="4" placeholder="请输入商品描述" maxlength="500" show-word-limit></el-input>
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="商品分类" prop="category" required>
+              <el-select v-model="addProductForm.category" placeholder="请选择商品分类" style="width: 100%">
+                <el-option v-for="item in categoryOptions" :key="item" :label="item" :value="item"></el-option>
+              </el-select>
+            </el-form-item>
+            <el-form-item label="发货方" prop="shipper" required>
+              <el-select v-model="addProductForm.shipper" placeholder="请选择发货方" style="width: 100%">
+                <el-option v-for="item in shipperOptions" :key="item" :label="item" :value="item"></el-option>
+              </el-select>
+            </el-form-item>
+            <el-form-item label="上架状态" prop="status">
+              <el-radio-group v-model="addProductForm.status">
+                <el-radio label="已上架">已上架</el-radio>
+                <el-radio label="未上架">未上架</el-radio>
+              </el-radio-group>
+            </el-form-item>
+            <el-form-item label="库存预警阀值" prop="stockThreshold" required>
+              <el-input v-model="addProductForm.stockThreshold" placeholder="请输入库存预警阀值"></el-input>
+            </el-form-item>
+            <el-form-item label="收款主体" prop="payEntity" required>
+              <el-select v-model="addProductForm.payEntity" placeholder="请先选择收款主体" style="width: 100%" @change="onAddProductPayEntityChange">
+                <el-option v-for="pe in payEntityConfigs" :key="pe.name" :label="pe.name + (pe.merchantNo ? '（' + pe.merchantNo + '）' : '')" :value="pe.name"></el-option>
+              </el-select>
+            </el-form-item>
+            <el-form-item label="收款方式" prop="payMethods" required>
+              <el-select v-model="addProductForm.payMethods" multiple collapse-tags collapse-tags-tooltip :disabled="!addProductForm.payEntity" placeholder="根据收款主体支持的方式多选" style="width: 100%">
+                <el-option v-for="pm in getPayMethodOptionsForEntity(addProductForm.payEntity)" :key="pm" :label="pm" :value="pm"></el-option>
+              </el-select>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row :gutter="24" style="margin-top: 20px">
+          <el-col :span="12">
+            <el-form-item label="缩略图">
+              <div class="thumbnail-upload-box">
+                <el-upload action="#" list-type="picture-card" :auto-upload="false" :limit="1" accept=".png" :on-exceed="handleAddProductExceed.bind(null,'缩略图',1)">
+                  <span class="upload-plus">+</span>
+                </el-upload>
+                <div class="upload-tip">移动端的图片最大不能超过30kb, png格式</div>
+              </div>
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="查询列表图">
+              <el-upload action="#" list-type="picture-card" :auto-upload="false" :limit="1" :on-exceed="handleAddProductExceed.bind(null,'查询列表图',1)">
+                <span class="upload-plus">+</span>
+              </el-upload>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row style="margin-top: 20px">
+          <el-col :span="24">
+            <el-form-item label="详情头图">
+              <div ref="detailHeaderUploadRef" class="upload-horizontal">
+                <el-upload v-model:file-list="detailHeaderFileList" action="#" list-type="picture-card" :auto-upload="false" :limit="3" :on-exceed="handleAddProductExceed.bind(null,'详情头图',3)">
+                  <span class="upload-plus">+</span>
+                </el-upload>
+              </div>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row style="margin-top: 20px">
+          <el-col :span="24">
+            <el-form-item label="详情图">
+              <div ref="detailUploadRef" class="upload-horizontal">
+                <el-upload v-model:file-list="detailFileList" action="#" list-type="picture-card" :auto-upload="false">
+                  <span class="upload-plus">+</span>
+                </el-upload>
+              </div>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-form-item label="业务通知地址" prop="noticeUrl">
+          <el-input v-model="addProductForm.noticeUrl" placeholder="请输入业务通知地址"></el-input>
+        </el-form-item>
+      </el-form>
+        </div>
+        <div class="mobile-preview-col">
+          <div class="mobile-phone-frame">
+            <div class="mobile-phone-screen">
+              <div class="mobile-status-bar">
+                <span>14:24 <span style="margin-left:4px">🔔</span></span>
+                <span>5G ▣ 66%</span>
+              </div>
+              <div class="mobile-nav-bar">
+                <span class="nav-back">&lt;</span>
+                <span class="nav-title">商品详情</span>
+                <span class="nav-icons">⋯ ⊙</span>
+              </div>
+              <div class="mobile-preview-scroll">
+              <div class="mobile-preview-img">
+                <img v-if="addProductPreviewImageUrl" :src="addProductPreviewImageUrl" alt="" />
+                <span v-else>商品图片</span>
+              </div>
+              <div class="mobile-preview-price-bar">
+                <span class="price-label">售价</span>
+                <span class="price">¥{{ (addProductForm.sellingPrice != null && addProductForm.sellingPrice !== '') ? addProductForm.sellingPrice : (addProductForm.originalPrice != null && addProductForm.originalPrice !== '' ? addProductForm.originalPrice : '0.00') }}</span>
+                <span class="original">¥{{ addProductForm.originalPrice != null && addProductForm.originalPrice !== '' ? addProductForm.originalPrice : '0.00' }}</span>
+                <span class="sales">已售0+</span>
+              </div>
+              <div class="mobile-preview-detail">
+                <div class="detail-title">{{ addProductForm.name || '商品名称' }}</div>
+                <div class="detail-desc">{{ addProductForm.description || '支持微信/支付宝/银联收钱' }}</div>
+                <div class="mobile-preview-attr">
+                  <span class="attr-icon">📋</span>
+                  <span>规格 {{ addProductForm.category || '码牌' }} {{ addProductForm.brand || '盛意旺自营' }}</span>
+                </div>
+                <div class="mobile-preview-attr mobile-preview-attr-delivery">
+                  <span class="attr-icon">🚚</span>
+                  <span>配送 {{ addProductForm.logistics === '是' ? '普通快递，预计3-5日送达' : '不支持配送' }}</span>
+                </div>
+                <div class="detail-section-title">商品详情</div>
+                <template v-if="addProductDetailImageUrls.length">
+                  <template v-for="(url, i) in addProductDetailImageUrls" :key="'img-' + i">
+                    <div class="mobile-preview-detail-img"><img :src="url" alt="" /></div>
+                  </template>
+                </template>
+              </div>
+              </div>
+              <div class="mobile-preview-bottom">
+                <span class="link-service">联系客服</span>
+                <button type="button" class="btn-buy">立即购买</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <template #footer>
+        <el-button @click="addProductVisible = false">取消</el-button>
+        <el-button type="primary" @click="submitAddProduct">确定</el-button>
+      </template>
+    </el-dialog>
+
+    <!-- 编辑商品弹窗 -->
+    <el-dialog v-model="editProductVisible" title="编辑商品" width="1200px" destroy-on-close class="add-product-dialog" @close="closeEditProduct" @opened="onEditProductOpened">
+      <template v-if="editingProduct">
+      <div class="add-product-dialog__body">
+        <div class="add-product-form-col">
+      <el-form ref="editProductFormRef" :model="editProductForm" :rules="addProductRules" label-width="140px" label-position="top">
+        <el-form-item label="商品SN">
+          <el-input v-model="editingProduct.sn" disabled placeholder="商品SN"></el-input>
+        </el-form-item>
+        <el-row :gutter="32">
+          <el-col :span="12">
+            <el-form-item label="品牌" prop="brand" required>
+              <el-select v-model="editProductForm.brand" placeholder="请选择品牌" style="width: 100%">
+                <el-option v-for="item in brandOptions" :key="item" :label="item" :value="item"></el-option>
+              </el-select>
+            </el-form-item>
+            <el-form-item label="商品名称" prop="name" required>
+              <el-input v-model="editProductForm.name" placeholder="请输入商品名称"></el-input>
+            </el-form-item>
+            <el-form-item label="市场指导价（划线价）/元" prop="originalPrice" required>
+              <el-input v-model="editProductForm.originalPrice" placeholder="请输入市场指导价"></el-input>
+            </el-form-item>
+            <el-form-item label="售价/元" prop="sellingPrice" required>
+              <el-input v-model="editProductForm.sellingPrice" placeholder="请输入售价，不得高于市场指导价"></el-input>
+            </el-form-item>
+            <el-form-item label="商品单位" prop="unit">
+              <el-input v-model="editProductForm.unit" placeholder="请输入商品单位,如:件、个、箱"></el-input>
+            </el-form-item>
+            <el-form-item label="物流发货" prop="logistics">
+              <el-radio-group v-model="editProductForm.logistics">
+                <el-radio label="是">是</el-radio>
+                <el-radio label="否">否</el-radio>
+              </el-radio-group>
+            </el-form-item>
+            <el-form-item label="库存" prop="stock" required>
+              <el-input v-model="editProductForm.stock" placeholder="请输入库存"></el-input>
+            </el-form-item>
+            <el-form-item label="商品描述" prop="description">
+              <el-input v-model="editProductForm.description" type="textarea" :rows="4" placeholder="请输入商品描述" maxlength="500" show-word-limit></el-input>
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="商品分类" prop="category" required>
+              <el-select v-model="editProductForm.category" placeholder="请选择商品分类" style="width: 100%">
+                <el-option v-for="item in categoryOptions" :key="item" :label="item" :value="item"></el-option>
+              </el-select>
+            </el-form-item>
+            <el-form-item label="发货方" prop="shipper" required>
+              <el-select v-model="editProductForm.shipper" placeholder="请选择发货方" style="width: 100%">
+                <el-option v-for="item in shipperOptions" :key="item" :label="item" :value="item"></el-option>
+              </el-select>
+            </el-form-item>
+            <el-form-item label="上架状态" prop="status">
+              <el-radio-group v-model="editProductForm.status">
+                <el-radio label="已上架">已上架</el-radio>
+                <el-radio label="未上架">未上架</el-radio>
+              </el-radio-group>
+            </el-form-item>
+            <el-form-item label="库存预警阀值" prop="stockThreshold" required>
+              <el-input v-model="editProductForm.stockThreshold" placeholder="请输入库存预警阀值"></el-input>
+            </el-form-item>
+            <el-form-item label="收款主体" prop="payEntity" required>
+              <el-select v-model="editProductForm.payEntity" placeholder="请先选择收款主体" style="width: 100%" @change="onEditProductPayEntityChange">
+                <el-option v-for="pe in payEntityConfigs" :key="pe.name" :label="pe.name + (pe.merchantNo ? '（' + pe.merchantNo + '）' : '')" :value="pe.name"></el-option>
+              </el-select>
+            </el-form-item>
+            <el-form-item label="收款方式" prop="payMethods" required>
+              <el-select v-model="editProductForm.payMethods" multiple collapse-tags collapse-tags-tooltip :disabled="!editProductForm.payEntity" placeholder="根据收款主体支持的方式多选" style="width: 100%">
+                <el-option v-for="pm in getPayMethodOptionsForEntity(editProductForm.payEntity)" :key="pm" :label="pm" :value="pm"></el-option>
+              </el-select>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row :gutter="24" style="margin-top: 20px">
+          <el-col :span="12">
+            <el-form-item label="缩略图">
+              <div class="thumbnail-upload-box">
+                <el-upload action="#" list-type="picture-card" :auto-upload="false" :limit="1" accept=".png" :on-exceed="handleEditProductExceed.bind(null,'缩略图',1)">
+                  <span class="upload-plus">+</span>
+                </el-upload>
+                <div class="upload-tip">移动端的图片最大不能超过30kb, png格式</div>
+              </div>
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="查询列表图">
+              <el-upload action="#" list-type="picture-card" :auto-upload="false" :limit="1" :on-exceed="handleEditProductExceed.bind(null,'查询列表图',1)">
+                <span class="upload-plus">+</span>
+              </el-upload>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row style="margin-top: 20px">
+          <el-col :span="24">
+            <el-form-item label="详情头图">
+              <div ref="editDetailHeaderUploadRef" class="upload-horizontal">
+                <el-upload v-model:file-list="editDetailHeaderFileList" action="#" list-type="picture-card" :auto-upload="false" :limit="3" :on-exceed="handleEditProductExceed.bind(null,'详情头图',3)">
+                  <span class="upload-plus">+</span>
+                </el-upload>
+              </div>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row style="margin-top: 20px">
+          <el-col :span="24">
+            <el-form-item label="详情图">
+              <div ref="editDetailUploadRef" class="upload-horizontal">
+                <el-upload v-model:file-list="editDetailFileList" action="#" list-type="picture-card" :auto-upload="false">
+                  <span class="upload-plus">+</span>
+                </el-upload>
+              </div>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-form-item label="业务通知地址" prop="noticeUrl">
+          <el-input v-model="editProductForm.noticeUrl" placeholder="请输入业务通知地址"></el-input>
+        </el-form-item>
+        <div class="content-card" style="margin-top:20px">
+          <div style="margin-bottom:12px;font-weight:600">适用策略</div>
+          <el-table :data="getProductAppliedStrategies(editingProduct.sn)" border size="small">
+            <el-table-column prop="typeName" label="策略类型" width="120"></el-table-column>
+            <el-table-column prop="strategy.name" label="策略名称" min-width="140"></el-table-column>
+            <el-table-column label="操作" width="180" align="center">
+              <template #default="{ row }">
+                <el-button type="danger" link size="small" @click="disableProductStrategy(editingProduct.sn, row.type, row.strategyId)">停用</el-button>
+                <el-select :model-value="(productStrategyLinks[editingProduct.sn] || {})[row.type]" placeholder="重选" size="small" style="width:120px;margin-left:8px" @change="handleRechooseStrategy($event, editingProduct, row)">
+                  <el-option v-for="s in (strategyLists[row.type] || []).filter(function(x){ return x.status === '有效'; })" :key="s.id" :label="s.name" :value="s.id"></el-option>
+                </el-select>
+              </template>
+            </el-table-column>
+          </el-table>
+          <div v-if="!getProductAppliedStrategies(editingProduct.sn).length" style="padding:24px;text-align:center;color:#909399">当前商品未关联任何策略</div>
+        </div>
+      </el-form>
+        </div>
+        <div class="mobile-preview-col">
+          <div class="mobile-phone-frame">
+            <div class="mobile-phone-screen">
+              <div class="mobile-status-bar">
+                <span>14:24 <span style="margin-left:4px">🔔</span></span>
+                <span>5G ▣ 66%</span>
+              </div>
+              <div class="mobile-nav-bar">
+                <span class="nav-back">&lt;</span>
+                <span class="nav-title">商品详情</span>
+                <span class="nav-icons">⋯ ⊙</span>
+              </div>
+              <div class="mobile-preview-scroll">
+              <div class="mobile-preview-img">
+                <img v-if="editProductPreviewImageUrl" :src="editProductPreviewImageUrl" alt="" />
+                <span v-else>商品图片</span>
+              </div>
+              <div class="mobile-preview-price-bar">
+                <span class="price-label">售价</span>
+                <span class="price">¥{{ (editProductForm.sellingPrice != null && editProductForm.sellingPrice !== '') ? editProductForm.sellingPrice : (editProductForm.originalPrice != null && editProductForm.originalPrice !== '' ? editProductForm.originalPrice : '0.00') }}</span>
+                <span class="original">¥{{ editProductForm.originalPrice != null && editProductForm.originalPrice !== '' ? editProductForm.originalPrice : '0.00' }}</span>
+                <span class="sales">已售{{ editingProduct.sales || 0 }}+</span>
+              </div>
+              <div class="mobile-preview-detail">
+                <div class="detail-title">{{ editProductForm.name || '商品名称' }}</div>
+                <div class="detail-desc">{{ editProductForm.description || '支持微信/支付宝/银联收钱' }}</div>
+                <div class="mobile-preview-attr">
+                  <span class="attr-icon">📋</span>
+                  <span>规格 {{ editProductForm.category || '码牌' }} {{ editProductForm.brand || '盛意旺自营' }}</span>
+                </div>
+                <div class="mobile-preview-attr mobile-preview-attr-delivery">
+                  <span class="attr-icon">🚚</span>
+                  <span>配送 {{ editProductForm.logistics === '是' ? '普通快递，预计3-5日送达' : '不支持配送' }}</span>
+                </div>
+                <div class="detail-section-title">商品详情</div>
+                <template v-if="editProductDetailImageUrls.length">
+                  <template v-for="(url, i) in editProductDetailImageUrls" :key="'edit-img-' + i">
+                    <div class="mobile-preview-detail-img"><img :src="url" alt="" /></div>
+                  </template>
+                </template>
+              </div>
+              </div>
+              <div class="mobile-preview-bottom">
+                <span class="link-service">联系客服</span>
+                <button type="button" class="btn-buy">立即购买</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      </template>
+      <template #footer>
+        <el-button @click="editProductVisible = false">取消</el-button>
+        <el-button type="primary" @click="submitEditProduct">保存</el-button>
+      </template>
+    </el-dialog>
+
+    <!-- 添加/查看/编辑策略弹窗 -->
+    <el-dialog v-model="addStrategyVisible" :title="(addStrategyMode === 'add' ? '添加 ' : (addStrategyMode === 'view' ? '查看 ' : '编辑 ')) + strategyTypeLabel" width="720px" destroy-on-close class="add-strategy-dialog">
+      <template v-if="addStrategyMode !== 'view'">
+        <el-form label-width="120px" size="default" class="strategy-form">
+          <el-form-item label="策略名称" required>
+            <el-input v-model="newStrategyName" placeholder="请输入策略名称"></el-input>
+          </el-form-item>
+          <el-form-item label="适用商品">
+            <el-radio-group v-model="newStrategyProductScope">
+              <el-radio label="all">全部商品</el-radio>
+              <el-radio label="specified">指定商品</el-radio>
+            </el-radio-group>
+            <el-select v-if="newStrategyProductScope === 'specified'" v-model="newStrategyProducts" multiple filterable placeholder="可搜索商品ID或商品名称" style="width:100%;margin-top:8px" :filter-method="filterProductOptions">
+              <el-option v-for="p in productSearchOptions" :key="p.sn" :label="p.name + '（' + p.sn + '）'" :value="p.sn"></el-option>
+            </el-select>
+          </el-form-item>
+          <el-form-item label="生效有效期">
+            <el-radio-group v-model="newStrategyValidType">
+              <el-radio label="longterm">长期</el-radio>
+              <el-radio label="range">固定时间段</el-radio>
+            </el-radio-group>
+            <el-date-picker v-if="newStrategyValidType === 'range'" v-model="newStrategyValidRange" type="daterange" range-separator="至" start-placeholder="开始日期" end-placeholder="结束日期" value-format="YYYY-MM-DD" style="width:100%;margin-top:8px"></el-date-picker>
+          </el-form-item>
+          <!-- 价格策略配置 -->
+          <template v-if="strategyCenterTab === 'price'">
+            <el-divider content-position="left">阶梯价格设置</el-divider>
+            <el-form-item label="阶梯配置">
+              <div class="tier-list">
+                <div class="tier-row tier-header">
+                  <span class="tier-label">最小值</span>
+                  <span class="tier-label">最大值</span>
+                  <span class="tier-label">优惠方式</span>
+                  <span class="tier-label">优惠值</span>
+                  <span class="tier-label">操作</span>
+                </div>
+                <div v-for="(tier, idx) in addStrategyPrice.tiers" :key="idx" class="tier-row">
+                  <el-input-number v-model="tier.min" :min="1" :max="99999999" placeholder="最小值" style="width:100px"></el-input-number>
+                  <el-input-number v-model="tier.max" :min="1" :max="99999999" placeholder="最大值" style="width:100px"></el-input-number>
+                  <el-radio-group v-model="tier.discountType" size="small">
+                    <el-radio-button label="reduce">立减</el-radio-button>
+                    <el-radio-button label="discount">打折</el-radio-button>
+                  </el-radio-group>
+                  <template v-if="tier.discountType === 'reduce'">
+                    <el-input-number v-model="tier.discountValue" :min="0" :precision="2" placeholder="减去金额（元）" style="width:130px"></el-input-number>
+                  </template>
+                  <template v-else>
+                    <el-input-number v-model="tier.discountValue" :min="0.01" :max="1" :step="0.1" :precision="2" placeholder="如0.8表示8折" style="width:130px"></el-input-number>
+                  </template>
+                  <el-button type="danger" link @click="removeAddStrategyTier(idx)">删除</el-button>
+                </div>
+                <el-button type="primary" link @click="addAddStrategyTier">+ 添加阶梯</el-button>
+              </div>
+            </el-form-item>
+          </template>
+          <!-- 展示与投放策略配置 -->
+          <template v-if="strategyCenterTab === 'display'">
+            <el-divider content-position="left">可见用户</el-divider>
+            <el-form-item label="可见用户范围">
+              <el-radio-group v-model="addStrategyDisplay.visibleUserType" size="small">
+                <el-radio-button label="all">全部用户</el-radio-button>
+                <el-radio-button label="whitelist">白名单</el-radio-button>
+                <el-radio-button label="blacklist">黑名单</el-radio-button>
+              </el-radio-group>
+            </el-form-item>
+            <template v-if="addStrategyDisplay.visibleUserType !== 'all'">
+              <div class="limit-tip" style="margin-top:8px;color:#e6a23c">请填写代理商商户号，规则将应用于代理商及其下属渠道商和商户、门店</div>
+              <el-form-item label="代理商商户号" style="margin-top:8px">
+                <el-input v-model="addStrategyDisplay.visibleUserIds" type="textarea" :rows="2" placeholder="多个商户号用逗号或换行分隔"></el-input>
+              </el-form-item>
+            </template>
+            <el-divider content-position="left">投放渠道</el-divider>
+            <el-form-item label="投放渠道">
+              <el-checkbox-group v-model="addStrategyDisplay.visibleUserEndpoints" @change="onDisplayChannelAllChange">
+                <el-checkbox label="全部">全部</el-checkbox>
+                <el-checkbox label="D平台">D平台</el-checkbox>
+                <el-checkbox label="盛意旺商家服务小程序">盛意旺商家服务小程序</el-checkbox>
+                <el-checkbox label="盛意旺APP">盛意旺APP</el-checkbox>
+              </el-checkbox-group>
+            </el-form-item>
+            <el-divider content-position="left">展示场景</el-divider>
+            <el-form-item label="展示场景">
+              <el-radio-group v-model="addStrategyDisplay.displayScene">
+                <el-radio label="public">公开展示</el-radio>
+                <el-radio label="link_only">仅链接/活动可见</el-radio>
+              </el-radio-group>
+              <div v-if="addStrategyDisplay.displayScene === 'link_only'" class="limit-tip" style="margin-top:8px;color:#e6a23c">该商品将从搜索和分类列表中隐藏，仅可通过指定链接或活动页访问</div>
+            </el-form-item>
+          </template>
+          <!-- 限购策略配置 -->
+          <template v-if="strategyCenterTab === 'limit'">
+            <el-divider content-position="left">全局限购设置</el-divider>
+            <div class="limit-global-card">
+              <el-form label-width="140px" size="small">
+                <el-form-item label="单笔订单限制">
+                  <div class="limit-row">
+                    <span class="limit-label">最小起购量</span>
+                    <el-input-number v-model="addStrategyLimit.globalRule.orderMin" :min="0" :precision="0" placeholder="≥1，0表示不限制" style="width:140px"></el-input-number>
+                    <span class="limit-label">最大购买量</span>
+                    <el-input-number v-model="addStrategyLimit.globalRule.orderMax" :min="0" :precision="0" placeholder="0表示不限制" style="width:140px"></el-input-number>
+                  </div>
+                  <div class="limit-tip">单人累计限制：</div>
+                  <el-form-item label="单人累计最大购买量" label-width="140px">
+                    <el-input-number v-model="addStrategyLimit.globalRule.userTotalMax" :min="0" :precision="0" placeholder="0表示不限制" style="width:160px"></el-input-number>
+                  </el-form-item>
+                </el-form-item>
+              </el-form>
+            </div>
+            <el-divider content-position="left">定向规则</el-divider>
+            <div class="limit-rule-list">
+              <div v-for="(rule, idx) in addStrategyLimit.targetedRules" :key="rule.id" class="limit-rule-card">
+                <div class="limit-rule-header">
+                  <el-switch v-model="rule.enabled" size="small"></el-switch>
+                  <span class="limit-rule-name">{{ rule.name || '未命名规则' }}</span>
+                  <el-input-number v-model="rule.priority" :min="0" size="small" style="width:90px;margin-left:auto" controls-position="right"></el-input-number>
+                  <span class="limit-rule-prio-tip">数值越小越优先</span>
+                  <el-button type="primary" link size="small" @click="editAddStrategyLimitRule(idx)">编辑</el-button>
+                  <el-button type="danger" link size="small" @click="removeAddStrategyLimitRule(idx)">删除</el-button>
+                </div>
+                <div class="limit-rule-summary">单笔 {{ rule.orderMin || 0 }}-{{ rule.orderMax || '不限' }} / 单人累计 {{ rule.userTotalMax || '不限' }}</div>
+              </div>
+            </div>
+            <el-button type="primary" link @click="addAddStrategyLimitRule">+ 添加定向规则</el-button>
+          </template>
+          <!-- 销量修饰策略配置 -->
+          <template v-if="strategyCenterTab === 'sales'">
+            <el-divider content-position="left">销量策略</el-divider>
+            <el-form-item label="公式说明">
+              <div class="sales-formula">前端展示销量 = 真实销量 + 修饰增量</div>
+            </el-form-item>
+            <el-form-item label="初始虚拟基数">
+              <el-input-number v-model="addStrategySales.initialVirtualBase" :min="0" :precision="0" placeholder="默认0" style="width:160px"></el-input-number>
+            </el-form-item>
+            <el-form-item label="修饰熔断上限">
+              <el-input-number v-model="addStrategySales.modificationFuseLimit" :min="0" :precision="0" placeholder="默认999999" style="width:160px"></el-input-number>
+            </el-form-item>
+            <el-form-item label="增量随机数">
+              <div class="limit-row">
+                <el-input-number v-model="addStrategySales.incrementMin" :min="1" :precision="0" placeholder="左区间" style="width:100px"></el-input-number>
+                <span class="tier-sep">至</span>
+                <el-input-number v-model="addStrategySales.incrementMax" :min="1" :precision="0" placeholder="右区间" style="width:100px"></el-input-number>
+              </div>
+              <div class="limit-tip">左区间≤右区间，均为正整数，默认5-10</div>
+            </el-form-item>
+            <el-form-item label="定时间隔">
+              <div class="limit-row">
+                <el-input-number v-model="addStrategySales.delayValue" :min="1" :precision="0" placeholder="数字" style="width:100px"></el-input-number>
+                <el-select v-model="addStrategySales.delayUnit" placeholder="单位" style="width:100px">
+                  <el-option label="秒" value="second"></el-option>
+                  <el-option label="分钟" value="minute"></el-option>
+                  <el-option label="小时" value="hour"></el-option>
+                </el-select>
+              </div>
+            </el-form-item>
+          </template>
+          <!-- 物流策略配置 -->
+          <template v-if="strategyCenterTab === 'logistics'">
+            <el-divider content-position="left">基础兜底策略</el-divider>
+            <el-form-item label="基础兜底策略">
+              <el-radio-group v-model="addStrategyLogistics.baseStrategyType">
+                <el-radio label="global">全局运费</el-radio>
+                <el-radio label="inherit">继承已有策略</el-radio>
+                <el-radio label="unified">统一运费</el-radio>
+              </el-radio-group>
+            </el-form-item>
+            <template v-if="addStrategyLogistics.baseStrategyType === 'global'">
+              <div class="limit-tip" style="margin-bottom:8px;color:#e6a23c">所有地区均需配置，请在下方物流运费配置中为各区域设置运费规则</div>
+            </template>
+            <template v-if="addStrategyLogistics.baseStrategyType === 'inherit'">
+              <el-form-item label="继承策略">
+                <el-select v-model="addStrategyLogistics.inheritedStrategyId" placeholder="请选择已有策略" clearable style="width:100%">
+                  <el-option v-for="s in availableLogisticsStrategiesForInherit" :key="s.id" :label="s.name" :value="s.id"></el-option>
+                </el-select>
+                <div class="limit-tip" style="margin-top:6px">下方只需配置特殊地区，其余地区继承所选策略</div>
+            </el-form-item>
+            </template>
+            <template v-if="addStrategyLogistics.baseStrategyType === 'unified'">
+              <el-form-item label="统一运费规则">
+                <div class="tier-list" style="margin-bottom:8px">
+                  <div class="tier-row tier-header">
+                    <span class="tier-label">物流公司</span>
+                    <span class="tier-label">基础件数</span>
+                    <span class="tier-label">基础运费（元）</span>
+                    <span class="tier-label">增件数量</span>
+                    <span class="tier-label">增件价格（元）</span>
+                  </div>
+                  <div class="tier-row">
+                    <el-select v-model="addStrategyLogistics.unifiedRule.company" placeholder="物流公司" style="width:120px">
+                      <el-option v-for="c in logisticsCompanyOptions" :key="c" :label="c" :value="c"></el-option>
+                    </el-select>
+                    <el-input-number v-model="addStrategyLogistics.unifiedRule.baseQuantity" :min="1" :precision="0" style="width:100px"></el-input-number>
+                    <el-input-number v-model="addStrategyLogistics.unifiedRule.baseFee" :min="0" :precision="2" style="width:100px"></el-input-number>
+                    <el-input-number v-model="addStrategyLogistics.unifiedRule.extraN" :min="1" :precision="0" style="width:100px"></el-input-number>
+                    <el-input-number v-model="addStrategyLogistics.unifiedRule.extraFee" :min="0" :precision="2" style="width:100px"></el-input-number>
+                  </div>
+                </div>
+                <div class="limit-tip">下方只需配置特殊地区，其余地区适用统一运费</div>
+              </el-form-item>
+            </template>
+            <el-divider content-position="left">{{ addStrategyLogistics.baseStrategyType === 'global' ? '物流运费配置' : '特殊地区运费配置' }}</el-divider>
+            <div class="tier-list">
+              <div class="tier-row tier-header">
+                <span class="tier-label">物流公司</span>
+                <span class="tier-label">地区（省）</span>
+                <span class="tier-label">基础件数</span>
+                <span class="tier-label">基础运费（元）</span>
+                <span class="tier-label">增件数量</span>
+                <span class="tier-label">增件价格（元）</span>
+                <span class="tier-label">操作</span>
+              </div>
+              <div v-for="(item, idx) in addStrategyLogistics.items" :key="idx" class="tier-row">
+                <el-select v-model="item.company" placeholder="物流公司" style="width:110px">
+                  <el-option v-for="c in logisticsCompanyOptions" :key="c" :label="c" :value="c"></el-option>
+                </el-select>
+                <el-select v-model="item.region" placeholder="点击选择省" clearable style="width:120px">
+                  <el-option v-for="p in provinceOptions" :key="p" :label="p" :value="p"></el-option>
+                </el-select>
+                <el-input-number v-model="item.baseQuantity" :min="1" :precision="0" style="width:90px"></el-input-number>
+                <el-input-number v-model="item.baseFee" :min="0" :precision="2" style="width:90px"></el-input-number>
+                <el-input-number v-model="item.extraN" :min="1" :precision="0" style="width:90px"></el-input-number>
+                <el-input-number v-model="item.extraFee" :min="0" :precision="2" style="width:90px"></el-input-number>
+                <el-button type="danger" link @click="removeAddStrategyLogisticsItem(idx)">删除</el-button>
+              </div>
+              <el-button type="primary" link @click="addAddStrategyLogisticsItem">+ 添加一条</el-button>
+            </div>
+          </template>
+        </el-form>
+      </template>
+      <template v-else-if="currentStrategyEdit">
+        <p><strong>策略名称：</strong>{{ currentStrategyEdit.name }}</p>
+        <p><strong>适用商品：</strong>{{ currentStrategyEdit.productScope === 'all' ? '全部商品' : ((currentStrategyEdit.products || []).map(function(p){ return p.name || p.sn; }).join('、') || '无') }}</p>
+        <p><strong>生效有效期：</strong>{{ currentStrategyEdit.validType === 'longterm' ? '长期' : (currentStrategyEdit.validFrom + ' 至 ' + currentStrategyEdit.validTo) }}</p>
+        <div v-if="currentStrategyEdit.config" style="margin-top:12px;padding-top:12px;border-top:1px solid #ebeef5">
+          <p v-if="strategyCenterTab === 'price' && currentStrategyEdit.config.tiers"><strong>阶梯：</strong>{{ currentStrategyEdit.config.tiers.length }} 档（{{ (currentStrategyEdit.config.tiers || []).map(function(t){ return t.discountType === 'reduce' ? '立减¥' + t.discountValue : (t.discountValue * 10) + '折'; }).join('、') }}）</p>
+          <p v-if="strategyCenterTab === 'display'"><strong>可见用户：</strong>{{ currentStrategyEdit.config.visibleUserType === 'all' ? '全部用户' : (currentStrategyEdit.config.visibleUserType === 'whitelist' ? '白名单' : '黑名单') }}</p>
+          <p v-if="strategyCenterTab === 'display' && currentStrategyEdit.config.visibleUserType !== 'all'"><strong>代理商商户号：</strong>{{ currentStrategyEdit.config.visibleUserIds || '未填' }}</p>
+          <p v-if="strategyCenterTab === 'display'"><strong>投放渠道：</strong>{{ (currentStrategyEdit.config.visibleUserEndpoints && currentStrategyEdit.config.visibleUserEndpoints.length) ? (currentStrategyEdit.config.visibleUserEndpoints.indexOf('全部') >= 0 ? '全部' : currentStrategyEdit.config.visibleUserEndpoints.join('、')) : '未选择' }}</p>
+          <p v-if="strategyCenterTab === 'display'"><strong>展示场景：</strong>{{ currentStrategyEdit.config.displayScene === 'link_only' ? '仅链接/活动可见' : '公开展示' }}</p>
+          <p v-if="strategyCenterTab === 'limit' && currentStrategyEdit.config.globalRule"><strong>全局限购：</strong>单笔 {{ currentStrategyEdit.config.globalRule.orderMin }}-{{ currentStrategyEdit.config.globalRule.orderMax || '不限' }}，单人累计 {{ currentStrategyEdit.config.globalRule.userTotalMax || '不限' }}</p>
+          <p v-if="strategyCenterTab === 'limit' && currentStrategyEdit.config.targetedRules && currentStrategyEdit.config.targetedRules.length"><strong>定向规则：</strong>{{ currentStrategyEdit.config.targetedRules.length }} 条</p>
+          <p v-if="strategyCenterTab === 'sales'"><strong>销量策略：</strong>初始虚拟基数{{ currentStrategyEdit.config.initialVirtualBase != null ? currentStrategyEdit.config.initialVirtualBase : 0 }}，熔断上限{{ currentStrategyEdit.config.modificationFuseLimit != null ? currentStrategyEdit.config.modificationFuseLimit : 999999 }}，增量{{ currentStrategyEdit.config.incrementMin || 5 }}-{{ currentStrategyEdit.config.incrementMax || 10 }}，定时间隔{{ currentStrategyEdit.config.delayValue || 1 }}{{ currentStrategyEdit.config.delayUnit === 'second' ? '秒' : (currentStrategyEdit.config.delayUnit === 'minute' ? '分钟' : '小时') }}</p>
+          <p v-if="strategyCenterTab === 'logistics'"><strong>基础兜底：</strong>{{ currentStrategyEdit.config.baseStrategyType === 'inherit' ? ('继承 ' + getLogisticsStrategyName(currentStrategyEdit.config.inheritedStrategyId)) : (currentStrategyEdit.config.baseStrategyType === 'unified' ? '统一运费' : '全局运费') }}</p>
+          <p v-if="strategyCenterTab === 'logistics' && currentStrategyEdit.config.items"><strong>特殊/全部地区配置：</strong>{{ currentStrategyEdit.config.items.length }} 条</p>
+        </div>
+      </template>
+      <template #footer>
+        <el-button @click="addStrategyVisible = false">取消</el-button>
+        <el-button v-if="addStrategyMode !== 'view'" type="primary" @click="saveAddStrategy">确定</el-button>
+      </template>
+    </el-dialog>
+    <!-- 基础数据-新增/编辑 -->
+    <el-dialog v-model="basicDataDialogVisible" :title="basicDataDialogTitle" :width="basicDataTab === 'payEntity' ? '520px' : '420px'" destroy-on-close @close="resetBasicDataDialog">
+      <template v-if="basicDataTab !== 'payEntity'">
+        <el-form label-width="96px">
+          <el-form-item :label="basicDataTab === 'brand' ? '品牌名称' : (basicDataTab === 'category' ? '分类名称' : '发货方名称')" required>
+            <el-input v-model="basicDataFormName" placeholder="请输入名称" maxlength="50" show-word-limit></el-input>
+          </el-form-item>
+        </el-form>
+      </template>
+      <template v-else>
+        <el-form label-width="120px">
+          <el-form-item label="配置名称" required>
+            <el-input v-model="basicDataPayEntityForm.name" placeholder="如：盛付通" maxlength="50" show-word-limit></el-input>
+          </el-form-item>
+          <el-form-item label="商户号" required>
+            <el-input v-model="basicDataPayEntityForm.merchantNo" placeholder="8位纯数字，45或46开头" maxlength="8" show-word-limit></el-input>
+          </el-form-item>
+          <el-form-item label="支持的收款方式" required>
+            <el-checkbox-group v-model="basicDataPayEntityForm.supportedPayMethods">
+              <el-checkbox v-for="pm in payMethodOptions" :key="pm" :label="pm">{{ pm }}</el-checkbox>
+            </el-checkbox-group>
+          </el-form-item>
+        </el-form>
+      </template>
+      <template #footer>
+        <el-button @click="basicDataDialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="submitBasicData">确定</el-button>
+      </template>
+    </el-dialog>
+
+    <!-- 物流运费策略-批量导入 -->
+    <el-dialog v-model="logisticsBatchImportVisible" title="批量导入物流运费策略" width="520px">
+      <div class="limit-tip" style="margin-bottom:12px">请上传Excel文件，表头：策略名称、适用商品范围(全部/指定)、商品ID(指定时多个用逗号分隔)、物流公司、地区、基础运费、增件数、增件运费。从第2行起为数据。</div>
+      <el-upload
+        :auto-upload="false"
+        :show-file-list="false"
+        accept=".xlsx,.xls"
+        :on-change="handleLogisticsExcelChange"
+      >
+        <el-button type="primary">选择Excel文件</el-button>
+      </el-upload>
+      <template #footer>
+        <el-button @click="logisticsBatchImportVisible = false">关闭</el-button>
+      </template>
+    </el-dialog>
+    <!-- 策略中心-限购定向规则编辑（内嵌弹窗） -->
+    <el-dialog v-model="addStrategyLimitRuleVisible" title="定向规则" width="520px" append-to-body>
+      <el-form v-if="addStrategyLimitRule" label-width="140px" size="small">
+        <el-form-item label="规则名称" required>
+          <el-input v-model="addStrategyLimitRule.name" placeholder="如：新客专享限购"></el-input>
+        </el-form-item>
+        <el-form-item label="适用人群-用户分组">
+          <el-select v-model="addStrategyLimitRule.userGroup" placeholder="请选择用户分组" clearable style="width:100%">
+            <el-option label="白名单" value="白名单"></el-option>
+            <el-option label="黑名单" value="黑名单"></el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item label="适用人群-用户ID">
+          <el-input v-model="addStrategyLimitRule.userIds" type="textarea" :rows="2" placeholder="填写代理商商户号，将应用于其自身及下属子商户、子门店"></el-input>
+        </el-form-item>
+        <el-form-item label="适用人群-用户标签">
+          <el-select v-model="addStrategyLimitRule.userTags" multiple placeholder="请选择用户标签" style="width:100%">
+            <el-option label="企业" value="企业"></el-option>
+            <el-option label="个体户" value="个体户"></el-option>
+            <el-option label="小微商户" value="小微商户"></el-option>
+            <el-option label="事业单位" value="事业单位"></el-option>
+            <el-option label="政府机关" value="政府机关"></el-option>
+            <el-option label="社会组织" value="社会组织"></el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item label="规则生效时间">
+          <el-date-picker v-model="addStrategyLimitRule.timeRange" type="datetimerange" range-separator="至" start-placeholder="开始时间" end-placeholder="结束时间" value-format="YYYY-MM-DD HH:mm:ss" style="width:100%"></el-date-picker>
+          <div class="limit-tip">空则永久有效</div>
+        </el-form-item>
+        <el-form-item label="优先级">
+          <el-input-number v-model="addStrategyLimitRule.priority" :min="0" controls-position="right" style="width:120px"></el-input-number>
+          <span class="limit-tip">数值越小越优先</span>
+        </el-form-item>
+        <el-form-item label="单笔订单-最小起购量">
+          <el-input-number v-model="addStrategyLimitRule.orderMin" :min="0" controls-position="right" style="width:120px"></el-input-number>
+        </el-form-item>
+        <el-form-item label="单笔订单-最大购买量">
+          <el-input-number v-model="addStrategyLimitRule.orderMax" :min="0" controls-position="right" style="width:120px"></el-input-number>
+        </el-form-item>
+        <el-form-item label="单人累计最大购买量">
+          <el-input-number v-model="addStrategyLimitRule.userTotalMax" :min="0" controls-position="right" style="width:120px"></el-input-number>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="addStrategyLimitRuleVisible = false">取消</el-button>
+        <el-button type="primary" @click="saveAddStrategyLimitRule">确定</el-button>
+      </template>
+    </el-dialog>
+
+    <!-- 营销策略弹窗 -->
+    <el-dialog v-model="strategyVisible" title="营销策略" width="720px" destroy-on-close @close="closeStrategy">
+      <div class="strategy-dialog-title" v-if="currentStrategyRow">{{ currentStrategyRow.name }}（{{ currentStrategyRow.sn }}）</div>
+      <el-form :model="strategyForm" label-width="100px" class="strategy-form">
+        <el-divider content-position="left">价格策略</el-divider>
+        <el-form-item label="策略类型">
+          <el-radio-group v-model="strategyForm.priceType">
+            <el-radio label="fixed">固定价格</el-radio>
+            <el-radio label="tier">阶梯价格</el-radio>
+          </el-radio-group>
+        </el-form-item>
+        <template v-if="strategyForm.priceType === 'fixed'">
+          <el-form-item label="价格">
+            <el-input-number v-model="strategyForm.fixedPrice" :min="0" :precision="2" placeholder="最多两位小数" style="width:160px" />
+          </el-form-item>
+        </template>
+        <template v-else>
+          <el-form-item label="阶梯配置">
+            <div class="tier-list">
+              <div class="tier-row tier-header">
+                <span class="tier-label">最小值（1~99999999）</span>
+                <span class="tier-label">最大值（1~99999999）</span>
+                <span class="tier-label">对应价格（元）</span>
+                <span class="tier-label">操作</span>
+              </div>
+              <div v-for="(tier, idx) in strategyForm.tiers" :key="idx" class="tier-row">
+                <el-input-number v-model="tier.min" :min="1" :max="99999999" placeholder="最小值" style="width:110px"></el-input-number>
+                <el-input-number v-model="tier.max" :min="1" :max="99999999" placeholder="最大值" style="width:110px"></el-input-number>
+                <el-input-number v-model="tier.price" :min="0" :precision="2" placeholder="对应价格" style="width:120px"></el-input-number>
+                <el-button type="danger" link @click="removeTier(idx)">删除</el-button>
+              </div>
+              <el-button type="primary" link @click="addTier">+ 添加阶梯</el-button>
+            </div>
+          </el-form-item>
+        </template>
+
+        <el-divider content-position="left">对外展示策略</el-divider>
+        <el-form-item label="可见用户">
+          <div class="display-strategy-row">
+            <el-radio-group v-model="strategyForm.visibleUserType" size="small">
+              <el-radio-button label="all">全部用户</el-radio-button>
+              <el-radio-button label="whitelist">白名单</el-radio-button>
+              <el-radio-button label="blacklist">黑名单</el-radio-button>
+            </el-radio-group>
+          </div>
+          <template v-if="strategyForm.visibleUserType !== 'all'">
+            <div class="limit-tip" style="margin-top:8px;color:#e6a23c">请填写代理商商户号，规则将应用于代理商及其下属渠道商和商户、门店</div>
+            <el-form-item label="代理商商户号" label-width="100px" style="margin-top:8px">
+              <el-input v-model="strategyForm.visibleUserIds" type="textarea" :rows="2" placeholder="多个商户号用逗号或换行分隔"></el-input>
+            </el-form-item>
+          </template>
+        </el-form-item>
+
+        <el-divider content-position="left">限购策略</el-divider>
+        <div class="limit-strategy-section">
+          <div class="limit-global-card">
+            <div class="limit-card-title">全局限购设置（置顶，不可删除）</div>
+            <el-form label-width="140px" size="small">
+              <el-form-item label="单笔订单限制">
+                <div class="limit-row">
+                  <span class="limit-label">最小起购量</span>
+                  <el-input-number v-model="strategyForm.globalRule.orderMin" :min="0" :precision="0" placeholder="≥1，0表示不限制" style="width:140px"></el-input-number>
+                  <span class="limit-label">最大购买量</span>
+                  <el-input-number v-model="strategyForm.globalRule.orderMax" :min="0" :precision="0" placeholder="≥最小起购量，0表示不限制" style="width:140px"></el-input-number>
+                </div>
+                <div class="limit-tip">最小起购量默认1；0表示不限制</div>
+              </el-form-item>
+              <el-form-item label="单人累计限制">
+                <el-input-number v-model="strategyForm.globalRule.userTotalMax" :min="0" :precision="0" placeholder="0表示不限制" style="width:160px"></el-input-number>
+                <div class="limit-tip">单个用户累计最大购买量，0表示不限制</div>
+              </el-form-item>
+            </el-form>
+          </div>
+        </div>
+        <div class="limit-strategy-section">
+          <div class="limit-targeted-section">
+            <div class="limit-card-title">定向规则</div>
+            <div class="limit-rule-list">
+              <div v-for="(rule, idx) in strategyForm.targetedRules" :key="rule.id" class="limit-rule-card">
+                <div class="limit-rule-header">
+                  <el-switch v-model="rule.enabled" size="small"></el-switch>
+                  <span class="limit-rule-name">{{ rule.name || '未命名规则' }}</span>
+                  <el-input-number v-model="rule.priority" :min="0" size="small" placeholder="优先级" style="width:90px;margin-left:auto" controls-position="right"></el-input-number>
+                  <span class="limit-rule-prio-tip">数值越小越优先</span>
+                  <el-button type="primary" link size="small" @click="editTargetedRule(idx)">编辑</el-button>
+                  <el-button type="danger" link size="small" @click="removeTargetedRule(idx)">删除</el-button>
+                </div>
+                <div class="limit-rule-summary">适用商品：{{ (rule.skus && rule.skus.length) ? rule.skus.join('、') : '全部' }}</div>
+                <div class="limit-rule-summary">单笔 {{ rule.orderMin || 0 }}-{{ rule.orderMax || '不限' }} / 单人累计 {{ rule.userTotalMax || '不限' }}</div>
+              </div>
+            </div>
+            <el-button type="primary" link @click="addTargetedRule">+ 添加定向规则</el-button>
+          </div>
+        </div>
+        <el-dialog v-model="targetedRuleDialogVisible" :title="editingRuleIndex >= 0 ? '编辑定向规则' : '添加定向规则'" width="560px" append-to-body>
+          <el-form :model="editingRule" label-width="140px" size="small" v-if="editingRule">
+            <el-form-item label="规则名称" required>
+              <el-input v-model="editingRule.name" placeholder="如：新客专享限购"></el-input>
+            </el-form-item>
+            <el-form-item label="适用商品">
+              <el-input :model-value="currentStrategyRow ? currentStrategyRow.name + '（' + currentStrategyRow.sn + '）' : '-'" disabled></el-input>
+              <div class="limit-tip">默认当前商品，不可编辑</div>
+            </el-form-item>
+            <el-form-item label="适用人群-用户分组">
+              <el-select v-model="editingRule.userGroup" placeholder="请选择用户分组" clearable style="width:100%">
+                <el-option label="白名单" value="白名单"></el-option>
+                <el-option label="黑名单" value="黑名单"></el-option>
+              </el-select>
+            </el-form-item>
+            <el-form-item label="适用人群-用户ID">
+              <el-input v-model="editingRule.userIds" type="textarea" :rows="2" placeholder="填写代理商商户号，将应用于其自身及下属子商户、子门店"></el-input>
+            </el-form-item>
+            <el-form-item label="适用人群-用户标签">
+              <el-select v-model="editingRule.userTags" multiple placeholder="请选择用户标签" style="width:100%">
+                <el-option label="企业" value="企业"></el-option>
+                <el-option label="个体户" value="个体户"></el-option>
+                <el-option label="小微商户" value="小微商户"></el-option>
+                <el-option label="事业单位" value="事业单位"></el-option>
+                <el-option label="政府机关" value="政府机关"></el-option>
+                <el-option label="社会组织" value="社会组织"></el-option>
+              </el-select>
+            </el-form-item>
+            <el-form-item label="规则生效时间">
+              <el-date-picker v-model="editingRule.timeRange" type="datetimerange" range-separator="至" start-placeholder="开始时间" end-placeholder="结束时间" value-format="YYYY-MM-DD HH:mm:ss" style="width:100%"></el-date-picker>
+              <div class="limit-tip">空则永久有效</div>
+            </el-form-item>
+            <el-form-item label="优先级">
+              <el-input-number v-model="editingRule.priority" :min="0" controls-position="right" style="width:120px"></el-input-number>
+              <span class="limit-tip">数值越小越优先</span>
+            </el-form-item>
+            <el-form-item label="单笔订单-最小起购量">
+              <el-input-number v-model="editingRule.orderMin" :min="0" controls-position="right" style="width:120px"></el-input-number>
+            </el-form-item>
+            <el-form-item label="单笔订单-最大购买量">
+              <el-input-number v-model="editingRule.orderMax" :min="0" controls-position="right" style="width:120px"></el-input-number>
+            </el-form-item>
+            <el-form-item label="单人累计最大购买量">
+              <el-input-number v-model="editingRule.userTotalMax" :min="0" controls-position="right" style="width:120px"></el-input-number>
+            </el-form-item>
+          </el-form>
+          <template #footer>
+            <el-button @click="targetedRuleDialogVisible = false">取消</el-button>
+            <el-button type="primary" @click="saveTargetedRule">确定</el-button>
+          </template>
+        </el-dialog>
+
+        <el-divider content-position="left">销量策略</el-divider>
+        <el-form-item label="公式说明">
+          <div class="sales-formula">前端展示销量 = 真实销量 + 修饰增量</div>
+        </el-form-item>
+        <el-form-item label="初始虚拟基数">
+          <el-input-number v-model="strategyForm.initialVirtualBase" :min="0" :precision="0" placeholder="默认0" style="width:160px"></el-input-number>
+        </el-form-item>
+        <el-form-item label="修饰熔断上限">
+          <el-input-number v-model="strategyForm.modificationFuseLimit" :min="0" :precision="0" placeholder="默认999999" style="width:160px"></el-input-number>
+        </el-form-item>
+        <el-form-item label="增量随机数">
+          <div class="limit-row">
+            <el-input-number v-model="strategyForm.incrementMin" :min="1" :precision="0" placeholder="左区间" style="width:100px"></el-input-number>
+            <span class="tier-sep">至</span>
+            <el-input-number v-model="strategyForm.incrementMax" :min="1" :precision="0" placeholder="右区间" style="width:100px"></el-input-number>
+          </div>
+          <div class="limit-tip">每新增一个真实订单，在延迟时间后随机取[M,N]间整数累加到修饰增量。左区间≤右区间，均为正整数，默认5-10</div>
+          <div class="limit-tip" v-if="strategyForm.incrementMin > strategyForm.incrementMax" style="color:#f56c6c">左区间不能大于右区间</div>
+        </el-form-item>
+        <el-form-item label="定时间隔">
+          <div class="limit-row">
+            <el-input-number v-model="strategyForm.delayValue" :min="1" :precision="0" placeholder="数字" style="width:100px"></el-input-number>
+            <el-select v-model="strategyForm.delayUnit" placeholder="单位" style="width:100px">
+              <el-option label="秒" value="second"></el-option>
+              <el-option label="分钟" value="minute"></el-option>
+              <el-option label="小时" value="hour"></el-option>
+            </el-select>
+          </div>
+          <div class="limit-tip">每新增一个真实订单，X时间后触发增量累加，默认1小时</div>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="strategyVisible = false">取消</el-button>
+        <el-button type="primary" @click="saveStrategy">保存</el-button>
+      </template>
+    </el-dialog>
+  </div>
+
+  <script>
+    try {
+      if (typeof Vue === 'undefined') {
+        document.getElementById('app').innerHTML = '<div style="padding:40px;color:#f56c6c">无法加载 Vue，请检查网络连接后刷新。建议用 Live Server 或本地 HTTP 服务打开。</div>';
+      } else if (typeof ElementPlus === 'undefined') {
+        document.getElementById('app').innerHTML = '<div style="padding:40px;color:#f56c6c">无法加载 Element Plus，请检查网络连接后刷新。</div>';
+      } else {
+        var app = Vue.createApp({
+          data: function() {
+            return {
+              activeMenu: 'product-list',
+              brandOptions: ['自营', '华智融', '商米', '联迪', '升腾', '天喻', '魔方', '博实结', '盛意旺自营'],
+              typeOptions: ['码牌', '云音箱', '智能POS', '电子发票服务', 'SaaS软件', '云打印机', '扫码王', '电子码牌', '小程序收银台', '泛智能POS', '传统POS'],
+              searchForm: { name: '', sn: '', type: '', brand: '' },
+              sampleImage: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="50" height="50"%3E%3Crect fill="%23e4e7ed" width="50" height="50"/%3E%3Ctext x="25" y="28" fill="%23909399" font-size="12" text-anchor="middle"%3E示例%3C/text%3E%3C/svg%3E',
+              tableData: [
+                { name: '碰一碰收款立牌', sn: 'P251201001', brand: '盛意旺自营', category: '码牌', price: '3.50', originalPrice: '8.00', sales: 552, status: '已上架', logistics: '是', shipper: '厂商-盛意旺', payMethods: ['扫码', '大额支付'], payEntity: '盛付通' },
+                { name: '纳客收银系统(餐饮零售)', sn: 'P260126001', brand: '盛意旺自营', category: 'SaaS软件', price: '280.00', originalPrice: '349.00', sales: 0, status: '已上架', logistics: '否', shipper: 'system', payMethods: ['扫码'], payEntity: '哈恩德' },
+                { name: '碰一碰收款贴纸', sn: 'P251128001', brand: '盛意旺自营', category: '码牌', price: '3.00', originalPrice: '5.00', sales: 150, status: '已上架', logistics: '是', shipper: '厂商-盛意旺', payMethods: ['扫码'], payEntity: '盛畅' }
+              ],
+              currentPage: 1,
+              pageSize: 10,
+              total: 3,
+              addProductVisible: false,
+              addProductForm: {
+                brand: '', name: '', originalPrice: '', sellingPrice: '', unit: '', logistics: '是', stock: '',
+                description: '', category: '', shipper: '', status: '未上架', stockThreshold: '0', noticeUrl: '',
+                payMethods: [], payEntity: ''
+              },
+              payMethodOptions: ['扫码', '大额支付'],
+              payEntityConfigs: (function() {
+                function generateOne(existingSet) {
+                  var prefix = Math.random() < 0.5 ? '45' : '46';
+                  var tail = String(Math.floor(Math.random() * 1000000)).padStart(6, '0');
+                  var full = prefix + tail;
+                  if (existingSet[full]) return generateOne(existingSet);
+                  existingSet[full] = true;
+                  return full;
+                }
+                var seen = {};
+                var names = [
+                  { name: '盛畅', methods: ['扫码', '大额支付'] },
+                  { name: '哈恩德', methods: ['扫码', '大额支付'] },
+                  { name: '夸父', methods: ['扫码'] },
+                  { name: '盛付通', methods: ['扫码', '大额支付'] }
+                ];
+                return names.map(function(item) {
+                  return {
+                    name: item.name,
+                    merchantNo: generateOne(seen),
+                    supportedPayMethods: item.methods.slice()
+                  };
+                });
+              })(),
+              addProductRules: {
+                brand: [{ required: true, message: '请选择品牌', trigger: 'change' }],
+                name: [{ required: true, message: '请输入商品名称', trigger: 'blur' }],
+                originalPrice: [{ required: true, message: '请输入市场指导价', trigger: 'blur' }],
+                sellingPrice: [{ required: true, message: '请输入售价', trigger: 'blur' }],
+                stock: [{ required: true, message: '请输入库存', trigger: 'blur' }],
+                category: [{ required: true, message: '请选择商品分类', trigger: 'change' }],
+                shipper: [{ required: true, message: '请选择发货方', trigger: 'change' }],
+                stockThreshold: [{ required: true, message: '请输入库存预警阀值', trigger: 'blur' }],
+                payEntity: [{ required: true, message: '请选择收款主体', trigger: 'change' }],
+                payMethods: [{ validator: function(rule, val, cb) { if (!val || val.length === 0) cb(new Error('请至少选择一种收款方式')); else cb(); }, trigger: 'change' }]
+              },
+              categoryOptions: ['码牌', '云音箱', '智能POS', '电子发票服务', 'SaaS软件', '云打印机', '扫码王', '电子码牌', '小程序收银台', '泛智能POS', '传统POS'],
+              shipperOptions: ['盛意旺自营', 'system', 'MSP', '厂商-盛意旺', '厂商-天喻', '厂商-联迪', '厂商-魔方', '厂商-博实结'],
+              detailHeaderFileList: [],
+              detailFileList: [],
+              addProductPreviewImageUrl: '',
+              addProductDetailImageUrls: [],
+              strategyVisible: false,
+              currentStrategyRow: null,
+              targetedRuleDialogVisible: false,
+              editingRuleIndex: -1,
+              editingRule: null,
+              strategyForm: {
+                priceType: 'fixed',
+                fixedPrice: 0,
+                tiers: [{ min: 1, max: 99999999, price: 0 }],
+                visibleUserType: 'all',
+                visibleUserIds: '',
+                globalRule: { orderMin: 1, orderMax: 0, userTotalMax: 0 },
+                targetedRules: [],
+                initialVirtualBase: 0,
+                modificationFuseLimit: 999999,
+                incrementMin: 5,
+                incrementMax: 10,
+                delayValue: 1,
+                delayUnit: 'hour'
+              },
+              strategyCenterTab: 'price',
+              strategyLists: (function() {
+                var now = new Date().toLocaleString('zh-CN');
+                return {
+                  price: [{ id: 'SPrice1', name: '默认价格策略', status: '有效', productScope: 'all', products: [], createdAt: now, updatedAt: now, creator: '系统', updater: '', validType: 'longterm', validFrom: '', validTo: '', config: { tiers: [{ min: 1, max: 99999999, discountType: 'reduce', discountValue: 0 }] } }],
+                  display: [{ id: 'SDisplay1', name: '默认展示与投放策略', status: '有效', productScope: 'all', products: [], createdAt: now, updatedAt: now, creator: '系统', updater: '', validType: 'longterm', validFrom: '', validTo: '', config: { visibleUserType: 'all', visibleUserIds: '', visibleUserEndpoints: ['全部', 'D平台', '盛意旺商家服务小程序', '盛意旺APP'], displayScene: 'public' } }],
+                  limit: [{ id: 'SLimit1', name: '默认限购策略', status: '有效', productScope: 'all', products: [], createdAt: now, updatedAt: now, creator: '系统', updater: '', validType: 'longterm', validFrom: '', validTo: '', config: { globalRule: { orderMin: 1, orderMax: 0, userTotalMax: 0 }, targetedRules: [] } }],
+                  logistics: [{ id: 'SLogistics1', name: '默认物流运费策略', status: '有效', productScope: 'all', products: [], createdAt: now, updatedAt: now, creator: '系统', updater: '', validType: 'longterm', validFrom: '', validTo: '', config: { baseStrategyType: 'global', inheritedStrategyId: '', unifiedRule: null, items: [{ company: '顺丰速运', region: '北京市', baseQuantity: 1, baseFee: 12, extraN: 1, extraFee: 2 }, { company: '中通快递', region: '广东省', baseQuantity: 1, baseFee: 8, extraN: 1, extraFee: 2 }] } }],
+                  sales: [{ id: 'SSales1', name: '默认销量修饰策略', status: '有效', productScope: 'all', products: [], createdAt: now, updatedAt: now, creator: '系统', updater: '', validType: 'longterm', validFrom: '', validTo: '', config: { initialVirtualBase: 0, modificationFuseLimit: 999999, incrementMin: 5, incrementMax: 10, delayValue: 1, delayUnit: 'hour' } }]
+                };
+              })(),
+              productStrategyLinks: {},
+              productStrategyExclusions: {},
+              addStrategyVisible: false,
+              addStrategyMode: 'add',
+              currentStrategyEdit: null,
+              newStrategyName: '',
+              newStrategyProductScope: 'all',
+              newStrategyProducts: [],
+              newStrategyValidType: 'longterm',
+              newStrategyValidRange: null,
+              productSearchOptions: [],
+              addStrategyPrice: { tiers: [{ min: 1, max: 99999999, discountType: 'reduce', discountValue: 0 }] },
+              addStrategyDisplay: { visibleUserType: 'all', visibleUserIds: '', visibleUserEndpoints: [], displayScene: 'public' },
+              addStrategyLimit: { globalRule: { orderMin: 1, orderMax: 0, userTotalMax: 0 }, targetedRules: [] },
+              addStrategyLimitRuleVisible: false,
+              addStrategyLimitRule: null,
+              addStrategyLimitRuleIndex: -1,
+              addStrategySales: { initialVirtualBase: 0, modificationFuseLimit: 999999, incrementMin: 5, incrementMax: 10, delayValue: 1, delayUnit: 'hour' },
+              addStrategyLogistics: { baseStrategyType: 'global', inheritedStrategyId: '', unifiedRule: { company: '中通快递', baseQuantity: 1, baseFee: 0, extraN: 1, extraFee: 0 }, items: [{ company: '中通快递', region: '', baseQuantity: 1, baseFee: 0, extraN: 1, extraFee: 0 }] },
+              logisticsCompanyOptions: ['中通快递', '顺丰速运', '圆通速递', '韵达快递', '申通快递', '邮政EMS', '德邦快递', '极兔速递'],
+              provinceOptions: ['北京市', '天津市', '河北省', '山西省', '内蒙古自治区', '辽宁省', '吉林省', '黑龙江省', '上海市', '江苏省', '浙江省', '安徽省', '福建省', '江西省', '山东省', '河南省', '湖北省', '湖南省', '广东省', '广西壮族自治区', '海南省', '重庆市', '四川省', '贵州省', '云南省', '西藏自治区', '陕西省', '甘肃省', '青海省', '宁夏回族自治区', '新疆维吾尔自治区'],
+              editProductVisible: false,
+              editingProduct: null,
+              editProductForm: {
+                brand: '', name: '', originalPrice: '', sellingPrice: '', unit: '', logistics: '是', stock: '',
+                description: '', category: '', shipper: '', status: '已上架', stockThreshold: '0', noticeUrl: '',
+                payMethods: [], payEntity: ''
+              },
+              editDetailHeaderFileList: [],
+              editDetailFileList: [],
+              editProductPreviewImageUrl: '',
+              editProductDetailImageUrls: [],
+              basicDataTab: 'brand',
+              basicDataDialogVisible: false,
+              basicDataFormName: '',
+              basicDataPayEntityForm: { name: '', merchantNo: '', supportedPayMethods: [] },
+              basicDataEditIndex: -1,
+              logisticsBatchImportVisible: false
+            };
+          },
+          computed: {
+            currentStrategyList: function() {
+              var key = this.strategyCenterTab;
+              return this.strategyLists[key] || [];
+            },
+            strategyTypeLabel: function() {
+              var m = { price: '价格策略', display: '展示与投放策略', limit: '限购策略', logistics: '物流运费策略', sales: '销量修饰策略' };
+              return m[this.strategyCenterTab] || '';
+            },
+            availableLogisticsStrategiesForInherit: function() {
+              var list = this.strategyLists.logistics || [];
+              var excludeId = this.currentStrategyEdit ? this.currentStrategyEdit.id : null;
+              return list.filter(function(s) { return s.id !== excludeId; });
+            },
+            currentBasicDataList: function() {
+              var key = this.basicDataTab;
+              var arr = key === 'brand' ? this.brandOptions : (key === 'category' ? this.categoryOptions : this.shipperOptions);
+              return (arr || []).map(function(name) { return { name: name }; });
+            },
+            basicDataDialogTitle: function() {
+              if (this.basicDataTab === 'payEntity') {
+                return (this.basicDataEditIndex >= 0 ? '编辑' : '新增') + '收款主体';
+              }
+              var label = this.basicDataTab === 'brand' ? '品牌' : (this.basicDataTab === 'category' ? '分类' : '发货方');
+              return (this.basicDataEditIndex >= 0 ? '编辑' : '新增') + label;
+            }
+          },
+          watch: {
+            detailHeaderFileList: { handler: function() { this.updateAddProductPreviewUrls(); }, deep: true },
+            detailFileList: { handler: function() { this.updateAddProductPreviewUrls(); }, deep: true },
+            editDetailHeaderFileList: { handler: function() { this.updateEditProductPreviewUrls(); }, deep: true },
+            editDetailFileList: { handler: function() { this.updateEditProductPreviewUrls(); }, deep: true }
+          },
+          methods: {
+            openAddProduct: function() {
+              this.addProductForm = {
+                brand: '', name: '', originalPrice: '', sellingPrice: '', unit: '', logistics: '是', stock: '',
+                description: '', category: '', shipper: '', status: '未上架', stockThreshold: '0', noticeUrl: '',
+                payMethods: [], payEntity: ''
+              };
+              this.detailHeaderFileList = [];
+              this.detailFileList = [];
+              this.updateAddProductPreviewUrls();
+              this.addProductVisible = true;
+            },
+            validateProductPayAgainstEntity: function(payEntityName, productPayMethods) {
+              if (!payEntityName) return true;
+              var cfg = this.payEntityConfigs.find(function(p) { return p.name === payEntityName; });
+              if (!cfg) {
+                ElementPlus.ElMessage.warning('所选收款主体无效，请重新选择');
+                return false;
+              }
+              var sup = cfg.supportedPayMethods || [];
+              var bad = (productPayMethods || []).filter(function(m) { return sup.indexOf(m) < 0; });
+              if (bad.length > 0) {
+                ElementPlus.ElMessage.warning('商品收款方式须在该收款主体支持范围内，请先调整：' + bad.join('、'));
+                return false;
+              }
+              return true;
+            },
+            getPayMethodOptionsForEntity: function(entityName) {
+              if (!entityName) return [];
+              var cfg = this.payEntityConfigs.find(function(p) { return p.name === entityName; });
+              return cfg && Array.isArray(cfg.supportedPayMethods) ? cfg.supportedPayMethods.slice() : [];
+            },
+            syncProductPayMethodsToEntity: function(form) {
+              var allowed = this.getPayMethodOptionsForEntity(form.payEntity);
+              var cur = form.payMethods || [];
+              form.payMethods = cur.filter(function(m) { return allowed.indexOf(m) >= 0; });
+            },
+            onAddProductPayEntityChange: function() {
+              this.syncProductPayMethodsToEntity(this.addProductForm);
+            },
+            onEditProductPayEntityChange: function() {
+              this.syncProductPayMethodsToEntity(this.editProductForm);
+            },
+            updateAddProductPreviewUrls: function() {
+              var revoke = (this._previewImageUrls || []).slice();
+              this._previewImageUrls = [];
+              var self = this;
+              if (this._previewImageUrl) {
+                URL.revokeObjectURL(this._previewImageUrl);
+                this._previewImageUrl = '';
+              }
+              this.addProductPreviewImageUrl = '';
+              var headerList = this.detailHeaderFileList || [];
+              if (headerList.length && headerList[0].raw) {
+                self._previewImageUrl = URL.createObjectURL(headerList[0].raw);
+                this.addProductPreviewImageUrl = self._previewImageUrl;
+              }
+              var detailUrls = [];
+              function pushFile(file) {
+                if (file && file.raw) {
+                  var url = URL.createObjectURL(file.raw);
+                  detailUrls.push(url);
+                  self._previewImageUrls.push(url);
+                }
+              }
+              (this.detailFileList || []).forEach(pushFile);
+              revoke.forEach(function(u) { URL.revokeObjectURL(u); });
+              this.addProductDetailImageUrls = detailUrls;
+            },
+            closeAddProduct: function() {
+              if (this._previewImageUrl) {
+                URL.revokeObjectURL(this._previewImageUrl);
+                this._previewImageUrl = '';
+              }
+              (this._previewImageUrls || []).forEach(function(u) { URL.revokeObjectURL(u); });
+              this._previewImageUrls = [];
+              this.addProductPreviewImageUrl = '';
+              this.addProductDetailImageUrls = [];
+              this.addProductVisible = false;
+            },
+            onAddProductOpened: function() {
+              var self = this;
+              Vue.nextTick(function() {
+                var headerEl = self.$refs.detailHeaderUploadRef;
+                var detailEl = self.$refs.detailUploadRef;
+                if (headerEl) {
+                  var listEl = headerEl.querySelector('.el-upload-list');
+                  if (listEl && !listEl._sortable) {
+                    Sortable.create(listEl, { animation: 150, filter: '.el-upload', onEnd: function(evt) {
+                      var list = self.detailHeaderFileList.slice();
+                      var item = list.splice(evt.oldIndex, 1)[0];
+                      list.splice(evt.newIndex, 0, item);
+                      self.detailHeaderFileList = list;
+                    }});
+                    listEl._sortable = true;
+                  }
+                }
+                if (detailEl) {
+                  var listEl2 = detailEl.querySelector('.el-upload-list');
+                  if (listEl2 && !listEl2._sortable) {
+                    Sortable.create(listEl2, { animation: 150, filter: '.el-upload', onEnd: function(evt) {
+                      var list = self.detailFileList.slice();
+                      var item = list.splice(evt.oldIndex, 1)[0];
+                      list.splice(evt.newIndex, 0, item);
+                      self.detailFileList = list;
+                    }});
+                    listEl2._sortable = true;
+                  }
+                }
+              });
+            },
+            handleAddProductExceed: function(name, limit) {
+              ElementPlus.ElMessage.warning(name + '最多上传' + limit + '张');
+            },
+            submitAddProduct: function() {
+              var self = this;
+              this.$refs.addProductFormRef.validate(function(valid) {
+                if (!valid) {
+                  ElementPlus.ElMessage.warning('请完善必填项');
+                  return;
+                }
+                var f = self.addProductForm;
+                var guidePrice = parseFloat(f.originalPrice);
+                var sellPrice = parseFloat(f.sellingPrice);
+                if (!isNaN(guidePrice) && !isNaN(sellPrice) && sellPrice > guidePrice) {
+                  ElementPlus.ElMessage.warning('售价不得高于市场指导价');
+                  return;
+                }
+                if (!self.validateProductPayAgainstEntity(f.payEntity, f.payMethods)) return;
+                var row = {
+                  name: f.name,
+                  sn: 'P' + Date.now().toString().slice(-9),
+                  brand: f.brand,
+                  category: f.category,
+                  price: (f.sellingPrice != null && f.sellingPrice !== '') ? f.sellingPrice : (f.originalPrice || '0.00'),
+                  originalPrice: f.originalPrice || '0.00',
+                  sales: 0,
+                  status: f.status,
+                  logistics: f.logistics,
+                  shipper: f.shipper,
+                  payMethods: Array.isArray(f.payMethods) ? f.payMethods.slice() : [],
+                  payEntity: f.payEntity || ''
+                };
+                self.tableData.push(row);
+                self.total = self.tableData.length;
+                self.addProductVisible = false;
+                ElementPlus.ElMessage.success('新增成功');
+              });
+            },
+            openEdit: function(row) {
+              this.editingProduct = row;
+              if (!this.productStrategyLinks[row.sn]) this.productStrategyLinks[row.sn] = {};
+              this.productStrategyLinks = Object.assign({}, this.productStrategyLinks);
+              this.editProductForm = {
+                brand: row.brand || '',
+                name: row.name || '',
+                originalPrice: row.originalPrice != null ? row.originalPrice : '',
+                sellingPrice: row.price != null ? row.price : '',
+                unit: row.unit || '',
+                logistics: row.logistics || '是',
+                stock: row.stock != null ? String(row.stock) : '',
+                description: row.description || '',
+                category: row.category || '',
+                shipper: row.shipper || '',
+                status: row.status || '已上架',
+                stockThreshold: row.stockThreshold != null ? String(row.stockThreshold) : '0',
+                noticeUrl: row.noticeUrl || '',
+                payMethods: Array.isArray(row.payMethods) ? row.payMethods.slice() : [],
+                payEntity: row.payEntity || ''
+              };
+              this.syncProductPayMethodsToEntity(this.editProductForm);
+              this.editDetailHeaderFileList = [];
+              this.editDetailFileList = [];
+              this.updateEditProductPreviewUrls();
+              this.editProductVisible = true;
+            },
+            closeEditProduct: function() {
+              if (this._editPreviewImageUrl) {
+                URL.revokeObjectURL(this._editPreviewImageUrl);
+                this._editPreviewImageUrl = '';
+              }
+              (this._editPreviewImageUrls || []).forEach(function(u) { URL.revokeObjectURL(u); });
+              this._editPreviewImageUrls = [];
+              this.editProductPreviewImageUrl = '';
+              this.editProductDetailImageUrls = [];
+              this.editProductVisible = false;
+              this.editingProduct = null;
+            },
+            updateEditProductPreviewUrls: function() {
+              var revoke = (this._editPreviewImageUrls || []).slice();
+              this._editPreviewImageUrls = [];
+              var self = this;
+              if (this._editPreviewImageUrl) {
+                URL.revokeObjectURL(this._editPreviewImageUrl);
+                this._editPreviewImageUrl = '';
+              }
+              this.editProductPreviewImageUrl = '';
+              var headerList = this.editDetailHeaderFileList || [];
+              if (headerList.length && headerList[0].raw) {
+                self._editPreviewImageUrl = URL.createObjectURL(headerList[0].raw);
+                this.editProductPreviewImageUrl = self._editPreviewImageUrl;
+              }
+              var detailUrls = [];
+              function pushFile(file) {
+                if (file && file.raw) {
+                  var url = URL.createObjectURL(file.raw);
+                  detailUrls.push(url);
+                  self._editPreviewImageUrls.push(url);
+                }
+              }
+              (this.editDetailFileList || []).forEach(pushFile);
+              revoke.forEach(function(u) { URL.revokeObjectURL(u); });
+              this.editProductDetailImageUrls = detailUrls;
+            },
+            onEditProductOpened: function() {
+              var self = this;
+              Vue.nextTick(function() {
+                var headerEl = self.$refs.editDetailHeaderUploadRef;
+                var detailEl = self.$refs.editDetailUploadRef;
+                if (headerEl) {
+                  var listEl = headerEl.querySelector('.el-upload-list');
+                  if (listEl && !listEl._editSortable) {
+                    Sortable.create(listEl, { animation: 150, filter: '.el-upload', onEnd: function(evt) {
+                      var list = self.editDetailHeaderFileList.slice();
+                      var item = list.splice(evt.oldIndex, 1)[0];
+                      list.splice(evt.newIndex, 0, item);
+                      self.editDetailHeaderFileList = list;
+                    }});
+                    listEl._editSortable = true;
+                  }
+                }
+                if (detailEl) {
+                  var listEl2 = detailEl.querySelector('.el-upload-list');
+                  if (listEl2 && !listEl2._editSortable) {
+                    Sortable.create(listEl2, { animation: 150, filter: '.el-upload', onEnd: function(evt) {
+                      var list = self.editDetailFileList.slice();
+                      var item = list.splice(evt.oldIndex, 1)[0];
+                      list.splice(evt.newIndex, 0, item);
+                      self.editDetailFileList = list;
+                    }});
+                    listEl2._editSortable = true;
+                  }
+                }
+              });
+            },
+            handleEditProductExceed: function(name, limit) {
+              ElementPlus.ElMessage.warning(name + '最多上传' + limit + '张');
+            },
+            submitEditProduct: function() {
+              var self = this;
+              this.$refs.editProductFormRef.validate(function(valid) {
+                if (!valid) {
+                  ElementPlus.ElMessage.warning('请完善必填项');
+                  return;
+                }
+                var f = self.editProductForm;
+                var guidePrice = parseFloat(f.originalPrice);
+                var sellPrice = parseFloat(f.sellingPrice);
+                if (!isNaN(guidePrice) && !isNaN(sellPrice) && sellPrice > guidePrice) {
+                  ElementPlus.ElMessage.warning('售价不得高于市场指导价');
+                  return;
+                }
+                if (!self.validateProductPayAgainstEntity(f.payEntity, f.payMethods)) return;
+                var row = self.editingProduct;
+                if (!row) return;
+                row.name = f.name;
+                row.brand = f.brand;
+                row.category = f.category;
+                row.price = (f.sellingPrice != null && f.sellingPrice !== '') ? f.sellingPrice : (f.originalPrice || '0.00');
+                row.originalPrice = f.originalPrice || '0.00';
+                row.status = f.status;
+                row.logistics = f.logistics;
+                row.shipper = f.shipper;
+                row.unit = f.unit;
+                row.stock = f.stock;
+                row.description = f.description;
+                row.stockThreshold = f.stockThreshold;
+                row.noticeUrl = f.noticeUrl;
+                row.payMethods = Array.isArray(f.payMethods) ? f.payMethods.slice() : [];
+                row.payEntity = f.payEntity || '';
+                self.editProductVisible = false;
+                ElementPlus.ElMessage.success('保存成功');
+              });
+            },
+            openStrategy: function(row) {
+              this.currentStrategyRow = row;
+              this.strategyForm = {
+                priceType: 'fixed',
+                fixedPrice: parseFloat(row.price) || 0,
+                tiers: [{ min: 1, max: 99999999, price: parseFloat(row.price) || 0 }],
+                visibleUserType: 'all',
+                visibleUserIds: '',
+                globalRule: { orderMin: 1, orderMax: 0, userTotalMax: 0 },
+                targetedRules: [],
+                initialVirtualBase: 0,
+                modificationFuseLimit: 999999,
+                incrementMin: 5,
+                incrementMax: 10,
+                delayValue: 1,
+                delayUnit: 'hour'
+              };
+              this.strategyVisible = true;
+            },
+            closeStrategy: function() { this.strategyVisible = false; this.currentStrategyRow = null; },
+            addTargetedRule: function() {
+              this.editingRuleIndex = -1;
+              var currentSn = this.currentStrategyRow && this.currentStrategyRow.sn ? [this.currentStrategyRow.sn] : [];
+              this.editingRule = { id: 'r' + Date.now(), name: '', skus: currentSn, userIds: '', userTags: [], userGroup: '', timeRange: null, priority: 10, orderMin: 1, orderMax: 0, userTotalMax: 0, enabled: true };
+              this.targetedRuleDialogVisible = true;
+            },
+            editTargetedRule: function(idx) {
+              var r = this.strategyForm.targetedRules[idx];
+              this.editingRuleIndex = idx;
+              var currentSn = this.currentStrategyRow && this.currentStrategyRow.sn ? [this.currentStrategyRow.sn] : [];
+              var userGroup = r.userGroup || (r.userGroups && r.userGroups[0]) || '';
+              this.editingRule = { id: r.id, name: r.name, skus: currentSn, userIds: r.userIds || '', userTags: (r.userTags || []).slice(), userGroup: userGroup, timeRange: r.timeRange, priority: r.priority, orderMin: r.orderMin, orderMax: r.orderMax, userTotalMax: r.userTotalMax, enabled: r.enabled };
+              this.targetedRuleDialogVisible = true;
+            },
+            removeTargetedRule: function(idx) {
+              this.strategyForm.targetedRules.splice(idx, 1);
+            },
+            saveTargetedRule: function() {
+              if (!this.editingRule.name) {
+                ElementPlus.ElMessage.warning('请输入规则名称');
+                return;
+              }
+              var r = this.editingRule;
+              var orderMinVal = Number(r.orderMin) || 0;
+              var orderMaxVal = Number(r.orderMax) || 0;
+              if (orderMinVal > 0 && orderMaxVal > 0 && orderMinVal > orderMaxVal) {
+                ElementPlus.ElMessage.warning('最大购买量不能小于最小起购量');
+                return;
+              }
+              var currentSn = this.currentStrategyRow && this.currentStrategyRow.sn ? [this.currentStrategyRow.sn] : [];
+              var rule = { id: r.id, name: r.name, skus: currentSn, userIds: r.userIds || '', userTags: r.userTags || [], userGroup: r.userGroup || '', timeRange: r.timeRange, priority: r.priority, orderMin: r.orderMin, orderMax: r.orderMax, userTotalMax: r.userTotalMax, enabled: r.enabled };
+              if (this.editingRuleIndex >= 0) {
+                this.strategyForm.targetedRules.splice(this.editingRuleIndex, 1, rule);
+              } else {
+                this.strategyForm.targetedRules.push(rule);
+              }
+              this.targetedRuleDialogVisible = false;
+            },
+saveStrategy: function() {
+              var g = this.strategyForm.globalRule;
+              if (g.orderMin > 0 && g.orderMax > 0 && g.orderMin > g.orderMax) {
+                ElementPlus.ElMessage.warning('全局限购：最大购买量不能小于最小起购量');
+                return;
+              }
+              var incMin = Number(this.strategyForm.incrementMin) || 0;
+              var incMax = Number(this.strategyForm.incrementMax) || 0;
+              if (incMin > incMax || incMin < 1 || incMax < 1) {
+                ElementPlus.ElMessage.warning('增量随机数需满足左区间≤右区间，且均为正整数');
+                return;
+              }
+              console.log('保存营销策略', this.currentStrategyRow, this.strategyForm);
+              this.strategyVisible = false;
+            },
+            addTier: function() { this.strategyForm.tiers.push({ min: 1, max: 99999999, price: 0 }); },
+            removeTier: function(idx) {
+              if (this.strategyForm.tiers.length <= 1) return;
+              this.strategyForm.tiers.splice(idx, 1);
+            },
+            handleSearch: function() { console.log('查询', this.searchForm); },
+            handleReset: function() {
+              this.searchForm.name = '';
+              this.searchForm.sn = '';
+              this.searchForm.type = '';
+              this.searchForm.brand = '';
+            },
+            onShelfChange: function(row) {
+              ElementPlus.ElMessage.success(row.status === '已上架' ? '已上架' : '已下架');
+            },
+            onMenuSelect: function(index) {
+              this.activeMenu = index;
+            },
+            resetBasicDataDialog: function() {
+              this.basicDataEditIndex = -1;
+              this.basicDataFormName = '';
+              this.basicDataPayEntityForm = { name: '', merchantNo: '', supportedPayMethods: [] };
+            },
+            generatePayEntityMerchantNo: function(currentEditIndex) {
+              var self = this;
+              var ix = typeof currentEditIndex === 'number' ? currentEditIndex : -1;
+              function one() {
+                var prefix = Math.random() < 0.5 ? '45' : '46';
+                return prefix + String(Math.floor(Math.random() * 1000000)).padStart(6, '0');
+              }
+              var cand;
+              for (var t = 0; t < 80; t++) {
+                cand = one();
+                var dup = (self.payEntityConfigs || []).some(function(pe, idx) {
+                  return idx !== ix && String((pe.merchantNo || '').trim()) === cand;
+                });
+                if (!dup) return cand;
+              }
+              return cand;
+            },
+            openAddBasicData: function() {
+              this.basicDataEditIndex = -1;
+              this.basicDataFormName = '';
+              if (this.basicDataTab === 'payEntity') {
+                this.basicDataPayEntityForm = { name: '', merchantNo: this.generatePayEntityMerchantNo(-1), supportedPayMethods: [] };
+              }
+              this.basicDataDialogVisible = true;
+            },
+            openEditBasicData: function(row, index) {
+              this.basicDataEditIndex = index;
+              if (this.basicDataTab === 'payEntity') {
+                this.basicDataPayEntityForm = {
+                  name: row.name || '',
+                  merchantNo: row.merchantNo || '',
+                  supportedPayMethods: Array.isArray(row.supportedPayMethods) ? row.supportedPayMethods.slice() : []
+                };
+              } else {
+                this.basicDataFormName = row.name;
+              }
+              this.basicDataDialogVisible = true;
+            },
+            deleteBasicData: function(index) {
+              var self = this;
+              var msg = self.basicDataTab === 'payEntity'
+                ? '确定删除该收款主体吗？若商品收款主体为该配置名称，需到商品管理中重新维护。'
+                : '确定删除该枚举值吗？删除后可能影响已使用该值的商品。';
+              ElementPlus.ElMessageBox.confirm(msg, '提示', {
+                confirmButtonText: '确定',
+                cancelButtonText: '取消',
+                type: 'warning'
+              }).then(function() {
+                if (self.basicDataTab === 'payEntity') {
+                  self.payEntityConfigs.splice(index, 1);
+                  self.payEntityConfigs = self.payEntityConfigs.slice();
+                } else {
+                  var arr = self.basicDataTab === 'brand' ? self.brandOptions : (self.basicDataTab === 'category' ? self.categoryOptions : self.shipperOptions);
+                  arr.splice(index, 1);
+                }
+                ElementPlus.ElMessage.success('删除成功');
+              }).catch(function() {});
+            },
+            submitBasicData: function() {
+              var self = this;
+              if (this.basicDataTab === 'payEntity') {
+                var f = this.basicDataPayEntityForm;
+                var nm = (f.name || '').trim();
+                var mn = (f.merchantNo || '').trim();
+                var sup = Array.isArray(f.supportedPayMethods) ? f.supportedPayMethods : [];
+                if (!nm) {
+                  ElementPlus.ElMessage.warning('请输入配置名称');
+                  return;
+                }
+                if (!mn) {
+                  ElementPlus.ElMessage.warning('请输入商户号');
+                  return;
+                }
+                if (!/^(45|46)\d{6}$/.test(mn)) {
+                  ElementPlus.ElMessage.warning('商户号须为 8 位纯数字，且以 45 或 46 开头');
+                  return;
+                }
+                if (!sup.length) {
+                  ElementPlus.ElMessage.warning('请至少选择一种支持的收款方式');
+                  return;
+                }
+                var dup = this.payEntityConfigs.some(function(pe, idx) {
+                  return idx !== self.basicDataEditIndex && pe.name === nm;
+                });
+                if (dup) {
+                  ElementPlus.ElMessage.warning('该配置名称已存在');
+                  return;
+                }
+                var dupM = this.payEntityConfigs.some(function(pe, idx) {
+                  return idx !== self.basicDataEditIndex && (pe.merchantNo || '').trim() === mn;
+                });
+                if (dupM) {
+                  ElementPlus.ElMessage.warning('商户号已存在');
+                  return;
+                }
+                var payload = { name: nm, merchantNo: mn, supportedPayMethods: sup.slice() };
+                if (this.basicDataEditIndex >= 0) {
+                  var oldName = this.payEntityConfigs[this.basicDataEditIndex].name;
+                  this.payEntityConfigs.splice(this.basicDataEditIndex, 1, payload);
+                  if (oldName !== nm) {
+                    this.tableData.forEach(function(r) { if (r.payEntity === oldName) r.payEntity = nm; });
+                  }
+                  ElementPlus.ElMessage.success('编辑成功');
+                } else {
+                  this.payEntityConfigs.push(payload);
+                  ElementPlus.ElMessage.success('新增成功');
+                }
+                this.payEntityConfigs = this.payEntityConfigs.slice();
+              } else {
+                var name = (this.basicDataFormName || '').trim();
+                if (!name) {
+                  ElementPlus.ElMessage.warning('请输入名称');
+                  return;
+                }
+                var arr = this.basicDataTab === 'brand' ? this.brandOptions : (this.basicDataTab === 'category' ? this.categoryOptions : this.shipperOptions);
+                if (this.basicDataEditIndex >= 0) {
+                  arr[this.basicDataEditIndex] = name;
+                  ElementPlus.ElMessage.success('编辑成功');
+                } else {
+                  if (arr.indexOf(name) >= 0) {
+                    ElementPlus.ElMessage.warning('该名称已存在');
+                    return;
+                  }
+                  arr.push(name);
+                  ElementPlus.ElMessage.success('新增成功');
+                }
+              }
+              this.basicDataDialogVisible = false;
+            },
+            handleLogisticsExcelChange: function(file) {
+              var self = this;
+              var raw = file && file.raw;
+              if (!raw) return;
+              if (typeof XLSX === 'undefined') {
+                ElementPlus.ElMessage.error('Excel解析库未加载，请检查网络');
+                return;
+              }
+              var reader = new FileReader();
+              reader.onload = function(e) {
+                try {
+                  var data = new Uint8Array(e.target.result);
+                  var workbook = XLSX.read(data, { type: 'array' });
+                  var firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                  var rows = XLSX.utils.sheet_to_json(firstSheet, { header: 1, defval: '' });
+                  if (!rows || rows.length < 2) {
+                    ElementPlus.ElMessage.warning('Excel至少需要表头行和一行数据');
+                    return;
+                  }
+                  var added = 0;
+                  for (var i = 1; i < rows.length; i++) {
+                    var row = rows[i];
+                    var name = (row[0] || '').toString().trim();
+                    if (!name) continue;
+                    var scope = ((row[1] || '').toString().trim().toLowerCase() === '指定') ? 'specified' : 'all';
+                    var productIds = scope === 'specified' && row[2] ? (row[2] + '').split(/[,，\s]+/).map(function(s){ return s.trim(); }).filter(Boolean) : [];
+                    var company = (row[3] || '').toString().trim();
+                    var region = (row[4] || '').toString().trim();
+                    var baseFee = parseFloat(row[5]) || 0;
+                    var extraN = parseInt(row[6], 10) || 1;
+                    var extraFee = parseFloat(row[7]) || 0;
+                    var products = productIds.map(function(sn) {
+                      var p = self.tableData.find(function(r) { return r.sn === sn; });
+                      return { sn: sn, name: p ? p.name : sn };
+                    });
+                    var id = 'SL' + Date.now() + '_' + i;
+                    var strategy = {
+                      id: id,
+                      name: name,
+                      status: '有效',
+                      productScope: scope,
+                      products: products,
+                      createdAt: new Date().toLocaleString('zh-CN'),
+                      updatedAt: new Date().toLocaleString('zh-CN'),
+                      creator: '批量导入',
+                      validType: 'longterm',
+                      validFrom: '',
+                      validTo: '',
+                      config: { baseStrategyType: 'global', inheritedStrategyId: '', unifiedRule: null, items: [{ company: company || '中通快递', region: region, baseQuantity: 1, baseFee: baseFee, extraN: extraN, extraFee: extraFee }] }
+                    };
+                    self.strategyLists.logistics = self.strategyLists.logistics || [];
+                    self.strategyLists.logistics.push(strategy);
+                    self.strategyLists = Object.assign({}, self.strategyLists);
+                    if (scope === 'specified') {
+                      products.forEach(function(p) {
+                        var sn = p.sn;
+                        if (!self.productStrategyLinks[sn]) self.productStrategyLinks[sn] = {};
+                        self.productStrategyLinks[sn].logistics = id;
+                      });
+                      self.productStrategyLinks = Object.assign({}, self.productStrategyLinks);
+                    }
+                    added++;
+                  }
+                  self.logisticsBatchImportVisible = false;
+                  ElementPlus.ElMessage.success('成功导入 ' + added + ' 条策略');
+                } catch (err) {
+                  ElementPlus.ElMessage.error('解析失败：' + (err.message || String(err)));
+                }
+              };
+              reader.readAsArrayBuffer(raw);
+            },
+            openAddStrategy: function() {
+              this.addStrategyMode = 'add';
+              this.currentStrategyEdit = null;
+              this.newStrategyName = '';
+              this.newStrategyProductScope = 'all';
+              this.newStrategyProducts = [];
+              this.newStrategyValidType = 'longterm';
+              this.newStrategyValidRange = null;
+              this.initAddStrategyConfig();
+              this.productSearchOptions = this.tableData.slice();
+              this.addStrategyVisible = true;
+            },
+            initAddStrategyConfig: function() {
+              var row = this.currentStrategyEdit;
+              var c = row && row.config ? row.config : null;
+              this.addStrategyPrice = c && c.tiers && c.tiers.length ? { tiers: c.tiers.map(function(t){ return { min: t.min, max: t.max, discountType: t.discountType || 'reduce', discountValue: t.discountValue != null ? t.discountValue : (t.price != null ? t.price : 0) }; }) } : { tiers: [{ min: 1, max: 99999999, discountType: 'reduce', discountValue: 0 }] };
+              this.addStrategyDisplay = c && c.visibleUserType !== undefined ? { visibleUserType: c.visibleUserType, visibleUserIds: c.visibleUserIds || '', visibleUserEndpoints: (c.visibleUserEndpoints && Array.isArray(c.visibleUserEndpoints)) ? c.visibleUserEndpoints.slice() : [], displayScene: c.displayScene || 'public' } : { visibleUserType: 'all', visibleUserIds: '', visibleUserEndpoints: [], displayScene: 'public' };
+              this.addStrategyLimit = c && c.globalRule ? { globalRule: { orderMin: c.globalRule.orderMin != null ? c.globalRule.orderMin : 1, orderMax: c.globalRule.orderMax != null ? c.globalRule.orderMax : 0, userTotalMax: c.globalRule.userTotalMax != null ? c.globalRule.userTotalMax : 0 }, targetedRules: (c.targetedRules || []).map(function(r){ return Object.assign({}, r); }) } : { globalRule: { orderMin: 1, orderMax: 0, userTotalMax: 0 }, targetedRules: [] };
+              this.addStrategySales = c && c.incrementMin !== undefined ? { initialVirtualBase: c.initialVirtualBase != null ? c.initialVirtualBase : 0, modificationFuseLimit: c.modificationFuseLimit != null ? c.modificationFuseLimit : 999999, incrementMin: c.incrementMin != null ? c.incrementMin : 5, incrementMax: c.incrementMax != null ? c.incrementMax : 10, delayValue: c.delayValue != null ? c.delayValue : 1, delayUnit: c.delayUnit || 'hour' } : { initialVirtualBase: 0, modificationFuseLimit: 999999, incrementMin: 5, incrementMax: 10, delayValue: 1, delayUnit: 'hour' };
+              this.addStrategyLogistics = c && c.items ? { baseStrategyType: c.baseStrategyType || 'global', inheritedStrategyId: c.inheritedStrategyId || '', unifiedRule: c.unifiedRule ? { company: c.unifiedRule.company || '中通快递', baseQuantity: c.unifiedRule.baseQuantity != null ? c.unifiedRule.baseQuantity : 1, baseFee: c.unifiedRule.baseFee != null ? c.unifiedRule.baseFee : 0, extraN: c.unifiedRule.extraN != null ? c.unifiedRule.extraN : 1, extraFee: c.unifiedRule.extraFee != null ? c.unifiedRule.extraFee : 0 } : { company: '中通快递', baseQuantity: 1, baseFee: 0, extraN: 1, extraFee: 0 }, items: c.items.length ? c.items.map(function(i){ return { company: i.company || '中通快递', region: i.region || '', baseQuantity: i.baseQuantity != null ? i.baseQuantity : 1, baseFee: i.baseFee != null ? i.baseFee : 0, extraN: i.extraN != null ? i.extraN : 1, extraFee: i.extraFee != null ? i.extraFee : 0 }; }) : [{ company: '中通快递', region: '', baseQuantity: 1, baseFee: 0, extraN: 1, extraFee: 0 }] } : { baseStrategyType: 'global', inheritedStrategyId: '', unifiedRule: { company: '中通快递', baseQuantity: 1, baseFee: 0, extraN: 1, extraFee: 0 }, items: [{ company: '中通快递', region: '', baseQuantity: 1, baseFee: 0, extraN: 1, extraFee: 0 }] };
+            },
+            removeAddStrategyTier: function(idx) {
+              if (this.addStrategyPrice.tiers.length <= 1) return;
+              this.addStrategyPrice.tiers.splice(idx, 1);
+            },
+            addAddStrategyTier: function() {
+              this.addStrategyPrice.tiers.push({ min: 1, max: 99999999, discountType: 'reduce', discountValue: 0 });
+            },
+            addAddStrategyLimitRule: function() {
+              this.addStrategyLimitRuleIndex = -1;
+              this.addStrategyLimitRule = { id: 'r' + Date.now(), name: '', userIds: '', userTags: [], userGroup: '', timeRange: null, priority: 10, orderMin: 1, orderMax: 0, userTotalMax: 0, enabled: true };
+              this.addStrategyLimitRuleVisible = true;
+            },
+            editAddStrategyLimitRule: function(idx) {
+              var r = this.addStrategyLimit.targetedRules[idx];
+              this.addStrategyLimitRuleIndex = idx;
+              var userGroup = r.userGroup || (r.userGroups && r.userGroups[0]) || '';
+              this.addStrategyLimitRule = { id: r.id, name: r.name || '', userIds: r.userIds || '', userTags: (r.userTags || []).slice(), userGroup: userGroup, timeRange: r.timeRange, priority: r.priority != null ? r.priority : 10, orderMin: r.orderMin != null ? r.orderMin : 1, orderMax: r.orderMax != null ? r.orderMax : 0, userTotalMax: r.userTotalMax != null ? r.userTotalMax : 0, enabled: r.enabled !== false };
+              this.addStrategyLimitRuleVisible = true;
+            },
+            removeAddStrategyLimitRule: function(idx) {
+              this.addStrategyLimit.targetedRules.splice(idx, 1);
+            },
+            saveAddStrategyLimitRule: function() {
+              if (!this.addStrategyLimitRule.name || !this.addStrategyLimitRule.name.trim()) {
+                ElementPlus.ElMessage.warning('请输入规则名称');
+                return;
+              }
+              var r = this.addStrategyLimitRule;
+              var rule = { id: r.id, name: r.name.trim(), userIds: r.userIds || '', userTags: r.userTags || [], userGroup: r.userGroup || '', timeRange: r.timeRange, priority: r.priority, orderMin: r.orderMin, orderMax: r.orderMax, userTotalMax: r.userTotalMax, enabled: r.enabled };
+              if (this.addStrategyLimitRuleIndex >= 0) {
+                this.addStrategyLimit.targetedRules.splice(this.addStrategyLimitRuleIndex, 1, rule);
+              } else {
+                this.addStrategyLimit.targetedRules.push(rule);
+              }
+              this.addStrategyLimitRuleVisible = false;
+            },
+            addAddStrategyLogisticsItem: function() {
+              this.addStrategyLogistics.items.push({ company: '中通快递', region: '', baseQuantity: 1, baseFee: 0, extraN: 1, extraFee: 0 });
+            },
+            removeAddStrategyLogisticsItem: function(idx) {
+              if (this.addStrategyLogistics.items.length <= 1) return;
+              this.addStrategyLogistics.items.splice(idx, 1);
+            },
+            getLogisticsStrategyName: function(id) {
+              if (!id) return '未选择';
+              var s = (this.strategyLists.logistics || []).find(function(x) { return x.id === id; });
+              return s ? s.name : id;
+            },
+            filterProductOptions: function(query) {
+              if (!query) {
+                this.productSearchOptions = this.tableData.slice();
+                return;
+              }
+              var q = (query || '').toLowerCase();
+              this.productSearchOptions = this.tableData.filter(function(p) {
+                return (p.sn && p.sn.toLowerCase().indexOf(q) >= 0) || (p.name && p.name.toLowerCase().indexOf(q) >= 0);
+              });
+            },
+            saveAddStrategy: function() {
+              if (!this.newStrategyName.trim()) {
+                ElementPlus.ElMessage.warning('请输入策略名称');
+                return;
+              }
+              if (this.newStrategyProductScope === 'specified' && (!this.newStrategyProducts || this.newStrategyProducts.length === 0)) {
+                ElementPlus.ElMessage.warning('选择指定商品时，请至少选择一个商品');
+                return;
+              }
+              var tab = this.strategyCenterTab;
+              var g = this.addStrategyLimit.globalRule;
+              if (tab === 'price') {
+                var tiers = this.addStrategyPrice.tiers || [];
+                for (var ti = 0; ti < tiers.length; ti++) {
+                  var t = tiers[ti];
+                  if (t.discountType === 'discount' && (t.discountValue < 0.01 || t.discountValue > 1)) {
+                    ElementPlus.ElMessage.warning('阶梯' + (ti + 1) + '：打折时折扣需在0.01-1之间（如0.8表示8折）');
+                    return;
+                  }
+                  if (t.discountType === 'reduce' && (t.discountValue < 0 || isNaN(t.discountValue))) {
+                    ElementPlus.ElMessage.warning('阶梯' + (ti + 1) + '：立减金额不能为负数');
+                    return;
+                  }
+                }
+              }
+              if (tab === 'logistics') {
+                var L = this.addStrategyLogistics;
+                if (L.baseStrategyType === 'global' && (!L.items || L.items.length === 0)) {
+                  ElementPlus.ElMessage.warning('全局运费模式下，请至少配置一个地区的运费规则');
+                  return;
+                }
+                if (L.baseStrategyType === 'inherit' && !L.inheritedStrategyId) {
+                  ElementPlus.ElMessage.warning('继承已有策略时，请选择一个策略');
+                  return;
+                }
+                if (L.baseStrategyType === 'unified') {
+                  var u = L.unifiedRule || {};
+                  if (!u.company || u.company === '') {
+                    ElementPlus.ElMessage.warning('统一运费模式下，请选择物流公司');
+                    return;
+                  }
+                }
+              }
+              if (tab === 'limit' && g.orderMin > 0 && g.orderMax > 0 && g.orderMin > g.orderMax) {
+                ElementPlus.ElMessage.warning('全局限购：最大购买量不能小于最小起购量');
+                return;
+              }
+              if (tab === 'sales') {
+                var incMin = Number(this.addStrategySales.incrementMin) || 0;
+                var incMax = Number(this.addStrategySales.incrementMax) || 0;
+                if (incMin > incMax || incMin < 1 || incMax < 1) {
+                  ElementPlus.ElMessage.warning('增量随机数需满足左区间≤右区间，且均为正整数');
+                  return;
+                }
+              }
+              var validFrom = ''; var validTo = '';
+              if (this.newStrategyValidType === 'range' && this.newStrategyValidRange && this.newStrategyValidRange.length === 2) {
+                validFrom = this.newStrategyValidRange[0];
+                validTo = this.newStrategyValidRange[1];
+              }
+              var self = this;
+              var config = null;
+              if (tab === 'price') config = { tiers: this.addStrategyPrice.tiers.map(function(t){ return { min: t.min, max: t.max, discountType: t.discountType || 'reduce', discountValue: t.discountValue != null ? t.discountValue : 0 }; }) };
+              else if (tab === 'display') config = { visibleUserType: this.addStrategyDisplay.visibleUserType, visibleUserIds: this.addStrategyDisplay.visibleUserIds, visibleUserEndpoints: (this.addStrategyDisplay.visibleUserEndpoints || []).slice(), displayScene: this.addStrategyDisplay.displayScene || 'public' };
+              else if (tab === 'limit') config = { globalRule: { orderMin: g.orderMin, orderMax: g.orderMax, userTotalMax: g.userTotalMax }, targetedRules: this.addStrategyLimit.targetedRules.map(function(r){ return Object.assign({}, r); }) };
+              else if (tab === 'sales') config = { initialVirtualBase: this.addStrategySales.initialVirtualBase != null ? this.addStrategySales.initialVirtualBase : 0, modificationFuseLimit: this.addStrategySales.modificationFuseLimit != null ? this.addStrategySales.modificationFuseLimit : 999999, incrementMin: this.addStrategySales.incrementMin, incrementMax: this.addStrategySales.incrementMax, delayValue: this.addStrategySales.delayValue, delayUnit: this.addStrategySales.delayUnit };
+              else if (tab === 'logistics') {
+                var L = this.addStrategyLogistics;
+                config = {
+                  baseStrategyType: L.baseStrategyType || 'global',
+                  inheritedStrategyId: L.baseStrategyType === 'inherit' ? L.inheritedStrategyId : '',
+                  unifiedRule: L.baseStrategyType === 'unified' && L.unifiedRule ? { company: L.unifiedRule.company, baseQuantity: L.unifiedRule.baseQuantity != null ? L.unifiedRule.baseQuantity : 1, baseFee: L.unifiedRule.baseFee != null ? L.unifiedRule.baseFee : 0, extraN: L.unifiedRule.extraN != null ? L.unifiedRule.extraN : 1, extraFee: L.unifiedRule.extraFee != null ? L.unifiedRule.extraFee : 0 } : null,
+                  items: L.items.map(function(i){ return { company: i.company, region: i.region, baseQuantity: i.baseQuantity != null ? i.baseQuantity : 1, baseFee: i.baseFee != null ? i.baseFee : 0, extraN: i.extraN != null ? i.extraN : 1, extraFee: i.extraFee != null ? i.extraFee : 0 }; })
+                };
+              }
+              var productScope = this.newStrategyProductScope;
+              var products = productScope === 'specified' ? this.newStrategyProducts.map(function(sn) {
+                var p = self.tableData.find(function(r) { return r.sn === sn; });
+                return { sn: sn, name: p ? p.name : sn };
+              }) : [];
+              var nowStr = new Date().toLocaleString('zh-CN');
+              var strategy = {
+                id: self.currentStrategyEdit ? self.currentStrategyEdit.id : ('S' + tab.slice(0, 1).toUpperCase() + Date.now()),
+                name: this.newStrategyName.trim(),
+                status: self.currentStrategyEdit ? self.currentStrategyEdit.status : '有效',
+                productScope: productScope,
+                products: products,
+                createdAt: self.currentStrategyEdit ? self.currentStrategyEdit.createdAt : nowStr,
+                updatedAt: nowStr,
+                creator: self.currentStrategyEdit ? self.currentStrategyEdit.creator : '当前用户',
+                updater: '当前用户',
+                validType: this.newStrategyValidType,
+                validFrom: validFrom,
+                validTo: validTo,
+                config: config
+              };
+              if (self.addStrategyMode === 'edit' && self.currentStrategyEdit) {
+                var list = self.strategyLists[tab] || [];
+                var idx = list.findIndex(function(r) { return r.id === self.currentStrategyEdit.id; });
+                if (idx >= 0) list.splice(idx, 1, strategy);
+                Object.keys(self.productStrategyLinks).forEach(function(sn) {
+                  if (self.productStrategyLinks[sn][tab] === self.currentStrategyEdit.id) delete self.productStrategyLinks[sn][tab];
+                });
+              } else {
+                self.strategyLists[tab] = self.strategyLists[tab] || [];
+                self.strategyLists[tab].push(strategy);
+              }
+              self.strategyLists = Object.assign({}, self.strategyLists);
+              if (productScope === 'specified') {
+                products.forEach(function(p) {
+                  var sn = typeof p === 'string' ? p : p.sn;
+                  if (!self.productStrategyLinks[sn]) self.productStrategyLinks[sn] = {};
+                  self.productStrategyLinks[sn][tab] = strategy.id;
+                });
+                self.productStrategyLinks = Object.assign({}, self.productStrategyLinks);
+              }
+              self.addStrategyVisible = false;
+              ElementPlus.ElMessage.success(self.addStrategyMode === 'edit' ? '保存成功' : '添加成功');
+            },
+            viewStrategy: function(row) {
+              this.addStrategyMode = 'view';
+              this.currentStrategyEdit = row;
+              this.productSearchOptions = this.tableData.slice();
+              this.addStrategyVisible = true;
+            },
+            editStrategy: function(row) {
+              this.addStrategyMode = 'edit';
+              this.currentStrategyEdit = row;
+              this.newStrategyName = row.name || '';
+              this.newStrategyProductScope = (row.productScope === 'specified') ? 'specified' : 'all';
+              this.newStrategyProducts = (row.products || []).map(function(p) { return typeof p === 'string' ? p : p.sn; });
+              this.newStrategyValidType = row.validType || 'longterm';
+              this.newStrategyValidRange = (row.validFrom && row.validTo) ? [row.validFrom, row.validTo] : null;
+              this.initAddStrategyConfig();
+              this.productSearchOptions = this.tableData.slice();
+              this.addStrategyVisible = true;
+            },
+            copyStrategy: function(row) {
+              var tab = this.strategyCenterTab;
+              var nowStr = new Date().toLocaleString('zh-CN');
+              var newId = 'S' + tab.slice(0, 1).toUpperCase() + Date.now();
+              var config = row.config ? JSON.parse(JSON.stringify(row.config)) : null;
+              var products = row.products ? row.products.map(function(p) { return typeof p === 'object' ? Object.assign({}, p) : p; }) : [];
+              var copy = {
+                id: newId,
+                name: (row.name || '') + '（副本）',
+                status: '失效',
+                productScope: row.productScope || 'all',
+                products: products,
+                createdAt: nowStr,
+                updatedAt: nowStr,
+                creator: row.creator || '当前用户',
+                updater: '',
+                validType: row.validType || 'longterm',
+                validFrom: row.validFrom || '',
+                validTo: row.validTo || '',
+                config: config
+              };
+              this.strategyLists[tab] = this.strategyLists[tab] || [];
+              this.strategyLists[tab].push(copy);
+              this.strategyLists = Object.assign({}, this.strategyLists);
+              ElementPlus.ElMessage.success('已复制为新策略，状态为失效');
+            },
+            toggleStrategyStatus: function(row) {
+              var tab = this.strategyCenterTab;
+              var list = this.strategyLists[tab] || [];
+              var idx = list.findIndex(function(r) { return r.id === row.id; });
+              if (idx < 0) return;
+              var newStatus = row.status === '有效' ? '失效' : '有效';
+              list[idx].status = newStatus;
+              list[idx].updatedAt = new Date().toLocaleString('zh-CN');
+              list[idx].updater = '当前用户';
+              this.strategyLists = Object.assign({}, this.strategyLists);
+              ElementPlus.ElMessage.success('已' + newStatus);
+            },
+            onDisplayChannelAllChange: function(val) {
+              var arr = this.addStrategyDisplay.visibleUserEndpoints || [];
+              var channels = ['D平台', '盛意旺商家服务小程序', '盛意旺APP'];
+              if (arr.indexOf('全部') >= 0) {
+                channels.forEach(function(c) {
+                  if (arr.indexOf(c) < 0) arr.push(c);
+                });
+              }
+              var allPresent = channels.every(function(c) { return arr.indexOf(c) >= 0; });
+              if (arr.indexOf('全部') >= 0 && !allPresent) {
+                arr.splice(arr.indexOf('全部'), 1);
+              }
+            },
+            deleteStrategy: function(row) {
+              var self = this;
+              ElementPlus.ElMessageBox.confirm('删除后，适用该策略的商品将不再适用，是否删除？', '确认删除', {
+                confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning'
+              }).then(function() {
+                var tab = self.strategyCenterTab;
+                var list = self.strategyLists[tab];
+                var idx = list.findIndex(function(r) { return r.id === row.id; });
+                if (idx >= 0) list.splice(idx, 1);
+                Object.keys(self.productStrategyLinks).forEach(function(pid) {
+                  var byType = self.productStrategyLinks[pid];
+                  if (byType && byType[tab] === row.id) delete byType[tab];
+                });
+                Object.keys(self.productStrategyExclusions || {}).forEach(function(pid) {
+                  var ex = self.productStrategyExclusions[pid];
+                  if (ex && ex[tab] === row.id) delete ex[tab];
+                });
+                self.productStrategyExclusions = Object.assign({}, self.productStrategyExclusions);
+                ElementPlus.ElMessage.success('已删除');
+              }).catch(function() {});
+            },
+            getProductAppliedStrategies: function(productSn) {
+              var links = this.productStrategyLinks[productSn] || {};
+              var exclusions = this.productStrategyExclusions && this.productStrategyExclusions[productSn] ? this.productStrategyExclusions[productSn] : {};
+              var types = [{ key: 'price', label: '价格策略' }, { key: 'display', label: '展示与投放策略' }, { key: 'limit', label: '限购策略' }, { key: 'logistics', label: '物流运费策略' }, { key: 'sales', label: '销量修饰策略' }];
+              return types.map(function(t) {
+                var sid = links[t.key];
+                var list = this.strategyLists[t.key] || [];
+                if (!sid) {
+                  var allStrategy = list.find(function(r) { return r.status === '有效' && r.productScope === 'all' && exclusions[t.key] !== r.id; });
+                  sid = allStrategy ? allStrategy.id : null;
+                } else if (exclusions[t.key] === sid) sid = null;
+                var s = sid ? list.find(function(r) { return r.id === sid; }) : null;
+                if (s && s.status !== '有效') { s = null; sid = null; }
+                return { type: t.key, typeName: t.label, strategyId: sid, strategy: s };
+              }.bind(this)).filter(function(x) { return x.strategyId && x.strategy; });
+            },
+            disableProductStrategy: function(productSn, strategyType, strategyId) {
+              var links = this.productStrategyLinks[productSn];
+              if (links && links[strategyType] === strategyId) {
+                delete links[strategyType];
+                this.productStrategyLinks = Object.assign({}, this.productStrategyLinks);
+              } else {
+                if (!this.productStrategyExclusions[productSn]) this.productStrategyExclusions[productSn] = {};
+                this.productStrategyExclusions[productSn][strategyType] = strategyId;
+                this.productStrategyExclusions = Object.assign({}, this.productStrategyExclusions);
+              }
+              ElementPlus.ElMessage.success('已停用');
+            },
+            setProductStrategy: function(productSn, strategyType, strategyId) {
+              if (!this.productStrategyLinks[productSn]) this.productStrategyLinks[productSn] = {};
+              this.productStrategyLinks[productSn][strategyType] = strategyId;
+              this.productStrategyLinks = Object.assign({}, this.productStrategyLinks);
+              if (this.productStrategyExclusions[productSn] && this.productStrategyExclusions[productSn][strategyType]) {
+                delete this.productStrategyExclusions[productSn][strategyType];
+                this.productStrategyExclusions = Object.assign({}, this.productStrategyExclusions);
+              }
+              ElementPlus.ElMessage.success('已更新策略');
+            },
+            handleRechooseStrategy: function(value, product, row) {
+              if (product && row) this.setProductStrategy(product.sn, row.type, value);
+            },
+            rechooseStrategy: function(productSn, strategyType) {
+              ElementPlus.ElMessage.info('请在下方下拉框中重选策略');
+            }
+          }
+        });
+        app.use(ElementPlus).mount('#app');
+      }
+    } catch (e) {
+      var msg = (e && e.message) || (e && e.code) || String(e);
+      document.getElementById('app').innerHTML = '<div style="padding:40px;color:#f56c6c;max-width:500px">页面加载出错：' + msg + '<br><br>若为网络超时，请检查网络或更换 CDN 链接（见 head 注释）</div>';
+    }
+  </script>
+</body>
+</html>
