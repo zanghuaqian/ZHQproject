@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>盛意旺 · 综合商户门户</title>
+  <meta name="description" content="盛意旺综合商户平台：极速收款、数字化经营、服务商分润与开放 API。面向收单商户与收单服务商的金融科技门户。" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Noto+Serif+SC:wght@600;700&family=Noto+Sans+SC:wght@400;500;600;700&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            syw: {
+              DEFAULT: '#0094FF',
+              deep: '#0076CC',
+              ink: '#1C2430',
+              mute: '#5C6673',
+              line: '#DDD8D0',
+              paper: '#F4F1EA',
+              card: '#FFFEFB',
+              navy: '#16324A'
+            }
+          },
+          fontFamily: {
+            sans: ['Source Sans 3', 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', 'sans-serif'],
+            serif: ['Noto Serif SC', 'Source Han Serif SC', 'serif'],
+            mono: ['IBM Plex Mono', 'ui-monospace', 'monospace']
+          },
+          boxShadow: {
+            glass: '0 18px 50px rgba(28, 36, 48, 0.10), 0 0 0 1px rgba(255,255,255,0.72)',
+            lift: '0 16px 36px rgba(0,148,255,0.16)'
+          }
+        }
+      }
+    };
+  </script>
+  <style>
+    html, body { background: #F4F1EA; }
+    body {
+      font-family: 'Source Sans 3', 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+      color: #1C2430;
+      -webkit-font-smoothing: antialiased;
+    }
+    .num { font-variant-numeric: tabular-nums; }
+    .ledger-grid {
+      background-image:
+        linear-gradient(rgba(0,148,255,0.07) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,148,255,0.07) 1px, transparent 1px);
+      background-size: 48px 48px;
+    }
+    .orb {
+      pointer-events: none;
+      position: absolute;
+      border-radius: 9999px;
+      filter: blur(48px);
+    }
+    .glass-card {
+      background: rgba(255,254,251,0.62);
+      backdrop-filter: blur(22px) saturate(1.4);
+      -webkit-backdrop-filter: blur(22px) saturate(1.4);
+    }
+    .glass-chip {
+      background: rgba(255,255,255,0.48);
+      backdrop-filter: blur(16px) saturate(1.3);
+      -webkit-backdrop-filter: blur(16px) saturate(1.3);
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+    input, select { outline: none; }
+    button, a, [role="tab"] { cursor: pointer; }
+    input:focus-visible, select:focus-visible, button:focus-visible, a:focus-visible {
+      box-shadow: 0 0 0 3px rgba(0,148,255,0.32);
+    }
+    .sr-only:not(:focus):not(:focus-visible) {
+      position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+      overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.26.7/babel.min.js" crossorigin="anonymous"></script>
+
+  <script type="text/babel" data-presets="react">
+    const { useState, useEffect, useMemo } = React;
+
+    const PERSONA = {
+      merchant: {
+        kicker: 'Acquiring Merchant',
+        role: '收单商户',
+        title: '让每一笔生意更兴旺',
+        line: '收款、对账、硬件，一个账号管完。',
+        chips: ['T+0 / D0 到账', '碰一下收款', '扫码即付', '多门店对账'],
+        kv: '碰一下 · 扫码 · 即到账'
+      },
+      partner: {
+        kicker: 'Channel Partner',
+        role: '收单服务商',
+        title: '共享支付产业红利',
+        line: '进件、分润、展业，一套系统做完。',
+        chips: ['分润实时可查', '一键进件', '开放 API / SDK', '渠道管理后台'],
+        kv: '进件 · 分润 · 展业'
+      }
+    };
+
+    const PRODUCTS = [
+      { id: 'hw', persona: 'merchant', title: '智能收款硬件', kicker: 'POS · 云打印 · 扫码牌', pain: '收银口播报延迟、多品牌设备难统一、掉线后无法核对。', stats: [{ n: '0.3s', l: '到账播报' }, { n: '99.95%', l: '在线率' }], span: 'md:col-span-7' },
+      { id: 'saas', persona: 'merchant', title: '商户数字化 SaaS', kicker: '交易对账 · 门店运营', pain: '跨通道对账靠表格、退款难追踪、多门店经营看不见。', stats: [{ n: 'T+0', l: '对账时效' }, { n: '12+', l: '经营看板' }], span: 'md:col-span-5' },
+      { id: 'agent', persona: 'partner', title: '代理商展业系统', kicker: '一键进件 · 分润报表', pain: '进件材料反复补件、分润口径不透明、下级渠道难管控。', stats: [{ n: '8 min', l: '平均进件' }, { n: '实时', l: '分润结算' }], span: 'md:col-span-5' },
+      { id: 'api', persona: 'partner', title: 'API / SDK 开放平台', kicker: '支付 · 分账 · 进件', pain: '对接周期长、沙箱数据不全、权限与证书管理散乱。', stats: [{ n: '< 2 天', l: '联调上线' }, { n: '99.99%', l: '网关可用' }], span: 'md:col-span-7' }
+    ];
+
+    const DEMANDS = [
+      { value: 'pay', label: '开通收款 / 商户进件' },
+      { value: 'hw', label: '采购智能收款硬件' },
+      { value: 'saas', label: '门店数字化 / 对账系统' },
+      { value: 'agent', label: '意向加盟 / 代理合作' },
+      { value: 'api', label: '开放平台 API 对接' }
+    ];
+
+    function Ico({ name, className = 'w-5 h-5' }) {
+      const p = { className, fill: 'none', stroke: 'currentColor', strokeWidth: 1.7, strokeLinecap: 'round', strokeLinejoin: 'round', viewBox: '0 0 24 24' };
+      const paths = {
+        help: <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3M12 17h.01M12 22a10 10 0 1 1 0-20 10 10 0 0 1 0 20z" />,
+        arrow: <path d="M5 12h14M13 6l6 6-6 6" />,
+        lock: <><rect x="4" y="11" width="16" height="10" rx="2" /><path d="M8 11V8a4 4 0 0 1 8 0v3" /></>,
+        wechat: <path d="M9.6 4.2C5.7 4.2 2.5 6.8 2.5 10c0 1.9 1.1 3.5 2.8 4.6L4.6 17l2.7-1.4c.9.3 1.8.4 2.8.4.3 0 .6 0 .9-.1-.2-.6-.3-1.2-.3-1.8 0-3.2 3-5.8 6.7-5.8.3 0 .6 0 .9.1C17.3 6 13.8 4.2 9.6 4.2zm-1.7 3.3a.9.9 0 1 1 0 1.8.9.9 0 0 1 0-1.8zm3.8 0a.9.9 0 1 1 0 1.8.9.9 0 0 1 0-1.8zM17.4 9.2c-3.1 0-5.6 2.1-5.6 4.8s2.5 4.8 5.6 4.8c.7 0 1.3-.1 1.9-.3l2.1 1.1-.5-1.8c1.4-.9 2.2-2.2 2.2-3.8 0-2.7-2.5-4.8-5.7-4.8zm-1.2 3.2a.7.7 0 1 1 0 1.4.7.7 0 0 1 0-1.4zm2.4 0a.7.7 0 1 1 0 1.4.7.7 0 0 1 0-1.4z" fill="currentColor" stroke="none" />,
+        chat: <path d="M21 12a8 8 0 0 1-8 8H7l-4 3V12a8 8 0 1 1 18 0z" />,
+        top: <path d="M12 19V5M6 11l6-6 6 6" />,
+        menu: <path d="M4 7h16M4 12h16M4 17h16" />,
+        close: <path d="M6 6l12 12M18 6 6 18" />,
+        shield: <path d="M12 3 5 6v6c0 5 3.2 7.8 7 9 3.8-1.2 7-4 7-9V6l-7-3z" />
+      };
+      return <svg {...p}>{paths[name]}</svg>;
+    }
+
+    function Logo({ compact = false, light = false }) {
+      return (
+        <a href="#top" className="flex items-center gap-2.5" aria-label="盛意旺首页">
+          <img src="logo.png" alt="盛意旺 Logo" className="h-9 w-9 rounded object-cover" width="36" height="36" />
+          <span className="leading-none">
+            <span className={`block text-[17px] font-semibold tracking-wide ${light ? 'text-white' : 'text-syw-ink'}`}>盛意旺</span>
+            {!compact && <span className={`mt-0.5 block text-[10px] tracking-[0.16em] ${light ? 'text-white/60' : 'text-syw-mute'}`}>SHENGYIWANG</span>}
+          </span>
+        </a>
+      );
+    }
+
+    function PersonaSwitch({ persona, setPersona, size = 'md' }) {
+      const compact = size === 'sm';
+      return (
+        <div className={`inline-flex rounded-full bg-white/70 p-1 ring-1 ring-white/80 backdrop-blur ${compact ? 'h-9' : 'h-10'}`} role="tablist" aria-label="登录身份">
+          {[
+            { id: 'merchant', label: '我是商户' },
+            { id: 'partner', label: '我是服务商' }
+          ].map((t) => (
+            <button
+              key={t.id}
+              type="button"
+              role="tab"
+              aria-selected={persona === t.id}
+              onClick={() => setPersona(t.id)}
+              className={`${compact ? 'h-7 px-3 text-[12px]' : 'h-8 px-4 text-[13px]'} rounded-full font-medium transition-colors duration-200 ${persona === t.id ? 'bg-[#0094FF] text-white shadow-[0_6px_16px_rgba(0,148,255,.28)]' : 'text-syw-mute hover:text-syw-ink'}`}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+      );
+    }
+
+    function QrMark({ seed = 7, size = 132, center = 'wx' }) {
+      const cells = useMemo(() => {
+        const n = 21;
+        const on = (x, y) => {
+          const inFinder = (ox, oy) => x >= ox && x < ox + 7 && y >= oy && y < oy + 7;
+          const finderCell = (ox, oy) => {
+            const lx = x - ox, ly = y - oy;
+            return lx === 0 || ly === 0 || lx === 6 || ly === 6 || (lx >= 2 && lx <= 4 && ly >= 2 && ly <= 4);
+          };
+          if (inFinder(0, 0)) return finderCell(0, 0);
+          if (inFinder(14, 0)) return finderCell(14, 0);
+          if (inFinder(0, 14)) return finderCell(0, 14);
+          if (x >= 8 && x <= 12 && y >= 8 && y <= 12) return false;
+          return ((x * 17 + y * 29 + seed * 11) % 5) > 1;
+        };
+        const list = [];
+        for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) if (on(x, y)) list.push(`${x}-${y}`);
+        return list;
+      }, [seed]);
+      return (
+        <div className="relative border border-syw-line bg-white p-1.5" style={{ width: size, height: size }}>
+          <svg viewBox="0 0 21 21" className="h-full w-full" aria-hidden="true">
+            {cells.map((k) => {
+              const [x, y] = k.split('-').map(Number);
+              return <rect key={k} x={x} y={y} width="0.92" height="0.92" rx="0.08" fill="#1C2430" />;
+            })}
+          </svg>
+          <span className="absolute left-1/2 top-1/2 grid h-8 w-8 -translate-x-1/2 -translate-y-1/2 place-items-center bg-white">
+            {center === 'wx' ? (
+              <svg viewBox="0 0 24 24" className="h-5 w-5 text-[#07C160]" fill="currentColor" aria-hidden="true">
+                <path d="M9.5 8.6c.3-2.3 2.8-4.1 5.8-4.1 3.4 0 6.1 2.2 6.1 4.9 0 2.6-2.7 4.8-6.1 4.8-.5 0-1 0-1.4-.1l-2.4 1.2.5-1.8C10.7 12.6 9.5 10.8 9.5 8.6zm2.3.3c.4 0 .7.3.7.7s-.3.8-.7.8-.8-.3-.8-.8.4-.7.8-.7zm4.4 0c.4 0 .7.3.7.7s-.3.8-.7.8-.8-.3-.8-.8.4-.7.8-.7zM8.6 11.5c-3.1 0-5.6 2-5.6 4.5 0 1.5.9 2.8 2.3 3.7l-.4 1.5 1.8-.9c.4.1.8.1 1.2.1 3.1 0 5.6-2 5.6-4.5 0-.3 0-.5-.1-.8-1.4-1.1-3.3-1.6-4.8-1.6zM7.2 14c.3 0 .6.3.6.6s-.3.6-.6.6-.6-.3-.6-.6.3-.6.6-.6zm3.6 0c.3 0 .6.3.6.6s-.3.6-.6.6-.6-.3-.6-.6.3-.6.6-.6z" />
+              </svg>
+            ) : (
+              <svg viewBox="0 0 24 24" className="h-5 w-5 text-[#0094FF]" fill="none" stroke="currentColor" strokeWidth="1.8">
+                <path d="M21 12a8 8 0 0 1-8 8H7l-4 3V12a8 8 0 1 1 18 0z" />
+              </svg>
+            )}
+          </span>
+        </div>
+      );
+    }
+
+    function Toast({ msg, onDone }) {
+      useEffect(() => {
+        const t = setTimeout(onDone, 2600);
+        return () => clearTimeout(t);
+      }, [onDone]);
+      return (
+        <div className="fixed bottom-8 left-1/2 z-[80] -translate-x-1/2 bg-syw-ink px-5 py-2.5 text-sm text-white" role="status">
+          {msg}
+        </div>
+      );
+    }
+
+    function Header({ onLead, onOpenMenu, menuOpen, persona, setPersona }) {
+      return (
+        <header className="sticky top-0 z-50 border-b border-white/60 bg-white/65 backdrop-blur-xl">
+          <div className="mx-auto flex h-16 max-w-[1200px] items-center gap-4 px-4 md:px-6 lg:px-8">
+            <Logo />
+            <div className="hidden sm:block">
+              <PersonaSwitch persona={persona} setPersona={setPersona} />
+            </div>
+            <nav className="ml-auto hidden items-center gap-8 md:flex" aria-label="主导航">
+              <a href="#help" className="text-[14px] text-syw-mute transition-colors duration-200 hover:text-syw-ink">帮助中心</a>
+              <a href="#products" className="text-[14px] text-syw-mute transition-colors duration-200 hover:text-syw-ink">开放平台</a>
+              <button
+                onClick={onLead}
+                className="inline-flex h-11 items-center rounded-full bg-[#0094FF] px-5 text-[14px] font-medium text-white shadow-[0_8px_18px_rgba(0,148,255,.28)] transition-colors duration-200 hover:bg-syw-deep"
+              >
+                免费获取方案
+              </button>
+            </nav>
+            <button
+              className="ml-auto grid h-11 w-11 place-items-center text-syw-ink md:hidden"
+              aria-label={menuOpen ? '关闭菜单' : '打开菜单'}
+              onClick={onOpenMenu}
+            >
+              <Ico name={menuOpen ? 'close' : 'menu'} />
+            </button>
+          </div>
+          <div className={`md:hidden overflow-hidden border-t border-syw-line bg-syw-card transition-all duration-200 ${menuOpen ? 'max-h-64 opacity-100' : 'max-h-0 opacity-0'}`}>
+            <div className="flex flex-col gap-3 px-4 py-3">
+              <div className="sm:hidden">
+                <PersonaSwitch persona={persona} setPersona={setPersona} size="sm" />
+              </div>
+              <a href="#help" className="min-h-11 py-2 text-sm text-syw-ink">帮助中心</a>
+              <a href="#products" className="min-h-11 py-2 text-sm text-syw-ink">开放平台</a>
+              <button onClick={onLead} className="h-11 rounded-full bg-[#0094FF] text-sm font-medium text-white">免费获取方案</button>
+            </div>
+          </div>
+        </header>
+      );
+    }
+
+    function HeroKV({ persona, onLead }) {
+      const copy = PERSONA[persona];
+      const isPartner = persona === 'partner';
+      const floats = isPartner
+        ? [
+            { t: '一键进件', d: '材料一次过审' },
+            { t: '实时分润', d: '可对账可提现' },
+            { t: '渠道穿透', d: '下级一目了然' }
+          ]
+        : [
+            { t: '碰一下', d: 'NFC 近场收款' },
+            { t: '扫码即付', d: '主扫 / 被扫' },
+            { t: 'T+0 到账', d: '资金当日清算' }
+          ];
+      return (
+        <div className="relative mt-6 overflow-hidden rounded-[22px] shadow-glass ring-1 ring-white/80">
+          <img
+            src={isPartner ? 'kv-partner.png' : 'kv-merchant.png'}
+            alt={isPartner ? '服务商分润与进件网络主视觉' : '碰一下与扫码收款主视觉'}
+            className="h-[280px] w-full object-cover object-center sm:h-[340px]"
+          />
+          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#16324A]/28 via-transparent to-white/12" />
+          <div className="pointer-events-none absolute inset-0 rounded-[22px] ring-1 ring-inset ring-white/75" />
+          <div className="absolute left-3 top-3 flex flex-col gap-2 sm:left-4 sm:top-4">
+            {floats.map((f) => (
+              <div key={f.t} className="glass-chip w-fit rounded-full px-3 py-1.5 ring-1 ring-white/80">
+                <p className="text-[12px] font-medium text-syw-ink">{f.t}</p>
+                <p className="text-[10px] text-syw-mute">{f.d}</p>
+              </div>
+            ))}
+          </div>
+          <div className="absolute inset-x-3 bottom-3">
+            <div className="glass-card flex items-center justify-between gap-3 rounded-2xl px-4 py-3 ring-1 ring-white/80">
+              <p className="text-[13px] font-medium text-syw-ink">{copy.kv}</p>
+              <div className="flex shrink-0 items-center gap-3">
+                <a href="#products" className="inline-flex h-10 items-center gap-1 text-[13px] font-medium text-syw-ink">
+                  了解产品 <Ico name="arrow" className="h-4 w-4" />
+                </a>
+                <button onClick={onLead} className="inline-flex h-10 items-center rounded-full bg-[#0094FF] px-4 text-[13px] font-medium text-white">获取方案</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    function HardwareGallery() {
+      const items = [
+        { src: 'hardware/printer.png', name: '云打印机', tone: 'light' },
+        { src: 'hardware/n7.png', name: 'N7 收款终端', tone: 'light' },
+        { src: 'hardware/p2.png', name: '智能 POS P2', tone: 'dark' },
+        { src: 'hardware/a8.png', name: '手持智能 POS', tone: 'dark' },
+        { src: 'hardware/new9220.png', name: '智能 POS', tone: 'dark' },
+        { src: 'hardware/qm50.png', name: '扫码收款终端', tone: 'dark' },
+        { src: 'hardware/alipay-nfc.png', name: '碰一下收款', tone: 'vivid' },
+        { src: 'hardware/qr-terminal.png', name: '扫码收款台牌', tone: 'light' },
+        { src: 'hardware/qr-stand.png', name: '扫码立牌', tone: 'vivid' }
+      ];
+      const well = { light: 'bg-[#F4F7FB]', dark: 'bg-[#0B1220]', vivid: 'bg-[#0A4A8A]' };
+      return (
+        <div className="grid grid-cols-3 gap-1.5">
+          {items.map((it) => (
+            <figure key={it.src} className="overflow-hidden border border-syw-line bg-white">
+              <div className={`h-[84px] overflow-hidden p-1 sm:h-[96px] ${well[it.tone]}`}>
+                <img src={it.src} alt={it.name} className="h-full w-full object-contain" />
+              </div>
+              <figcaption className="truncate px-1.5 py-1 text-center text-[10px] leading-4 text-syw-mute">{it.name}</figcaption>
+            </figure>
+          ))}
+        </div>
+      );
+    }
+
+    function MiniSaaS() {
+      return (
+        <div className="h-[132px] overflow-hidden border border-syw-line bg-[#F7F5F0] p-3">
+          <div className="mb-2 flex items-center justify-between">
+            <span className="text-[11px] font-medium text-syw-ink">今日流水</span>
+            <span className="num text-[12px] font-semibold text-[#0094FF]">¥186,420</span>
+          </div>
+          <div className="mb-3 flex h-12 items-end gap-1.5">
+            {[40, 62, 48, 80, 55, 92, 70].map((h, i) => (
+              <div key={i} className="flex-1 bg-[#0094FF]/15">
+                <div className="w-full bg-[#0094FF]" style={{ height: `${h}%` }} />
+              </div>
+            ))}
+          </div>
+          <div className="space-y-1.5">
+            {['门店A 对账完成', '跨月退款 2 笔'].map((t) => (
+              <div key={t} className="flex items-center justify-between bg-white px-2 py-1 text-[10px] text-syw-mute">
+                <span>{t}</span>
+                <span className="text-[#1F8A5B]">已匹配</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    function MiniAgent() {
+      return (
+        <div className="h-[132px] overflow-hidden border border-syw-line bg-white p-3">
+          <div className="mb-3 flex items-center justify-between text-[11px]">
+            <span className="text-syw-mute">进件漏斗</span>
+            <span className="num font-semibold text-syw-ink">本周 +128</span>
+          </div>
+          <div className="flex items-center gap-2">
+            {['提交', '审核', '开通'].map((s, i) => (
+              <React.Fragment key={s}>
+                <div className="flex-1 bg-[#EAF4FC] px-2 py-2 text-center">
+                  <div className="num text-sm font-semibold text-[#0094FF]">{[128, 96, 81][i]}</div>
+                  <div className="text-[10px] text-syw-mute">{s}</div>
+                </div>
+                {i < 2 && <span className="text-syw-line">→</span>}
+              </React.Fragment>
+            ))}
+          </div>
+          <div className="mt-3 h-1.5 overflow-hidden bg-[#EFECE6]">
+            <div className="h-full w-[63%] bg-[#0094FF]" />
+          </div>
+        </div>
+      );
+    }
+
+    function MiniApi() {
+      return (
+        <div className="h-[132px] overflow-hidden bg-syw-navy p-3 font-mono text-[11px] leading-relaxed text-white">
+          <div className="text-white/40">POST /v1/payments</div>
+          <div className="text-[#7DD3FC]">{'{'}</div>
+          <div className="pl-3 text-white/80">amount: <span className="text-[#FDE68A]">12800</span>,</div>
+          <div className="pl-3 text-white/80">channel: <span className="text-[#86EFAC]">"wxpay"</span></div>
+          <div className="text-[#7DD3FC]">{'}'}</div>
+          <div className="mt-1 inline-flex bg-[#0094FF]/25 px-1.5 py-0.5 text-[10px] text-[#7DD3FC]">200 OK · 42ms</div>
+        </div>
+      );
+    }
+
+    const VISUAL = { hw: HardwareGallery, saas: MiniSaaS, agent: MiniAgent, api: MiniApi };
+
+    function AuthCard({ toast, persona }) {
+      const isPartner = persona === 'partner';
+      const [loginMode, setLoginMode] = useState('password');
+      const [login, setLogin] = useState({ account: '', password: '', phone: '', code: '', pwdControl: false });
+      const [err, setErr] = useState('');
+      const [sec, setSec] = useState(0);
+      const [busy, setBusy] = useState(false);
+
+      useEffect(() => {
+        setLoginMode('password');
+        setErr('');
+        setSec(0);
+        setBusy(false);
+      }, [persona]);
+
+      useEffect(() => {
+        if (sec <= 0) return undefined;
+        const t = setTimeout(() => setSec((n) => n - 1), 1000);
+        return () => clearTimeout(t);
+      }, [sec]);
+
+      const phoneOk = (v) => /^1[3-9]\d{9}$/.test(v);
+
+      const sendCode = () => {
+        if (!phoneOk(login.phone)) {
+          setErr('请输入有效的 11 位手机号');
+          return;
+        }
+        setErr('');
+        setSec(60);
+        toast('验证码已发送（演示环境，任意 6 位即可）');
+      };
+
+      const submitLogin = (e) => {
+        e.preventDefault();
+        if (loginMode === 'password') {
+          if (!login.account.trim() || login.password.length < 6) {
+            setErr('请输入账号，且密码不少于 6 位');
+            return;
+          }
+        } else {
+          if (!phoneOk(login.phone)) {
+            setErr('请输入有效的 11 位手机号');
+            return;
+          }
+          if (!/^\d{6}$/.test(login.code)) {
+            setErr('请输入 6 位短信验证码');
+            return;
+          }
+        }
+        setErr('');
+        setBusy(true);
+        setTimeout(() => {
+          setBusy(false);
+          toast(isPartner ? '演示环境：即将对接服务商统一认证' : '演示环境：即将对接商户统一认证');
+        }, 420);
+      };
+
+      const portalName = isPartner ? '服务商' : '商户';
+      const field = 'h-11 w-full rounded-xl border border-white/70 bg-white/75 px-3.5 text-sm text-syw-ink placeholder:text-syw-mute/70 transition-colors duration-200 focus:border-[#0094FF]';
+
+      return (
+        <div className="relative">
+          <div className="orb -right-8 -top-8 h-36 w-36 bg-[#0094FF]/25" />
+          <div className="glass-card relative overflow-hidden rounded-[22px] p-6 shadow-glass sm:p-7">
+          <p className="text-[16px] font-semibold text-syw-ink">{portalName}登录</p>
+          <p className="mt-1 mb-5 text-[12px] text-syw-mute">
+            {isPartner ? '渠道账号统一管理' : '收款与对账同一账号'}
+          </p>
+          <form onSubmit={submitLogin} className="space-y-3.5" noValidate>
+            <div className="flex gap-6 border-b border-syw-line">
+              {[
+                { id: 'password', label: '账号密码登录' },
+                { id: 'sms', label: '手机验证码登录' }
+              ].map((m) => (
+                <button
+                  key={m.id}
+                  type="button"
+                  onClick={() => { setLoginMode(m.id); setErr(''); }}
+                  className={`-mb-px pb-2 text-[13px] font-medium transition-colors duration-200 ${loginMode === m.id ? 'border-b-2 border-[#0094FF] text-syw-ink' : 'text-syw-mute hover:text-syw-ink'}`}
+                >
+                  {m.label}
+                </button>
+              ))}
+            </div>
+            {loginMode === 'password' ? (
+              <>
+                <label htmlFor="v2-account" className="block">
+                  <span className="mb-1.5 block text-[12px] text-syw-mute">账号</span>
+                  <input id="v2-account" value={login.account} onChange={(e) => setLogin({ ...login, account: e.target.value })} className={field} placeholder={isPartner ? '请输入服务商账号' : '请输入商户账号'} autoComplete="username" />
+                </label>
+                <label htmlFor="v2-password" className="block">
+                  <span className="mb-1.5 block text-[12px] text-syw-mute">密码</span>
+                  <input id="v2-password" type="password" value={login.password} onChange={(e) => setLogin({ ...login, password: e.target.value })} className={field} placeholder="请输入密码" autoComplete="current-password" />
+                </label>
+                <div className="flex items-center justify-between text-[12px]">
+                  <label htmlFor="v2-pwd-control" className="flex min-h-11 cursor-pointer items-center gap-2 text-syw-mute">
+                    <input id="v2-pwd-control" type="checkbox" checked={login.pwdControl} onChange={(e) => setLogin({ ...login, pwdControl: e.target.checked })} className="h-4 w-4 accent-[#0094FF]" />
+                    使用密码控件登录
+                  </label>
+                  <a href="#help" className="text-[#0094FF] hover:underline">忘记密码</a>
+                </div>
+              </>
+            ) : (
+              <>
+                <label htmlFor="v2-phone" className="block">
+                  <span className="mb-1.5 block text-[12px] text-syw-mute">手机号</span>
+                  <input id="v2-phone" value={login.phone} onChange={(e) => setLogin({ ...login, phone: e.target.value })} className={field} placeholder="请输入手机号" inputMode="numeric" maxLength={11} autoComplete="tel" />
+                </label>
+                <label htmlFor="v2-code" className="block">
+                  <span className="mb-1.5 block text-[12px] text-syw-mute">短信验证码</span>
+                  <div className="flex gap-2">
+                    <input id="v2-code" value={login.code} onChange={(e) => setLogin({ ...login, code: e.target.value })} className={`${field} min-w-0 flex-1`} placeholder="6 位验证码" inputMode="numeric" maxLength={6} autoComplete="one-time-code" />
+                    <button type="button" onClick={sendCode} disabled={sec > 0} className="h-11 shrink-0 rounded-xl bg-[#EAF4FC] px-3.5 text-[13px] font-medium text-[#0094FF] transition-colors duration-200 hover:bg-[#d6ecff] disabled:cursor-not-allowed disabled:text-syw-mute">
+                      {sec > 0 ? `${sec}s 后重发` : '获取验证码'}
+                    </button>
+                  </div>
+                </label>
+              </>
+            )}
+            {err && <p className="text-[12px] text-[#C81E4A]" role="alert">{err}</p>}
+            <button type="submit" disabled={busy} className="h-11 w-full rounded-xl bg-[#0094FF] text-sm font-medium text-white transition-colors duration-200 hover:bg-syw-deep disabled:cursor-wait disabled:opacity-70">
+              {busy ? '正在登录…' : `登录${portalName}平台`}
+            </button>
+            <p className="flex items-center justify-center gap-1.5 pt-1 text-[11px] text-syw-mute">
+              <Ico name="lock" className="h-3.5 w-3.5" />
+              资金由合作银行存管 · TLS 加密传输
+            </p>
+          </form>
+          </div>
+        </div>
+      );
+    }
+
+    function Hero({ persona, toast, onLead }) {
+      const copy = PERSONA[persona];
+      return (
+        <section className="relative overflow-hidden border-b border-white/60">
+          <div className="pointer-events-none absolute inset-0 ledger-grid" />
+          <div className="orb -left-16 top-8 h-72 w-72 bg-[#0094FF]/20" />
+          <div className="orb right-[28%] bottom-0 h-56 w-56 bg-[#7DD3FC]/30" />
+          <div className="relative mx-auto grid max-w-[1200px] grid-cols-1 items-start gap-8 px-4 py-10 md:px-6 lg:grid-cols-10 lg:gap-10 lg:px-8 lg:py-12">
+            <div className="lg:col-span-6">
+              <p className="font-mono text-[11px] uppercase tracking-[0.28em] text-[#0094FF]">{copy.kicker}</p>
+              <p className="mt-2 text-[13px] text-syw-mute">{copy.role}</p>
+              <h1 key={persona} className="mt-1 font-serif text-[32px] font-semibold leading-[1.25] tracking-tight text-syw-ink sm:text-[40px]">
+                {copy.title}
+              </h1>
+              <p className="mt-3 text-[15px] text-syw-mute">{copy.line}</p>
+              <div className="mt-4 flex flex-wrap gap-2">
+                {copy.chips.map((c) => (
+                  <span key={c} className="rounded-full bg-white/70 px-3 py-1.5 text-[12px] text-syw-ink ring-1 ring-white/80 backdrop-blur">{c}</span>
+                ))}
+              </div>
+              <HeroKV persona={persona} onLead={onLead} />
+            </div>
+            <div className="lg:col-span-4 lg:pt-1">
+              <AuthCard key={persona} toast={toast} persona={persona} />
+            </div>
+          </div>
+        </section>
+      );
+    }
+
+    function Products({ persona, onLead }) {
+      return (
+        <section id="products" className="bg-syw-paper py-14">
+          <div className="mx-auto max-w-[1200px] px-4 md:px-6 lg:px-8">
+            <div className="mb-8 flex items-end justify-between gap-6">
+              <div>
+                <h2 className="font-serif text-[26px] font-semibold text-syw-ink">核心产品</h2>
+                <p className="mt-2 max-w-xl text-sm leading-6 text-syw-mute">商户看收银与经营，服务商看展业与开放网关。</p>
+              </div>
+              <a href="#open-platform" className="hidden h-11 items-center text-sm text-[#0094FF] md:inline-flex">开放平台文档</a>
+            </div>
+            <div className="grid grid-cols-1 gap-5 md:grid-cols-12">
+              {PRODUCTS.map((p) => {
+                const Visual = VISUAL[p.id];
+                const active = p.persona === persona;
+                return (
+                  <article
+                    key={p.id}
+                    id={p.id === 'api' ? 'open-platform' : undefined}
+                    className={`relative bg-syw-card p-5 ${p.span} ${active ? 'border-2 border-[#0094FF]' : 'border border-syw-line'}`}
+                  >
+                    {active && <span className="absolute right-4 top-4 text-[11px] text-[#0094FF]">当前路径</span>}
+                    <div className="mb-4"><Visual /></div>
+                    <p className="text-[12px] text-syw-mute">{p.kicker}</p>
+                    <h3 className="mt-1 text-[18px] font-semibold text-syw-ink">{p.title}</h3>
+                    <p className="mt-2 text-[13px] leading-6 text-syw-mute">{p.pain}</p>
+                    <div className="mt-4 grid grid-cols-2 gap-2">
+                      {p.stats.map((s) => (
+                        <div key={s.l} className="bg-[#F7F5F0] px-3 py-2.5">
+                          <div className="num text-[18px] font-semibold text-syw-ink">{s.n}</div>
+                          <div className="text-[11px] text-syw-mute">{s.l}</div>
+                        </div>
+                      ))}
+                    </div>
+                    <button onClick={onLead} className="mt-5 inline-flex h-11 items-center bg-[#0094FF] px-4 text-[13px] font-medium text-white transition-colors duration-200 hover:bg-syw-deep">
+                      获取方案
+                    </button>
+                  </article>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+      );
+    }
+
+    function Trust() {
+      const items = [
+        { n: '百亿级', l: '日均交易量', d: '覆盖零售、餐饮、政企采购等场景' },
+        { n: '银行级', l: '资金合规', d: '备付金存管 · 支付业务许可经营' },
+        { n: '7×24', l: '小时技术保障', d: '交易、结算、对账链路全天候值守' }
+      ];
+      return (
+        <section className="bg-syw-navy py-14 text-white">
+          <div className="mx-auto max-w-[1200px] px-4 md:px-6 lg:px-8">
+            <div className="mb-8 flex items-center gap-3">
+              <Ico name="shield" className="h-5 w-5 text-[#7DD3FC]" />
+              <h2 className="font-serif text-[22px] font-semibold">金融级安全，可被审计的确定性</h2>
+            </div>
+            <div className="mb-8 flex flex-wrap gap-x-6 gap-y-2 text-[13px] text-white/70">
+              {['支付业务许可', '备付金银行存管', '等保三级', 'TLS 全链路加密'].map((b) => (
+                <span key={b}>{b}</span>
+              ))}
+            </div>
+            <div className="grid grid-cols-1 divide-y divide-white/15 md:grid-cols-3 md:divide-x md:divide-y-0">
+              {items.map((it) => (
+                <div key={it.l} className="py-6 md:px-10 md:py-1 first:pl-0 last:pr-0">
+                  <div className="num text-[36px] font-semibold leading-none">{it.n}</div>
+                  <div className="mt-3 text-[15px] text-white/80">{it.l}</div>
+                  <p className="mt-2 text-[13px] text-white/50">{it.d}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      );
+    }
+
+    function LeadBand({ toast, persona }) {
+      const [form, setForm] = useState({
+        company: '',
+        phone: '',
+        demand: persona === 'partner' ? 'agent' : 'pay'
+      });
+      const [err, setErr] = useState('');
+      const [busy, setBusy] = useState(false);
+      useEffect(() => {
+        setForm((s) => ({ ...s, demand: persona === 'partner' ? 'agent' : 'pay' }));
+      }, [persona]);
+
+      const onSubmit = (e) => {
+        e.preventDefault();
+        if (!form.company.trim()) { setErr('请填写企业名称'); return; }
+        if (!/^1[3-9]\d{9}$/.test(form.phone)) { setErr('请输入有效的 11 位手机号'); return; }
+        setErr('');
+        setBusy(true);
+        setTimeout(() => {
+          setBusy(false);
+          toast('已收到需求，顾问将在 30 分钟内提供专属报价');
+          setForm({ company: '', phone: '', demand: form.demand });
+        }, 420);
+      };
+
+      const field = 'h-12 border border-syw-line bg-white px-4 text-sm text-syw-ink placeholder:text-syw-mute/80 transition-colors duration-200 focus:border-[#0094FF]';
+
+      return (
+        <section id="lead" className="bg-syw-card py-14">
+          <div className="mx-auto grid max-w-[1200px] grid-cols-1 items-center gap-10 px-4 md:px-6 lg:grid-cols-10 lg:px-8">
+            <div className="lg:col-span-7">
+              <h2 className="font-serif text-[26px] font-semibold text-syw-ink">30 分钟内提供专属报价</h2>
+              <p className="mt-3 max-w-xl text-sm leading-6 text-syw-mute">留下企业信息，按商户 / 服务商匹配产品、费率与硬件方案。</p>
+              <form onSubmit={onSubmit} className="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4" noValidate>
+                <label className="sr-only" htmlFor="v2-company">企业名称</label>
+                <input id="v2-company" value={form.company} onChange={(e) => setForm({ ...form, company: e.target.value })} placeholder="企业名称" className={field} />
+                <label className="sr-only" htmlFor="v2-lead-phone">手机号</label>
+                <input id="v2-lead-phone" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="手机号" inputMode="numeric" maxLength={11} className={field} />
+                <label className="sr-only" htmlFor="v2-demand">需求类型</label>
+                <select id="v2-demand" value={form.demand} onChange={(e) => setForm({ ...form, demand: e.target.value })} className={field}>
+                  {DEMANDS.map((d) => <option key={d.value} value={d.value}>{d.label}</option>)}
+                </select>
+                <button type="submit" disabled={busy} className="h-12 bg-[#0094FF] text-sm font-medium text-white transition-colors duration-200 hover:bg-syw-deep disabled:cursor-wait disabled:opacity-70">
+                  {busy ? '提交中…' : '提交需求'}
+                </button>
+              </form>
+              {err && <p className="mt-3 text-[12px] text-[#C81E4A]" role="alert">{err}</p>}
+            </div>
+            <div className="lg:col-span-3">
+              <div className="mx-auto flex max-w-[240px] flex-col items-center border border-syw-line bg-syw-paper p-5 lg:ml-auto">
+                <QrMark seed={11} size={156} center="chat" />
+                <p className="mt-3 text-[13px] font-medium text-syw-ink">专属渠道顾问</p>
+                <p className="mt-1 text-center text-[11px] text-syw-mute">微信扫码沟通费率与进件</p>
+              </div>
+            </div>
+          </div>
+        </section>
+      );
+    }
+
+    function Footer() {
+      return (
+        <footer id="help" className="border-t border-syw-line bg-syw-paper py-10">
+          <div className="mx-auto flex max-w-[1200px] flex-col gap-8 px-4 md:flex-row md:items-end md:justify-between md:px-6 lg:px-8">
+            <div>
+              <Logo compact />
+              <p className="mt-4 max-w-md text-[12px] leading-6 text-syw-mute">
+                © 2026 盛意旺科技有限公司 保留所有权利<br />
+                支付业务许可证编号：Z2017XXXXXXXX · ICP备XXXXXXXX号-1
+              </p>
+              <div className="mt-3 flex gap-4 text-[12px] text-syw-mute">
+                <a href="#help" className="hover:text-syw-ink">隐私政策</a>
+                <a href="#help" className="hover:text-syw-ink">服务协议</a>
+                <a href="#open-platform" className="hover:text-syw-ink">开放平台</a>
+              </div>
+            </div>
+            <div className="flex gap-6">
+              {[
+                { title: '盛意旺公众号', seed: 3, center: 'wx' },
+                { title: '在线客服', seed: 19, center: 'chat' }
+              ].map((q) => (
+                <div key={q.title} className="flex flex-col items-center">
+                  <QrMark seed={q.seed} size={88} center={q.center} />
+                  <span className="mt-2 text-[11px] text-syw-mute">{q.title}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </footer>
+      );
+    }
+
+    function FloatBar() {
+      const [showTop, setShowTop] = useState(false);
+      const [open, setOpen] = useState(null);
+      useEffect(() => {
+        const onScroll = () => setShowTop(window.scrollY > 420);
+        window.addEventListener('scroll', onScroll, { passive: true });
+        return () => window.removeEventListener('scroll', onScroll);
+      }, []);
+      const items = [
+        { id: 'cs', label: '在线客服', icon: 'chat', qr: 19, center: 'chat', copy: '扫码添加在线客服' },
+        { id: 'wx', label: '官方微信', icon: 'wechat', qr: 3, center: 'wx', copy: '扫码关注官方公众号' }
+      ];
+      return (
+        <div className="fixed bottom-6 right-5 z-50 flex flex-col items-end gap-2">
+          {items.map((it) => (
+            <div key={it.id} className="relative">
+              <div className={`absolute right-[54px] top-1/2 w-[176px] -translate-y-1/2 border border-syw-line bg-syw-card p-3 transition-opacity duration-200 ${open === it.id ? 'opacity-100' : 'pointer-events-none opacity-0'}`}>
+                <QrMark seed={it.qr} size={152} center={it.center} />
+                <p className="mt-2 text-center text-[11px] text-syw-mute">{it.copy}</p>
+              </div>
+              <button
+                aria-label={it.label}
+                aria-expanded={open === it.id}
+                onClick={() => setOpen((v) => (v === it.id ? null : it.id))}
+                className="grid h-12 w-12 place-items-center border border-syw-line bg-syw-card text-syw-ink transition-colors duration-200 hover:text-[#0094FF]"
+              >
+                <Ico name={it.icon} />
+              </button>
+            </div>
+          ))}
+          <button
+            aria-label="返回顶部"
+            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            className={`grid h-12 w-12 place-items-center bg-syw-ink text-white transition-opacity duration-200 ${showTop ? 'opacity-100' : 'pointer-events-none opacity-0'}`}
+          >
+            <Ico name="top" />
+          </button>
+        </div>
+      );
+    }
+
+    function App() {
+      const [persona, setPersona] = useState('merchant');
+      const [menuOpen, setMenuOpen] = useState(false);
+      const [toast, setToast] = useState('');
+      const goLead = () => {
+        setMenuOpen(false);
+        document.getElementById('lead')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      };
+      return (
+        <div id="top" className="min-h-screen bg-syw-paper">
+          <a href="#products" className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[90] focus:bg-white focus:px-3 focus:py-2">跳到产品矩阵</a>
+          <Header onLead={goLead} menuOpen={menuOpen} onOpenMenu={() => setMenuOpen((v) => !v)} persona={persona} setPersona={setPersona} />
+          <main>
+            <Hero persona={persona} toast={setToast} onLead={goLead} />
+            <Products persona={persona} onLead={goLead} />
+            <Trust />
+            <LeadBand toast={setToast} persona={persona} />
+          </main>
+          <Footer />
+          <FloatBar />
+          {toast && <Toast msg={toast} onDone={() => setToast('')} />}
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
