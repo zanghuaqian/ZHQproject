@@ -1,0 +1,3278 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>盛意旺 · 让每一笔生意更兴旺（V3 滚动动效）</title>
+  <meta name="description" content="盛意旺综合商户平台：极速收款、数字化经营、服务商分润与开放 API。面向收单商户与收单服务商的金融科技门户。" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            syw: {
+              DEFAULT: '#0094FF',
+              deep: '#0076CC',
+              soft: '#E8F4FF',
+              mist: '#F5F7FA',
+              navy: '#071422',
+              ink: '#0C1B2E',
+              mute: '#5B6B7C',
+              line: '#E3E8EF',
+              gold: '#C4A35A'
+            }
+          },
+          fontFamily: {
+            sans: ['Noto Sans SC', 'IBM Plex Sans', 'PingFang SC', 'Microsoft YaHei', 'sans-serif'],
+            display: ['IBM Plex Sans', 'Noto Sans SC', 'sans-serif'],
+            mono: ['IBM Plex Mono', 'ui-monospace', 'monospace']
+          },
+          boxShadow: {
+            glass: '0 18px 50px rgba(12, 27, 46, 0.10), 0 0 0 1px rgba(255,255,255,0.65)',
+            lift: '0 22px 40px rgba(12, 27, 46, 0.12)'
+          },
+          transitionTimingFunction: {
+            syw: 'cubic-bezier(0.4, 0, 0.2, 1)'
+          }
+        }
+      }
+    };
+  </script>
+  <style>
+    :root { --syw: #0094FF; }
+    html, body { background: #F5F7FA; }
+    body {
+      font-family: 'Noto Sans SC', 'IBM Plex Sans', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+      color: #0C1B2E;
+      -webkit-font-smoothing: antialiased;
+    }
+    .ledger-grid {
+      background-image:
+        linear-gradient(rgba(0,148,255,0.055) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,148,255,0.055) 1px, transparent 1px);
+      background-size: 48px 48px;
+    }
+    .grain::before {
+      content: '';
+      pointer-events: none;
+      position: absolute;
+      inset: 0;
+      opacity: 0.28;
+      mix-blend-mode: overlay;
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)' opacity='.55'/></svg>");
+    }
+    .glass-card {
+      background: rgba(255,255,255,0.78);
+      backdrop-filter: blur(22px) saturate(1.35);
+      -webkit-backdrop-filter: blur(22px) saturate(1.35);
+    }
+    .wx-fold {
+      clip-path: polygon(0 0, 100% 0, 100% 100%);
+    }
+    .num { font-family: 'IBM Plex Sans', 'Noto Sans SC', sans-serif; font-variant-numeric: tabular-nums; }
+    @keyframes rise-in {
+      from { opacity: 0; transform: translateY(14px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes float-y {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
+    }
+    .rise { animation: rise-in 0.55s ease-in-out both; }
+    .float-slow { animation: float-y 5.5s ease-in-out infinite; }
+    .float-slower { animation: float-y 7s ease-in-out infinite; }
+
+    /* ── V3 滚动显现：仅首次进入视口播放，结束后完全静态 ── */
+    .reveal {
+      opacity: 0;
+      transform: translateY(60px);
+      transition: opacity 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+                  transform 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+      transition-delay: var(--reveal-delay, 0s);
+      will-change: opacity, transform;
+    }
+    .reveal.active {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    /* 行业方案 Tab / 合作商户蜂窝：避免 Tailwind transition-* 盖掉显现动画 */
+    #solutions [role='tab'].reveal,
+    .partner-hex.reveal {
+      opacity: 0;
+      transform: translateY(48px);
+      transition:
+        opacity 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+        transform 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
+      transition-delay: var(--reveal-delay, 0s) !important;
+      will-change: opacity, transform;
+    }
+    #solutions [role='tab'].reveal.active,
+    .partner-hex.reveal.active {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    /* 动画结束后移除 .reveal，元素恢复普通静态样式，不再参与动效 */
+    .reveal.product-bento-card {
+      transition: opacity 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+                  transform 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+                  box-shadow 0.3s ease;
+      transition-delay: var(--reveal-delay, 0s), var(--reveal-delay, 0s), 0s;
+    }
+    /* 独立大模块轻微背景区分，便于验证连续触发 */
+    .reveal-band-a { background-color: #F5F7FA; }
+    .reveal-band-b { background-color: #FFFFFF; }
+    .reveal-band-c { background-color: #EEF2F7; }
+    .reveal-band-d { background-color: #F8FBFF; }
+    .reveal-band-e { background-color: #F3F6FA; }
+    .reveal-band-f { background-color: #EAF2FA; }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+      .reveal {
+        opacity: 1 !important;
+        transform: none !important;
+        transition: none !important;
+      }
+    }
+    input, select { outline: none; }
+    button, a { outline: none; cursor: pointer; }
+    input:focus-visible, select:focus-visible, button:focus-visible, a:focus-visible {
+      box-shadow: 0 0 0 3px rgba(0,148,255,0.28);
+    }
+    .case-copy-shadow {
+      text-shadow:
+        0 0 14px rgba(255,255,255,.95),
+        0 0 28px rgba(255,255,255,.85),
+        0 2px 8px rgba(12,27,46,.12);
+    }
+    .case-left-scrim {
+      background: linear-gradient(
+        90deg,
+        rgba(255,255,255,.97) 0%,
+        rgba(255,255,255,.92) 18%,
+        rgba(255,255,255,.78) 32%,
+        rgba(255,255,255,.52) 46%,
+        rgba(255,255,255,.24) 58%,
+        rgba(255,255,255,.08) 68%,
+        rgba(255,255,255,0) 82%
+      );
+    }
+    .solution-tab-active {
+      box-shadow: 0 12px 30px rgba(0,148,255,.10);
+    }
+
+    /* ── 支付方式 ── */
+    #payment-methods {
+      scroll-margin-top: 4rem;
+    }
+    #payment-methods .payment-methods-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+    @media (min-width: 640px) {
+      #payment-methods .payment-methods-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 12px;
+      }
+    }
+    @media (min-width: 1024px) {
+      #payment-methods .payment-methods-grid {
+        grid-template-columns: repeat(8, minmax(0, 1fr));
+      }
+    }
+    #payment-methods .payment-method-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 14px 8px;
+      border-radius: 12px;
+      background: #fff;
+      border: 1px solid #E3E8EF;
+      box-shadow: 0 4px 14px rgba(12, 27, 46, 0.04);
+      transition: border-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
+    }
+    #payment-methods .payment-method-item:hover {
+      border-color: rgba(0, 148, 255, 0.35);
+      box-shadow: 0 8px 22px rgba(0, 148, 255, 0.1);
+      transform: translateY(-2px);
+    }
+    #payment-methods .payment-method-logo {
+      width: 40px;
+      height: 40px;
+      object-fit: contain;
+    }
+    #payment-methods .payment-method-label {
+      font-size: 12px;
+      font-weight: 500;
+      line-height: 1.3;
+      color: #0C1B2E;
+      text-align: center;
+      white-space: nowrap;
+    }
+
+    /* ── 核心产品矩阵 · 2+3 错落布局 ── */
+    .product-matrix {
+      scroll-margin-top: 4rem;
+    }
+    .product-bento {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+    .product-bento-row {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 0.75rem;
+      align-items: stretch;
+    }
+    @media (min-width: 768px) {
+      .product-bento-row-1 {
+        grid-template-columns: 7fr 5fr;
+      }
+      .product-bento-row-2 {
+        grid-template-columns: 3.2fr 3.2fr 5.6fr;
+      }
+      .product-bento-row-1 .product-bento-visual {
+        min-height: 168px;
+      }
+      .product-bento-row-1 .product-bento-hw-card .product-bento-visual {
+        min-height: 300px;
+      }
+      .product-bento-row-1 .product-bento-hw-card #my-carousel {
+        height: 300px;
+      }
+      .product-bento-row-2 .product-bento-visual {
+        min-height: 168px;
+      }
+    }
+    @media (min-width: 1024px) {
+      .product-bento-row-1 .product-bento-hw-card .product-bento-visual {
+        min-height: 320px;
+      }
+      .product-bento-row-1 .product-bento-hw-card #my-carousel {
+        height: 320px;
+      }
+    }
+    /* 行业方案大卡 · 左右衔接蒙层 */
+    .solution-seam-fade {
+      pointer-events: none;
+      position: absolute;
+      inset-block: 0;
+      right: 0;
+      z-index: 2;
+      width: 4.5rem;
+      background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,.55) 45%, rgba(255,255,255,.92) 100%);
+    }
+    @media (max-width: 767px) {
+      .solution-seam-fade {
+        inset-block: auto;
+        inset-inline: 0;
+        top: auto;
+        bottom: 0;
+        right: auto;
+        width: auto;
+        height: 3.5rem;
+        background: linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(255,255,255,.55) 45%, rgba(255,255,255,.92) 100%);
+      }
+    }
+    .product-bento-hw-card {
+      padding: 0 !important;
+    }
+    .product-bento-hw-card .product-bento-visual {
+      flex: 1 1 auto;
+      margin-bottom: 0;
+      min-height: 280px;
+    }
+    .product-bento-hero-card {
+      padding: 0 !important;
+    }
+    .product-bento-hero-card .product-bento-visual {
+      flex: 1 1 auto;
+      margin-bottom: 0;
+      min-height: 240px;
+      display: flex;
+      flex-direction: column;
+    }
+    @media (min-width: 768px) {
+      .product-bento-row-1 .product-bento-hero-card .product-bento-visual {
+        min-height: 300px;
+      }
+      .product-bento-row-2 .product-bento-hero-card .product-bento-visual {
+        min-height: 260px;
+      }
+    }
+    @media (min-width: 1024px) {
+      .product-bento-row-1 .product-bento-hero-card .product-bento-visual {
+        min-height: 320px;
+      }
+      .product-bento-row-2 .product-bento-hero-card .product-bento-visual {
+        min-height: 280px;
+      }
+    }
+    .product-bento-hw-footer {
+      flex-shrink: 0;
+      border-top: 1px solid #E3E8EF;
+      background: #fff;
+      padding: 0.75rem 1rem;
+    }
+    @media (min-width: 768px) {
+      .product-bento-hw-footer {
+        padding: 0.875rem 1.125rem;
+      }
+    }
+    /* 第二排窄卡：标题区与数据区上下拆分，避免标签/主标题挤压换行 */
+    .product-bento-row-2 .product-bento-hw-footer .product-footer-head {
+      flex-direction: column;
+      align-items: stretch;
+    }
+    .product-bento-row-2 .product-bento-hw-footer .product-footer-title {
+      min-width: 0;
+    }
+    .product-bento-row-2 .product-bento-hw-footer .product-footer-kicker,
+    .product-bento-row-2 .product-bento-hw-footer .product-footer-name {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .product-bento-row-2 .product-bento-hw-footer .product-footer-kicker {
+      letter-spacing: 0.08em;
+    }
+    .product-bento-row-2 .product-bento-hw-footer .product-footer-meta {
+      justify-content: flex-start;
+      flex-wrap: wrap;
+    }
+    .product-bento-row-2 .product-bento-hw-footer .product-footer-name {
+      font-size: 15px;
+      letter-spacing: -0.01em;
+    }
+    .product-bento-card {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s ease;
+    }
+    .product-bento-visual {
+      flex-shrink: 0;
+    }
+    .product-bento-body {
+      display: flex;
+      flex: 1;
+      flex-direction: column;
+      gap: 0.375rem;
+    }
+    @media (min-width: 768px) {
+      .product-bento-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 18px 36px rgba(12, 27, 46, 0.1);
+      }
+    }
+
+    /* ── 3D 硬件轮播（作用域：#my-carousel） ── */
+    #my-carousel {
+      position: relative;
+      width: 100%;
+      height: 280px;
+      background: linear-gradient(165deg, #F5F7FA 0%, #EEF2F7 100%);
+      border-radius: 12px;
+      overflow: hidden;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    .product-bento-hw-card #my-carousel {
+      border-radius: 0;
+      height: 100%;
+      min-height: 280px;
+    }
+    #my-carousel .carousel-scene {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      perspective: 1200px;
+      perspective-origin: 50% 46%;
+    }
+    #my-carousel .carousel-ring {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      transform-style: preserve-3d;
+    }
+    #my-carousel .carousel-card {
+      position: absolute;
+      left: 50%;
+      top: 46%;
+      width: 158px;
+      margin-left: -79px;
+      margin-top: -74px;
+      transform-style: preserve-3d;
+      cursor: pointer;
+      transition:
+        transform 0.65s cubic-bezier(0.4, 0, 0.2, 1),
+        opacity 0.65s ease,
+        filter 0.65s ease;
+      will-change: transform, opacity, filter;
+    }
+    #my-carousel.is-fast-spin .carousel-card {
+      transition:
+        transform 0.38s cubic-bezier(0.4, 0, 0.2, 1),
+        opacity 0.38s ease,
+        filter 0.38s ease;
+    }
+    #my-carousel .carousel-card.is-active {
+      cursor: default;
+    }
+    #my-carousel .carousel-card-inner {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      height: 148px;
+      background: #fff;
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 12px 32px rgba(12, 27, 46, 0.12);
+      border: 2px solid transparent;
+      transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+    #my-carousel .carousel-card.is-active .carousel-card-inner {
+      border-color: #0094FF;
+      box-shadow:
+        0 0 0 1px rgba(0, 148, 255, 0.18),
+        0 18px 42px rgba(0, 148, 255, 0.2);
+    }
+    #my-carousel .carousel-card img {
+      display: block;
+      width: 100%;
+      height: 112px;
+      object-fit: contain;
+      background: #fff;
+      padding: 8px;
+      box-sizing: border-box;
+    }
+    #my-carousel .carousel-card-name {
+      flex: 0 0 auto;
+      padding: 6px 8px 8px;
+      text-align: center;
+      font-size: 11px;
+      font-weight: 600;
+      color: #0C1B2E;
+      line-height: 1.3;
+      background: #fff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    #my-carousel .carousel-card-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.62);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 10px;
+      opacity: 0;
+      transition: opacity 0.25s ease;
+      overflow: hidden;
+    }
+    #my-carousel .carousel-card.is-active:hover .carousel-card-overlay {
+      opacity: 1;
+    }
+    #my-carousel .carousel-card-overlay p {
+      margin: 0;
+      color: #fff;
+      font-size: 10px;
+      line-height: 1.45;
+      text-align: center;
+      display: -webkit-box;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 6;
+      overflow: hidden;
+    }
+    #my-carousel .carousel-arrow {
+      position: absolute;
+      top: 50%;
+      z-index: 30;
+      width: 36px;
+      height: 36px;
+      border: none;
+      border-radius: 50%;
+      background: #0094FF;
+      color: #fff;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transform: translateY(-50%);
+      box-shadow: 0 8px 20px rgba(0, 148, 255, 0.35);
+      transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    #my-carousel .carousel-arrow:hover {
+      background: #0076CC;
+      transform: translateY(-50%) scale(1.06);
+      box-shadow: 0 10px 24px rgba(0, 148, 255, 0.42);
+    }
+    #my-carousel .carousel-arrow:active {
+      transform: translateY(-50%) scale(0.96);
+    }
+    #my-carousel .carousel-prev { left: 10px; }
+    #my-carousel .carousel-next { right: 10px; }
+    #my-carousel .carousel-arrow svg {
+      width: 18px;
+      height: 18px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 2.2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    #my-carousel .carousel-page {
+      position: absolute;
+      bottom: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-family: 'IBM Plex Mono', ui-monospace, monospace;
+      font-size: 13px;
+      font-weight: 600;
+      color: #0094FF;
+      letter-spacing: 0.1em;
+      z-index: 30;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      #my-carousel .carousel-card {
+        transition-duration: 0.01ms !important;
+      }
+    }
+
+    /* ── 合作商户蜂窝聚合 ── */
+    .partner-honeycomb {
+      --hex-w: 76px;
+      --hex-gap: 12px;
+      --hex-h: calc(var(--hex-w) * 1.1547);
+      /* 蜂巢行距：使斜向邻边间距 = 同行左右间距 (--hex-gap) */
+      --hex-row-step: calc(var(--hex-h) * 0.75 + var(--hex-gap));
+    }
+    @media (min-width: 640px) {
+      .partner-honeycomb {
+        --hex-w: 88px;
+        --hex-gap: 14px;
+      }
+    }
+    .partner-honeycomb-rows {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0;
+      padding: 4px 0;
+    }
+    .partner-honeycomb-row {
+      display: flex;
+      justify-content: center;
+      gap: var(--hex-gap);
+    }
+    .partner-honeycomb-row + .partner-honeycomb-row {
+      margin-top: calc(var(--hex-row-step) - var(--hex-h));
+    }
+    .partner-hex {
+      position: relative;
+      width: var(--hex-w);
+      height: var(--hex-h);
+      flex-shrink: 0;
+    }
+    .partner-hex-shape {
+      width: 100%;
+      height: 100%;
+      clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+      background: #fff;
+      box-shadow: 0 0 0 1px #E3E8EF, 0 8px 22px rgba(12, 27, 46, 0.08);
+    }
+    .partner-hex-inner {
+      position: absolute;
+      inset: 3px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+      background: linear-gradient(145deg, #F5F7FA 0%, #E8F4FF 100%);
+      padding: 8px 6px 10px;
+      text-align: center;
+    }
+    .partner-hex.is-placeholder .partner-hex-inner {
+      background: linear-gradient(145deg, #EEF2F7 0%, #E8F4FF 55%, #F5F7FA 100%);
+    }
+    .partner-hex-mark {
+      display: grid;
+      place-items: center;
+      width: calc(var(--hex-w) * 0.42);
+      height: calc(var(--hex-w) * 0.42);
+      border-radius: 10px;
+      background: rgba(0, 148, 255, 0.12);
+      color: #0094FF;
+      font-family: 'IBM Plex Sans', 'Noto Sans SC', sans-serif;
+      font-size: calc(var(--hex-w) * 0.22);
+      font-weight: 700;
+      line-height: 1;
+    }
+    .partner-hex-name {
+      margin-top: 6px;
+      max-width: calc(var(--hex-w) - 10px);
+      font-size: 10px;
+      font-weight: 500;
+      line-height: 1.3;
+      color: #5B6B7C;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    @media (min-width: 640px) {
+      .partner-hex-name { font-size: 11px; }
+    }
+
+    /* ── 合作案例 · 水平手风琴 (#partner-accordion) ── */
+    #partner-accordion {
+      position: relative;
+      width: 100%;
+      height: 420px;
+      background:
+        radial-gradient(ellipse 120% 90% at 8% 50%, rgba(253, 182, 7, 0.28), transparent 58%),
+        radial-gradient(ellipse 100% 80% at 32% 45%, rgba(39, 97, 255, 0.22), transparent 55%),
+        radial-gradient(ellipse 110% 85% at 58% 55%, rgba(242, 152, 1, 0.2), transparent 58%),
+        radial-gradient(ellipse 100% 80% at 82% 48%, rgba(160, 11, 127, 0.22), transparent 55%),
+        linear-gradient(135deg, #DFE8F2 0%, #EEF3F8 48%, #E4ECF4 100%);
+      border-radius: 16px;
+      overflow: hidden;
+    }
+    #partner-accordion .accordion-track {
+      display: flex;
+      align-items: stretch;
+      gap: 8px;
+      height: 100%;
+      padding: 8px;
+      box-sizing: border-box;
+    }
+    #partner-accordion .accordion-card {
+      position: relative;
+      flex: 1 1 0;
+      min-width: 0;
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-radius: 12px;
+      background: var(--card-brand-bg, #fff);
+      box-shadow: 0 4px 16px rgba(12, 27, 46, 0.06);
+      cursor: pointer;
+      overflow: hidden;
+      text-align: left;
+      isolation: isolate;
+      transition:
+        flex-grow 0.5s cubic-bezier(0.4, 0, 0.2, 1),
+        flex-basis 0.5s cubic-bezier(0.4, 0, 0.2, 1),
+        box-shadow 0.45s ease,
+        border-color 0.35s ease,
+        background 0.45s ease,
+        backdrop-filter 0.45s ease;
+    }
+    /* 合作案例竖卡：提高优先级，避免卡片自身 transition 盖掉滚动显现 */
+    #partner-accordion .accordion-card.reveal {
+      opacity: 0 !important;
+      transform: translateY(48px);
+      transition:
+        opacity 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+        transform 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
+      transition-delay: var(--reveal-delay, 0s) !important;
+      will-change: opacity, transform;
+    }
+    #partner-accordion .accordion-card.reveal.active {
+      opacity: 1 !important;
+      transform: translateY(0);
+    }
+    #partner-accordion .accordion-card:not(.is-expanded).theme-ready {
+      background:
+        linear-gradient(145deg, rgba(255, 255, 255, 0.38) 0%, rgba(255, 255, 255, 0.1) 42%, rgba(255, 255, 255, 0.06) 100%),
+        var(--card-brand-glass, var(--card-brand-bg));
+      backdrop-filter: blur(20px) saturate(1.45);
+      -webkit-backdrop-filter: blur(20px) saturate(1.45);
+      border-color: rgba(255, 255, 255, 0.44);
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.58),
+        inset 0 -1px 0 rgba(255, 255, 255, 0.1),
+        0 8px 28px rgba(12, 27, 46, 0.12);
+    }
+    #partner-accordion .accordion-card:not(.is-expanded).theme-ready::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      border-radius: inherit;
+      background: linear-gradient(
+        135deg,
+        rgba(255, 255, 255, 0.42) 0%,
+        rgba(255, 255, 255, 0.08) 38%,
+        transparent 62%
+      );
+      pointer-events: none;
+    }
+    #partner-accordion .accordion-card.is-expanded {
+      background: rgba(255, 255, 255, 0.96);
+      backdrop-filter: blur(12px) saturate(1.2);
+      -webkit-backdrop-filter: blur(12px) saturate(1.2);
+      border-color: rgba(255, 255, 255, 0.65);
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.85),
+        0 14px 36px rgba(0, 148, 255, 0.12);
+    }
+    #partner-accordion .accordion-card.is-expanded::before {
+      display: none;
+    }
+    #partner-accordion.has-active .accordion-card.is-expanded {
+      flex-grow: 2.6;
+      border-color: rgba(0, 148, 255, 0.45);
+      border-left-width: 3px;
+      box-shadow: 0 14px 36px rgba(0, 148, 255, 0.14);
+    }
+    #partner-accordion.has-active .accordion-card.is-narrow {
+      flex-grow: 0.6;
+    }
+    #partner-accordion .accordion-card.has-card-photo:not(.is-expanded).theme-ready {
+      background: transparent;
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+      border-color: rgba(255, 255, 255, 0.55);
+      box-shadow: 0 8px 28px rgba(12, 27, 46, 0.14);
+    }
+    #partner-accordion .accordion-card.has-card-photo:not(.is-expanded).theme-ready::before {
+      display: none;
+    }
+    #partner-accordion .accordion-card-photo {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      pointer-events: none;
+    }
+    #partner-accordion .accordion-card-photo-overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      background: linear-gradient(
+        180deg,
+        rgba(255, 255, 255, 0) 0%,
+        rgba(255, 255, 255, 1) 100%
+      );
+      pointer-events: none;
+    }
+    #partner-accordion .accordion-card.has-card-photo .accordion-card-scrim {
+      display: none;
+    }
+    #partner-accordion .accordion-card.has-card-photo .accordion-collapsed-logo {
+      display: none;
+    }
+    #partner-accordion .accordion-card-heading {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+      max-width: 100%;
+    }
+    #partner-accordion .accordion-inline-logo {
+      flex: 0 0 auto;
+      width: 28px;
+      height: 28px;
+      object-fit: contain;
+      border-radius: 6px;
+    }
+    #partner-accordion .accordion-card-heading .accordion-card-title {
+      min-width: 0;
+    }
+    #partner-accordion .accordion-card.has-card-photo .accordion-card-collapsed {
+      justify-content: flex-end;
+      align-items: flex-start;
+      padding: 12px;
+    }
+    #partner-accordion .accordion-card.has-card-photo .accordion-card-industry {
+      margin-top: 4px;
+      padding-left: 36px;
+    }
+    #partner-accordion .accordion-card.is-expanded .accordion-card-photo,
+    #partner-accordion .accordion-card.is-expanded .accordion-card-photo-overlay {
+      opacity: 0;
+      transition: opacity 0.35s ease;
+    }
+    #partner-accordion .accordion-card-scrim {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      background: linear-gradient(
+        180deg,
+        rgba(255, 255, 255, 0.12) 0%,
+        rgba(255, 255, 255, 0) 40%,
+        rgba(0, 0, 0, 0.1) 100%
+      );
+      pointer-events: none;
+      transition: opacity 0.35s ease;
+    }
+    #partner-accordion .accordion-card.is-expanded .accordion-card-scrim {
+      opacity: 0;
+    }
+    #partner-accordion .accordion-card:not(.is-expanded).theme-ready .accordion-card-title {
+      color: #0C1B2E;
+      text-shadow: none;
+    }
+    #partner-accordion .accordion-card:not(.is-expanded).theme-ready .accordion-card-industry {
+      color: #0094FF;
+      text-shadow: none;
+    }
+    #partner-accordion .accordion-card:not(.is-expanded):not(.theme-ready) .accordion-card-title {
+      color: #0C1B2E;
+    }
+    #partner-accordion .accordion-card:not(.is-expanded):not(.theme-ready) .accordion-card-industry {
+      color: #0094FF;
+    }
+    #partner-accordion .accordion-card:not(.is-expanded):not(.theme-ready) .accordion-card-scrim {
+      background: linear-gradient(
+        180deg,
+        rgba(255, 255, 255, 0.96) 0%,
+        rgba(255, 255, 255, 0.82) 45%,
+        rgba(245, 247, 250, 0.72) 100%
+      );
+    }
+    #partner-accordion .accordion-card-collapsed {
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: flex-start;
+      padding: 14px 12px 72px;
+      box-sizing: border-box;
+      transition: opacity 0.35s ease;
+    }
+    #partner-accordion .accordion-card.is-expanded .accordion-card-collapsed {
+      opacity: 0;
+      pointer-events: none;
+    }
+    #partner-accordion .accordion-card-title {
+      font-size: clamp(13px, 1.35vw, 18px);
+      font-weight: 700;
+      text-align: left;
+      line-height: 1.35;
+      letter-spacing: 0;
+      writing-mode: horizontal-tb;
+    }
+    #partner-accordion .accordion-card-industry {
+      margin-top: 6px;
+      font-size: 10px;
+      font-weight: 500;
+      line-height: 1.4;
+    }
+    #partner-accordion .accordion-collapsed-logo {
+      position: absolute;
+      right: 10px;
+      bottom: 10px;
+      z-index: 3;
+      width: clamp(44px, 38%, 72px);
+      height: clamp(44px, 38%, 72px);
+      object-fit: contain;
+      object-position: bottom right;
+      filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.28));
+      pointer-events: none;
+      transition: opacity 0.35s ease;
+    }
+    #partner-accordion .accordion-card.is-expanded .accordion-collapsed-logo {
+      opacity: 0;
+    }
+    #partner-accordion .accordion-card-expanded {
+      position: absolute;
+      inset: 0;
+      z-index: 3;
+      display: grid;
+      grid-template-rows: minmax(0, 1fr) auto;
+      gap: 0;
+      height: auto;
+      padding: 0;
+      box-sizing: border-box;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.4s ease 0.08s;
+      overflow: hidden;
+    }
+    #partner-accordion .accordion-card.is-expanded .accordion-card-expanded {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    #partner-accordion .accordion-visual {
+      width: 100%;
+      height: 100%;
+      min-width: 0;
+      min-height: 0;
+      position: relative;
+      overflow: hidden;
+      display: block;
+      background: #fff;
+      border: none;
+    }
+    #partner-accordion .accordion-visual img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center center;
+    }
+    #partner-accordion .accordion-card-detail {
+      width: 100%;
+      min-width: 0;
+      padding: 6px 10px 8px;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      overflow: hidden;
+      background: #fff;
+      border-top: 1px solid #E3E8EF;
+    }
+    #partner-accordion .accordion-detail-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      min-width: 0;
+    }
+    #partner-accordion .accordion-detail-title {
+      flex: 1 1 auto;
+      min-width: 0;
+      margin: 0;
+      font-size: 12px;
+      font-weight: 700;
+      color: #0C1B2E;
+      line-height: 1.25;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    #partner-accordion .accordion-detail-industry {
+      flex: 0 0 auto;
+      margin: 0;
+      padding: 0 6px;
+      font-size: 9px;
+      font-weight: 500;
+      line-height: 18px;
+      color: #0094FF;
+      background: rgba(0, 148, 255, 0.08);
+      border-radius: 999px;
+      white-space: nowrap;
+    }
+    #partner-accordion .accordion-detail-desc {
+      margin: 0;
+      font-size: 10px;
+      line-height: 1.45;
+      color: #5B6B7C;
+      display: -webkit-box;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 3;
+      overflow: hidden;
+    }
+    @media (max-width: 767px) {
+      #partner-accordion {
+        height: auto;
+        min-height: 420px;
+      }
+      #partner-accordion .accordion-track {
+        flex-direction: column;
+        height: auto;
+      }
+      #partner-accordion .accordion-card {
+        flex: none !important;
+        height: 72px;
+        transition: height 0.45s ease, box-shadow 0.45s ease, border-color 0.35s ease;
+      }
+      #partner-accordion.has-active .accordion-card.is-expanded {
+        height: 360px;
+      }
+      #partner-accordion .accordion-detail-title {
+        font-size: 11px;
+      }
+      #partner-accordion .accordion-detail-desc {
+        font-size: 9px;
+        line-height: 1.4;
+        -webkit-line-clamp: 2;
+      }
+      #partner-accordion .accordion-card-detail {
+        padding: 5px 8px 6px;
+        gap: 3px;
+      }
+      #partner-accordion.has-active .accordion-card.is-narrow {
+        height: 56px;
+      }
+      #partner-accordion .accordion-card-collapsed {
+        padding: 10px 10px 52px;
+      }
+      #partner-accordion .accordion-collapsed-logo {
+        width: 40px;
+        height: 40px;
+        right: 8px;
+        bottom: 8px;
+      }
+      #partner-accordion .accordion-inline-logo {
+        width: 24px;
+        height: 24px;
+      }
+      #partner-accordion .accordion-card.has-card-photo .accordion-card-industry {
+        padding-left: 32px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script>
+    /* 智能收款硬件 3D 轮播 — 修改 products 即可替换图片与文案 */
+    const products = [
+      { img: 'hardware/carousel-01-yun-speaker.png', name: '盛意旺云音箱', desc: '聚合微信、支付宝、云闪付，到账语音实时播报。' },
+      { img: 'hardware/carousel-02-pg03.png', name: '博实结PG03小票打印机', desc: '高速出单、按键简洁，兼容主流收银系统。' },
+      { img: 'hardware/carousel-03-p2.png', name: '商米P2智能移动POS', desc: '扫码、闪付、识读一体，便携收款终端。' },
+      { img: 'hardware/carousel-04-n7.png', name: '支付宝碰一下N7', desc: '碰一下即支付，双显同步，收银更快。' },
+      { img: 'hardware/carousel-05-qr-stand.png', name: '盛意旺聚合码牌立牌', desc: '专属收款码定制，三码合一低成本铺设。' },
+      { img: 'hardware/carousel-06-dual-zone.png', name: '碰一下双区收款牌', desc: '扫码+NFC 双区收款，提升碰一下转化。' },
+      { img: 'hardware/carousel-07-a8.png', name: '联迪A8智能移动POS', desc: '大屏扫码闪付，坚固机身适合高频门店。' },
+      { img: 'hardware/carousel-08-e350p.png', name: '联迪E350P非接收款终端', desc: '非接触感应收款，大屏清晰、即放即用。' },
+      { img: 'hardware/carousel-09-qm50.png', name: '联迪QM50手持扫码终端', desc: '扫付码、输金额、彩屏确认，流动收款利器。' }
+    ];
+
+    function initHardwareCarousel(container) {
+      if (!container || container.dataset.carouselReady === '1') {
+        return function noop() {};
+      }
+
+      const count = products.length;
+      const stepDeg = 360 / count;
+
+      const ring = container.querySelector('.carousel-ring');
+      const pageEl = container.querySelector('.carousel-page');
+      const prevBtn = container.querySelector('.carousel-prev');
+      const nextBtn = container.querySelector('.carousel-next');
+
+      let current = 0;
+      let cards = [];
+      let radiusX = 200;
+      let radiusZ = 160;
+
+      function measureRadii() {
+        var w = container.clientWidth || 360;
+        radiusX = Math.min(Math.max(w * 0.34, 120), 240);
+        radiusZ = Math.min(Math.max(w * 0.26, 90), 180);
+      }
+
+      products.forEach(function (p, i) {
+        const card = document.createElement('div');
+        card.className = 'carousel-card';
+        card.dataset.index = String(i);
+        card.innerHTML =
+          '<div class="carousel-card-inner">' +
+            '<img src="' + p.img + '" alt="' + p.name + '" loading="lazy" />' +
+            '<div class="carousel-card-name">' + p.name + '</div>' +
+            '<div class="carousel-card-overlay"><p>' + p.desc + '</p></div>' +
+          '</div>';
+        ring.appendChild(card);
+      });
+
+      cards = Array.from(ring.querySelectorAll('.carousel-card'));
+
+      function relIndex(i) {
+        var rel = i - current;
+        var half = count / 2;
+        if (rel > half) rel -= count;
+        if (rel < -half) rel += count;
+        return rel;
+      }
+
+      function layout() {
+        measureRadii();
+        cards.forEach(function (card, i) {
+          var rel = relIndex(i);
+          var angleDeg = rel * stepDeg;
+          var rad = angleDeg * Math.PI / 180;
+          var x = Math.sin(rad) * radiusX;
+          var z = Math.cos(rad) * radiusZ;
+          var scale = Math.max(0.5, 1 - Math.abs(rel) * 0.13);
+          var opacity = Math.max(0.22, 1 - Math.abs(rel) * 0.2);
+          var blur = Math.abs(rel) >= 3 ? 1.8 : Math.abs(rel) * 0.45;
+
+          card.style.transform = 'translate3d(' + x + 'px, 0, ' + z + 'px) scale(' + scale + ')';
+          card.style.opacity = String(opacity);
+          card.style.zIndex = String(Math.round(100 - Math.abs(rel) * 10));
+          card.style.filter = blur > 0.05 ? 'blur(' + blur + 'px)' : 'none';
+          card.classList.toggle('is-active', i === current);
+        });
+        pageEl.textContent = (current + 1) + '/' + count;
+      }
+
+      function goTo(index, fast) {
+        if (index === current) return;
+        current = ((index % count) + count) % count;
+        if (fast) {
+          container.classList.add('is-fast-spin');
+          window.setTimeout(function () {
+            container.classList.remove('is-fast-spin');
+          }, 400);
+        }
+        layout();
+      }
+
+      function onPrev() {
+        goTo(current - 1, false);
+      }
+
+      function onNext() {
+        goTo(current + 1, false);
+      }
+
+      function onCardClick(e) {
+        var card = e.target.closest('.carousel-card');
+        if (!card || !ring.contains(card)) return;
+        var index = parseInt(card.dataset.index, 10);
+        if (Number.isNaN(index) || index === current) return;
+        goTo(index, true);
+      }
+
+      prevBtn.addEventListener('click', onPrev);
+      nextBtn.addEventListener('click', onNext);
+      ring.addEventListener('click', onCardClick);
+
+      var onResize = function () { layout(); };
+      window.addEventListener('resize', onResize);
+
+      layout();
+      container.dataset.carouselReady = '1';
+
+      return function cleanup() {
+        prevBtn.removeEventListener('click', onPrev);
+        nextBtn.removeEventListener('click', onNext);
+        ring.removeEventListener('click', onCardClick);
+        window.removeEventListener('resize', onResize);
+        container.classList.remove('is-fast-spin');
+        ring.innerHTML = '';
+        delete container.dataset.carouselReady;
+      };
+    }
+
+    window.initHardwareCarousel = initHardwareCarousel;
+
+    /* 合作案例水平手风琴 — 修改 partners 即可替换内容 */
+    function partnerRgbToHex(r, g, b) {
+      return '#' + [r, g, b].map(function (v) {
+        var h = v.toString(16);
+        return h.length === 1 ? '0' + h : h;
+      }).join('');
+    }
+
+    function partnerIsNearWhite(r, g, b, a) {
+      return a > 20 && r > 215 && g > 215 && b > 215;
+    }
+
+    function partnerIsSaturated(r, g, b) {
+      return Math.max(r, g, b) - Math.min(r, g, b) > 35;
+    }
+
+    function partnerHexToRgb(hex) {
+      var match = hex.match(/^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i);
+      return match
+        ? [parseInt(match[1], 16), parseInt(match[2], 16), parseInt(match[3], 16)]
+        : [0, 148, 255];
+    }
+
+    function partnerRgba(rgb, alpha) {
+      return 'rgba(' + rgb[0] + ', ' + rgb[1] + ', ' + rgb[2] + ', ' + alpha + ')';
+    }
+
+    function partnerBuildGlassBg(cardBg, opts) {
+      opts = opts || {};
+      if (cardBg.indexOf('gradient') !== -1) {
+        var top = opts.topRgb || [222, 17, 120];
+        var bot = opts.botRgb || [67, 1, 146];
+        return 'linear-gradient(160deg, ' +
+          partnerRgba(top, 0.62) + ' 0%, ' +
+          partnerRgba(bot, 0.44) + ' 100%)';
+      }
+      var rgb = partnerHexToRgb(cardBg);
+      return 'linear-gradient(155deg, ' +
+        partnerRgba(rgb, 0.68) + ' 0%, ' +
+        partnerRgba(rgb, 0.36) + ' 52%, ' +
+        partnerRgba(rgb, 0.54) + ' 100%)';
+    }
+
+    function partnerTopBucketColor(bucket) {
+      var bestKey = null;
+      var bestCount = 0;
+      Object.keys(bucket).forEach(function (key) {
+        if (key.indexOf('_rgb') !== -1) return;
+        if (bucket[key] > bestCount) {
+          bestCount = bucket[key];
+          bestKey = key;
+        }
+      });
+      return bestKey ? bucket[bestKey + '_rgb'] : null;
+    }
+
+    function analyzePartnerLogo(logoPath, overrides, callback) {
+      overrides = overrides || {};
+      var img = new Image();
+      img.onload = function () {
+        var w = img.naturalWidth;
+        var h = img.naturalHeight;
+        var canvas = document.createElement('canvas');
+        canvas.width = w;
+        canvas.height = h;
+        var ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+        var imageData = ctx.getImageData(0, 0, w, h);
+        var px = imageData.data;
+
+        var whiteCount = 0;
+        var coloredCount = 0;
+        var brandBucket = {};
+        var bgBucket = {};
+        var topBucket = {};
+        var botBucket = {};
+
+        for (var y = 0; y < h; y++) {
+          for (var x = 0; x < w; x++) {
+            var idx = (y * w + x) * 4;
+            var r = px[idx];
+            var g = px[idx + 1];
+            var b = px[idx + 2];
+            var a = px[idx + 3];
+            if (a < 20) continue;
+
+            if (partnerIsNearWhite(r, g, b, a)) {
+              whiteCount++;
+              continue;
+            }
+
+            coloredCount++;
+            var bgKey = Math.round(r / 32) + ',' + Math.round(g / 32) + ',' + Math.round(b / 32);
+            bgBucket[bgKey] = (bgBucket[bgKey] || 0) + 1;
+            bgBucket[bgKey + '_rgb'] = [r, g, b];
+
+            if (partnerIsSaturated(r, g, b)) {
+              var brandKey = Math.round(r / 24) * 11 + Math.round(g / 24) * 7 + Math.round(b / 24);
+              if (!brandBucket[brandKey]) {
+                brandBucket[brandKey] = { count: 0, r: 0, g: 0, b: 0 };
+              }
+              brandBucket[brandKey].count++;
+              brandBucket[brandKey].r += r;
+              brandBucket[brandKey].g += g;
+              brandBucket[brandKey].b += b;
+            }
+
+            if (y < h * 0.35) {
+              topBucket[bgKey] = (topBucket[bgKey] || 0) + 1;
+              topBucket[bgKey + '_rgb'] = [r, g, b];
+            } else if (y > h * 0.65) {
+              botBucket[bgKey] = (botBucket[bgKey] || 0) + 1;
+              botBucket[bgKey + '_rgb'] = [r, g, b];
+            }
+          }
+        }
+
+        var isWhiteBg = whiteCount > coloredCount;
+        var dominantBrand = null;
+        var maxBrandCount = 0;
+        Object.keys(brandBucket).forEach(function (key) {
+          if (brandBucket[key].count > maxBrandCount) {
+            maxBrandCount = brandBucket[key].count;
+            dominantBrand = brandBucket[key];
+          }
+        });
+
+        var brandRgb = dominantBrand
+          ? [
+              Math.round(dominantBrand.r / dominantBrand.count),
+              Math.round(dominantBrand.g / dominantBrand.count),
+              Math.round(dominantBrand.b / dominantBrand.count)
+            ]
+          : partnerTopBucketColor(bgBucket) || [0, 148, 255];
+
+        var bgRgb = partnerTopBucketColor(bgBucket) || brandRgb;
+        var topRgb = partnerTopBucketColor(topBucket);
+        var botRgb = partnerTopBucketColor(botBucket);
+        var hasGradient = !isWhiteBg && topRgb && botRgb &&
+          (Math.abs(topRgb[0] - botRgb[0]) + Math.abs(topRgb[1] - botRgb[1]) + Math.abs(topRgb[2] - botRgb[2]) > 80);
+
+        var cardBg;
+        if (overrides.cardBg) {
+          cardBg = overrides.cardBg;
+        } else if (isWhiteBg) {
+          cardBg = partnerRgbToHex(brandRgb[0], brandRgb[1], brandRgb[2]);
+        } else if (hasGradient) {
+          cardBg = 'linear-gradient(180deg, ' + partnerRgbToHex(topRgb[0], topRgb[1], topRgb[2]) +
+            ' 0%, ' + partnerRgbToHex(botRgb[0], botRgb[1], botRgb[2]) + ' 100%)';
+        } else {
+          cardBg = partnerRgbToHex(bgRgb[0], bgRgb[1], bgRgb[2]);
+        }
+
+        for (var i = 0; i < px.length; i += 4) {
+          var pr = px[i];
+          var pg = px[i + 1];
+          var pb = px[i + 2];
+          var pa = px[i + 3];
+          if (pa < 20) continue;
+
+          if (isWhiteBg) {
+            if (partnerIsNearWhite(pr, pg, pb, pa)) {
+              px[i + 3] = 0;
+            } else {
+              px[i] = 255;
+              px[i + 1] = 255;
+              px[i + 2] = 255;
+            }
+          } else if (pr > 195 && pg > 195 && pb > 195) {
+            px[i] = 255;
+            px[i + 1] = 255;
+            px[i + 2] = 255;
+          } else {
+            px[i + 3] = 0;
+          }
+        }
+
+        ctx.putImageData(imageData, 0, 0);
+        callback({
+          cardBg: cardBg,
+          cardBgGlass: partnerBuildGlassBg(cardBg, {
+            topRgb: topRgb,
+            botRgb: botRgb,
+            hasGradient: hasGradient
+          }),
+          logoSrc: canvas.toDataURL('image/png'),
+          isWhiteBg: isWhiteBg
+        });
+      };
+      img.onerror = function () {
+        var fallback = overrides.cardBg || '#0094FF';
+        callback({
+          cardBg: fallback,
+          cardBgGlass: partnerBuildGlassBg(fallback, {}),
+          logoSrc: logoPath,
+          isWhiteBg: false
+        });
+      };
+      img.src = logoPath;
+    }
+
+    const partners = [
+      {
+        name: '银豹',
+        logo: 'cases/yinbao-logo.png',
+        visual: 'cases/yinbao-visual.png',
+        industry: '新零售 · 餐饮',
+        desc: '盛意旺 × 银豹：一步就位，打造 O2O 门店，覆盖零售、餐饮、茶饮与烘焙收银，帮助商户打通线上线下一体化经营。',
+        theme: {
+          cardPhoto: 'cases/yinbao-card-bg.png',
+          useOriginalLogo: true
+        }
+      },
+      {
+        name: '太米',
+        logo: 'cases/taimi-logo.png',
+        visual: 'cases/taimi-visual.png',
+        industry: '加油站 · 零售',
+        desc: '盛意旺 × 太米：让商户体验快捷的收款服务，覆盖加油站、零售与休闲娱乐场景，提升收银效率与资金到账体验。',
+        theme: {
+          cardPhoto: 'cases/taimi-card-bg.png',
+          useOriginalLogo: true
+        }
+      },
+      {
+        name: '中皖知托付',
+        logo: 'cases/zhongwan-logo.png',
+        visual: 'cases/zhongwan-visual.png',
+        industry: '商超 · 便利 · 百货',
+        desc: '盛意旺 × 中皖知托付：助力商家数字化转型升级，打通商超、便利店与百货收银链路，实现收款、对账与经营一体化。',
+        theme: {
+          cardPhoto: 'cases/zhongwan-card-bg.png',
+          useOriginalLogo: true
+        }
+      },
+      {
+        name: '十角兽',
+        logo: 'cases/shijiaoshou-logo.png',
+        visual: 'cases/shijiaoshou-visual.png',
+        industry: '工商财税',
+        desc: '盛意旺 × 十角兽：小微企业记账报税新时代，覆盖工商、记账、报税与财税服务，为商户提供合规便捷的财税数字化能力。',
+        theme: {
+          cardPhoto: 'cases/shijiaoshou-card-bg.png',
+          useOriginalLogo: true
+        }
+      },
+      {
+        name: '九点半',
+        logo: 'cases/jiudianban-logo.png',
+        visual: 'cases/jiudianban-visual.png',
+        industry: '夜生活',
+        desc: '盛意旺 × 九点半：为夜而生，用芯相伴，酒吧系统与创投顾问一体赋能夜间消费场景，助力夜场商户高效收款与经营。',
+        theme: {
+          cardPhoto: 'cases/jiudianban-card-bg.png',
+          useOriginalLogo: true
+        }
+      }
+    ];
+
+    function initPartnerAccordion(container) {
+      if (!container || container.dataset.accordionReady === '1') {
+        return function noop() {};
+      }
+
+      var track = container.querySelector('.accordion-track');
+      if (!track) {
+        track = document.createElement('div');
+        track.className = 'accordion-track';
+        track.setAttribute('role', 'tablist');
+        track.setAttribute('aria-label', '合作案例');
+        container.appendChild(track);
+      }
+
+      var activeIndex = null;
+
+      partners.forEach(function (p, index) {
+        var card = document.createElement('button');
+        card.type = 'button';
+        card.className = 'accordion-card';
+        card.setAttribute('role', 'tab');
+        card.setAttribute('aria-expanded', 'false');
+        card.setAttribute('aria-label', p.name);
+
+        var theme = p.theme || {};
+        var photoHtml = theme.cardPhoto
+          ? '<div class="accordion-card-photo" style="background-image:url(\'' + theme.cardPhoto + '\')" aria-hidden="true"></div>' +
+            '<div class="accordion-card-photo-overlay" aria-hidden="true"></div>'
+          : '';
+        var titleHtml = theme.useOriginalLogo
+          ? '<div class="accordion-card-heading">' +
+              '<img class="accordion-inline-logo" src="' + p.logo + '" alt="" loading="lazy" />' +
+              '<span class="accordion-card-title">' + p.name + '</span>' +
+            '</div>'
+          : '<span class="accordion-card-title">' + p.name + '</span>';
+
+        card.innerHTML =
+          photoHtml +
+          '<div class="accordion-card-scrim" aria-hidden="true"></div>' +
+          '<div class="accordion-card-collapsed">' +
+            titleHtml +
+            '<span class="accordion-card-industry">' + p.industry + '</span>' +
+          '</div>' +
+          '<img class="accordion-collapsed-logo" src="' + p.logo + '" alt="' + p.name + ' Logo" loading="lazy" />' +
+          '<div class="accordion-card-expanded">' +
+            '<div class="accordion-visual">' +
+              '<img src="' + p.visual + '" alt="' + p.name + ' 产品架构展示" loading="lazy" />' +
+            '</div>' +
+            '<div class="accordion-card-detail">' +
+              '<div class="accordion-detail-meta">' +
+                '<h3 class="accordion-detail-title">盛意旺 × ' + p.name + '</h3>' +
+                '<p class="accordion-detail-industry">' + p.industry + '</p>' +
+              '</div>' +
+              '<p class="accordion-detail-desc">' + p.desc + '</p>' +
+            '</div>' +
+          '</div>';
+
+        if (theme.cardPhoto) {
+          card.classList.add('has-card-photo');
+        }
+
+        var logoEl = card.querySelector('.accordion-collapsed-logo');
+        if (theme.cardPhoto) {
+          card.classList.add('theme-ready');
+        } else {
+          analyzePartnerLogo(p.logo, theme, function (themeResult) {
+            card.style.setProperty('--card-brand-bg', themeResult.cardBg);
+            card.style.setProperty('--card-brand-glass', themeResult.cardBgGlass);
+            if (logoEl && themeResult.logoSrc) {
+              logoEl.src = themeResult.logoSrc;
+            }
+            card.classList.add('theme-ready');
+          });
+        }
+
+        card.addEventListener('click', function () {
+          if (activeIndex === index) {
+            activeIndex = null;
+          } else {
+            activeIndex = index;
+          }
+          updateState();
+        });
+
+        track.appendChild(card);
+      });
+
+      var cards = Array.from(track.querySelectorAll('.accordion-card'));
+
+      function updateState() {
+        var hasActive = activeIndex !== null;
+        container.classList.toggle('has-active', hasActive);
+        cards.forEach(function (card, i) {
+          var expanded = activeIndex === i;
+          card.classList.toggle('is-expanded', expanded);
+          card.classList.toggle('is-narrow', hasActive && !expanded);
+          card.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+          card.setAttribute('aria-selected', expanded ? 'true' : 'false');
+        });
+      }
+
+      updateState();
+      container.dataset.accordionReady = '1';
+
+      return function cleanup() {
+        track.innerHTML = '';
+        container.classList.remove('has-active');
+        delete container.dataset.accordionReady;
+      };
+    }
+
+    window.initPartnerAccordion = initPartnerAccordion;
+  </script>
+
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.26.7/babel.min.js" crossorigin="anonymous"></script>
+
+  <script type="text/babel" data-presets="react">
+    const { useState, useEffect, useMemo, useRef } = React;
+
+    /** 交错延迟：第 n 项 = n * 0.1s */
+    function revealDelayStyle(index = 0) {
+      return { ['--reveal-delay']: `${Math.max(0, index) * 0.1}s` };
+    }
+
+    /** 已完成首次显现的元素 ID（跨重渲染保持，避免切换 Tab 再次隐藏） */
+    const revealedOnce = new Set();
+    const revealCallbacks = new WeakMap();
+    let sharedRevealIO = null;
+
+    function getSharedRevealIO() {
+      if (sharedRevealIO) return sharedRevealIO;
+      sharedRevealIO = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (!entry.isIntersecting) return;
+            const cb = revealCallbacks.get(entry.target);
+            sharedRevealIO.unobserve(entry.target);
+            if (typeof cb === 'function') cb();
+          });
+        },
+        { root: null, rootMargin: '0px 0px -50px 0px', threshold: 0 }
+      );
+      return sharedRevealIO;
+    }
+
+    /**
+     * 方案 B：React Hooks 滚动显现
+     * phase: pending(待播) → playing(播放中) → done(静态，去掉 .reveal)
+     * 同一 id 一旦 done，后续重挂载直接静态展示，不再动画、不隐藏
+     */
+    function useReveal(id, delayIndex = 0) {
+      const ref = useRef(null);
+      const [phase, setPhase] = useState(() => (revealedOnce.has(id) ? 'done' : 'pending'));
+
+      useEffect(() => {
+        if (phase === 'done') {
+          revealedOnce.add(id);
+          return undefined;
+        }
+        if (phase === 'playing') {
+          const ms = 800 + Math.max(0, delayIndex) * 100 + 40;
+          const timer = window.setTimeout(() => {
+            revealedOnce.add(id);
+            setPhase('done');
+          }, ms);
+          return () => window.clearTimeout(timer);
+        }
+
+        const el = ref.current;
+        if (!el) return undefined;
+
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+          revealedOnce.add(id);
+          setPhase('done');
+          return undefined;
+        }
+
+        const io = getSharedRevealIO();
+        revealCallbacks.set(el, () => {
+          revealedOnce.add(id);
+          setPhase('playing');
+        });
+        io.observe(el);
+        return () => {
+          io.unobserve(el);
+          revealCallbacks.delete(el);
+        };
+      }, [id, phase, delayIndex]);
+
+      if (phase === 'done') {
+        return { ref, className: '', style: undefined };
+      }
+      return {
+        ref,
+        className: phase === 'playing' ? 'reveal active' : 'reveal',
+        style: revealDelayStyle(delayIndex)
+      };
+    }
+
+    function Reveal({ id, delay = 0, as: Tag = 'div', className = '', style, children, ...rest }) {
+      const rev = useReveal(id, delay);
+      const mergedClass = [rev.className, className].filter(Boolean).join(' ');
+      const mergedStyle = rev.style ? { ...rev.style, ...style } : style;
+      return (
+        <Tag ref={rev.ref} className={mergedClass} style={mergedStyle} {...rest}>
+          {children}
+        </Tag>
+      );
+    }
+
+    /**
+     * 分组显现：以组内第一项为哨兵进入视口后触发，
+     * 其余项按 0.1s 递增紧接着顺次升起（不要求各自滚入视口）。
+     */
+    function useRevealGroup(groupId, itemCount = 1) {
+      const containerRef = useRef(null);
+      const [phase, setPhase] = useState(() => (revealedOnce.has(groupId) ? 'done' : 'pending'));
+      const [nodeReady, setNodeReady] = useState(0);
+
+      const setContainerRef = React.useCallback((node) => {
+        if (containerRef.current === node) return;
+        containerRef.current = node;
+        if (node) setNodeReady((n) => n + 1);
+      }, []);
+
+      useEffect(() => {
+        if (phase === 'done') {
+          revealedOnce.add(groupId);
+          return undefined;
+        }
+        if (phase === 'playing') {
+          const ms = 800 + Math.max(0, itemCount - 1) * 100 + 40;
+          const timer = window.setTimeout(() => {
+            revealedOnce.add(groupId);
+            setPhase('done');
+          }, ms);
+          return () => window.clearTimeout(timer);
+        }
+
+        const root = containerRef.current;
+        if (!root) return undefined;
+
+        // 以第一项为触发哨兵：第一项滚出后整组顺次播放
+        const sentinel = root.querySelector('[data-reveal-sentinel="1"]') || root.firstElementChild || root;
+
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+          revealedOnce.add(groupId);
+          setPhase('done');
+          return undefined;
+        }
+
+        const io = getSharedRevealIO();
+        revealCallbacks.set(sentinel, () => {
+          revealedOnce.add(groupId);
+          setPhase('playing');
+        });
+        io.observe(sentinel);
+        return () => {
+          io.unobserve(sentinel);
+          revealCallbacks.delete(sentinel);
+        };
+      }, [groupId, phase, itemCount, nodeReady]);
+
+      const itemProps = (index = 0) => {
+        const base = phase === 'done'
+          ? { className: '', style: undefined }
+          : {
+              className: phase === 'playing' ? 'reveal active' : 'reveal',
+              style: revealDelayStyle(index)
+            };
+        if (index === 0) base['data-reveal-sentinel'] = '1';
+        return base;
+      };
+
+      return { containerRef, setContainerRef, itemProps, phase };
+    }
+
+    /** 原生 DOM 分组显现：容器进入视口后，子项从左到右交错升起 */
+    function bindVanillaRevealGroup(container, items) {
+      if (!container || !items || !items.length || container.dataset.revealGroupBound === '1') return;
+      container.dataset.revealGroupBound = '1';
+
+      items.forEach((el, i) => {
+        el.classList.add('reveal');
+        el.style.setProperty('--reveal-delay', `${(Math.round(i * 10) / 100).toFixed(2)}s`);
+      });
+
+      const settle = (el, i) => {
+        window.setTimeout(() => {
+          el.classList.remove('reveal', 'active');
+          el.style.removeProperty('--reveal-delay');
+        }, 800 + i * 100 + 40);
+      };
+
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        items.forEach((el) => {
+          el.classList.remove('reveal');
+          el.style.removeProperty('--reveal-delay');
+        });
+        return;
+      }
+
+      const io = getSharedRevealIO();
+      revealCallbacks.set(container, () => {
+        items.forEach((el, i) => {
+          el.classList.add('active');
+          settle(el, i);
+        });
+      });
+      io.observe(container);
+    }
+
+    const PERSONA = {
+      merchant: {
+        kicker: '收单商户',
+        title: ['盛意旺，让每一笔', '生意更兴旺'],
+        sub: '极速到账、费率透明、门店数字化一体打通。收银硬件即插即用，对账与经营数据实时可见，让收款从“能用”变成“好用”。',
+        chips: ['T+0 / D0 到账', '费率可谈', '硬件即插即用', '多门店对账']
+      },
+      partner: {
+        kicker: '收单服务商',
+        title: ['开放赋能，共享', '支付产业红利'],
+        sub: '透明分润、一键进件、展业工具与开放 API 全链路赋能。用一套系统拓客、管商、看账，把支付产业红利变成可持续的渠道利润。',
+        chips: ['分润实时可查', '一键进件', '开放 API / SDK', '渠道管理后台']
+      }
+    };
+
+    const PRODUCTS = [
+      {
+        id: 'hw',
+        persona: 'merchant',
+        title: '智能收款硬件',
+        kicker: 'POS · 云打印 · 扫码牌',
+        pain: '到账语音极速播报，多品类硬件统一接入，断网补传保障笔笔可核、收银不断档。',
+        stats: [
+          { n: '0.3s', l: '到账播报' },
+          { n: '99.95%', l: '在线率' }
+        ]
+      },
+      {
+        id: 'saas-platform',
+        personas: ['merchant', 'partner'],
+        title: 'SaaS 数字化平台',
+        kicker: '商户对账 · 代理商展业',
+        pain: '商户跨通道自动对账、退款全程可追踪；代理商一键进件、分润实时透明，下级渠道集中管控。',
+        stats: [
+          { n: 'T+0', l: '对账时效' },
+          { n: '实时', l: '分润结算' }
+        ]
+      },
+      {
+        id: 'api',
+        persona: 'partner',
+        title: 'API / SDK 开放平台',
+        kicker: '支付 · 分账 · 进件',
+        pain: '完整沙箱环境与开发文档，标准 API 快速联调上线，权限与证书集中管理、安全合规。',
+        stats: [
+          { n: '< 2 天', l: '联调上线' },
+          { n: '99.99%', l: '网关可用' }
+        ]
+      },
+      {
+        id: 'mcp',
+        personas: ['merchant', 'partner'],
+        title: 'SaaS MCP',
+        kicker: 'AI Agent · 工具协议',
+        pain: 'AI Agent 通过 MCP 标准协议安全调用 SaaS 能力，自然语言查账、进件核验，一次对接多场景复用。',
+        stats: [
+          { n: 'MCP', l: '开放协议' },
+          { n: '10+', l: '经营工具' }
+        ]
+      },
+      {
+        id: 'mobile',
+        personas: ['merchant', 'partner'],
+        title: '移动端',
+        kicker: 'APP · 小程序',
+        pain: '盛意旺商户 APP、盛意通服务商 APP 与商家服务小程序，随时查账、管店、展业，移动端经营不断线。',
+        stats: [
+          { n: '3 端', l: '全覆盖' },
+          { n: '随时', l: '查账管店' }
+        ]
+      }
+    ];
+
+    const DEMANDS = [
+      { value: 'pay', label: '开通收款 / 商户进件' },
+      { value: 'hw', label: '采购智能收款硬件' },
+      { value: 'saas', label: '门店数字化 / 对账系统' },
+      { value: 'agent', label: '意向加盟 / 代理合作' },
+      { value: 'api', label: '开放平台 API 对接' }
+    ];
+
+    const LEAD_STEPS = {
+      merchant: ['填写接入意向', '添加企微客服', '注册签约', '开通支付'],
+      partner: ['填写接入意向', '添加商务企微', '注册开户', 'API接入/SaaS展业']
+    };
+
+    function LeadQrModal({ open, persona, onClose }) {
+      useEffect(() => {
+        if (!open) return undefined;
+        const onKey = (e) => { if (e.key === 'Escape') onClose(); };
+        window.addEventListener('keydown', onKey);
+        return () => window.removeEventListener('keydown', onKey);
+      }, [open, onClose]);
+
+      if (!open) return null;
+
+      const isPartner = persona === 'partner';
+
+      return (
+        <div
+          className="fixed inset-0 z-[90] flex items-center justify-center bg-syw-ink/55 p-6 backdrop-blur-sm"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="lead-qr-title"
+          onClick={onClose}
+        >
+          <div
+            className="relative w-full max-w-[360px] rounded-2xl bg-white p-6 shadow-lift ring-1 ring-syw-line"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              type="button"
+              onClick={onClose}
+              className="absolute right-4 top-4 grid h-8 w-8 place-items-center rounded-lg text-syw-mute transition-colors hover:bg-syw-mist hover:text-syw-ink"
+              aria-label="关闭"
+            >
+              <Ico name="close" className="h-4 w-4" />
+            </button>
+            <p id="lead-qr-title" className="pr-8 text-[17px] font-semibold text-syw-ink">
+              {isPartner ? '添加商务企微，继续对接' : '添加企微客服，继续接入'}
+            </p>
+            <p className="mt-2 text-[13px] leading-6 text-syw-mute">
+              需求已提交。请扫码添加{isPartner ? '商务企微' : '企微客服'}，顾问将协助您完成后续{isPartner ? '开户与 API/SaaS 展业' : '签约与支付开通'}。
+            </p>
+            <div className="mx-auto mt-5 flex max-w-[220px] flex-col items-center rounded-xl bg-syw-mist p-4 ring-1 ring-syw-line">
+              <div className="overflow-hidden rounded-lg bg-white p-1.5">
+                <img src="qr/wecom-cs.png" alt={isPartner ? '商务企微二维码' : '企微客服二维码'} width="176" height="176" className="h-[176px] w-[176px] object-contain" />
+              </div>
+              <p className="mt-3 text-[13px] font-medium text-syw-ink">{isPartner ? '商务企微' : '企微专属客服'}</p>
+              <p className="mt-1 text-center text-[11px] text-syw-mute">长按识别二维码 · 1 对 1 专属服务</p>
+            </div>
+            <button
+              type="button"
+              onClick={onClose}
+              className="mt-5 h-11 w-full rounded-xl bg-[#0094FF] text-sm font-medium text-white transition-all duration-300 ease-in-out hover:bg-syw-deep"
+            >
+              我知道了
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    function LeadSteps({ persona }) {
+      const steps = LEAD_STEPS[persona] || LEAD_STEPS.merchant;
+
+      return (
+        <div className="mx-auto w-full max-w-[320px] rounded-2xl bg-white/12 p-5 ring-1 ring-white/25 lg:ml-auto lg:max-w-none">
+          <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-white/70">Onboarding</p>
+          <p className="mt-1 text-[15px] font-semibold text-white">接入步骤</p>
+          <ol className="mt-4 space-y-0">
+            {steps.map((label, index) => (
+              <li key={label} className="relative flex gap-3 pb-4 last:pb-0">
+                {index < steps.length - 1 && (
+                  <span className="absolute left-[13px] top-7 h-[calc(100%-12px)] w-px bg-white/25" aria-hidden="true" />
+                )}
+                <span
+                  className={`relative z-[1] flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold ${
+                    index === 0 ? 'bg-white text-[#0094FF]' : 'bg-white/15 text-white/85 ring-1 ring-white/20'
+                  }`}
+                >
+                  {index + 1}
+                </span>
+                <div className="min-w-0 pt-0.5">
+                  <p className={`text-[13px] font-medium leading-5 ${index === 0 ? 'text-white' : 'text-white/80'}`}>{label}</p>
+                  {index === 0 && (
+                    <p className="mt-0.5 text-[11px] text-white/60">当前步骤</p>
+                  )}
+                </div>
+              </li>
+            ))}
+          </ol>
+        </div>
+      );
+    }
+
+    /* 其他合作商户 — 替换 logo 字段即可接入真实六边形 logo 图 */
+    const PARTNER_MERCHANTS = [
+      { id: 'm01', name: '优选便利', abbr: '优' },
+      { id: 'm02', name: '鲜丰水果', abbr: '鲜' },
+      { id: 'm03', name: '味千拉面', abbr: '味' },
+      { id: 'm04', name: '全家便利店', abbr: '全' },
+      { id: 'm05', name: '瑞幸咖啡', abbr: '瑞' },
+      { id: 'm06', name: '海底捞', abbr: '海' },
+      { id: 'm07', name: '屈臣氏', abbr: '屈' },
+      { id: 'm08', name: '百果园', abbr: '百' },
+      { id: 'm09', name: '杨国福', abbr: '杨' },
+      { id: 'm10', name: '蜜雪冰城', abbr: '蜜' },
+      { id: 'm11', name: '华莱士', abbr: '华' },
+      { id: 'm12', name: '正新鸡排', abbr: '正' },
+      { id: 'm13', name: '书亦烧仙草', abbr: '书' },
+      { id: 'm14', name: '老乡鸡', abbr: '老' }
+    ];
+
+    /* 蜂窝布局：最多三行（5 + 4 + 5） */
+    const PARTNER_HONEYCOMB_ROWS = [
+      { ids: ['m01', 'm02', 'm03', 'm04', 'm05'] },
+      { ids: ['m06', 'm07', 'm08', 'm09'] },
+      { ids: ['m10', 'm11', 'm12', 'm13', 'm14'] }
+    ];
+
+    const SOLUTIONS = [
+      {
+        id: 'fuel-invoice',
+        partner: '驾油吧 × 乐企联用',
+        title: '支付即开票',
+        industry: '加油站 · 能源零售',
+        intro: '加油支付完成后自动触发乐企联用开票，司机与企业无需二次操作，税控合规与对账一次完成。',
+        points: ['支付成功即开票', '乐企联用税控对接', '车队 / 企业批量对账'],
+        stats: [{ n: '≤3s', l: '开票触发' }, { n: '100%', l: '票款一致' }],
+        tone: 'from-[#E8F4FF] via-white to-[#F5F7FA]',
+        accent: '#0094FF',
+        visual: 'fuel',
+        image: 'cases/fuel-invoice-visual.png'
+      },
+      {
+        id: 'bar-split',
+        partner: '酒吧业态',
+        title: '行业分账',
+        industry: '夜生活 · 娱乐餐饮',
+        intro: '场地方、酒水供应商、艺人等多方按规则实时分账，账单透明、提现可查，适配高频夜间交易场景。',
+        points: ['多角色分账规则', '实时清分可提现', '与 POS / 存酒联动'],
+        stats: [{ n: 'T+0', l: '分账到账' }, { n: '多层级', l: '渠道穿透' }],
+        tone: 'from-[#E8F4FF] via-white to-[#F5F7FA]',
+        accent: '#0094FF',
+        visual: 'bar',
+        image: 'cases/bar-split-visual.png'
+      },
+      {
+        id: 'cross-border',
+        partner: '跨境支付',
+        title: '多币种收款结算',
+        industry: '外贸 · 跨境电商',
+        intro: '支持多币种收款、跨境结算与合规申报，汇率透明、到账路径可追踪，降低出海商户接入成本。',
+        points: ['多币种收款', '合规申报通道', '汇率与手续费透明'],
+        stats: [{ n: '10+', l: '主流币种' }, { n: '7×24', l: '跨境清算' }],
+        tone: 'from-[#EEF6FF] via-white to-[#E8F4FF]',
+        accent: '#0076CC',
+        visual: 'cross',
+        image: 'cases/cross-border-visual.png'
+      },
+      {
+        id: 'ai-saas',
+        partner: 'AI + SaaS',
+        title: '智能经营助手',
+        industry: '全业态 · 数字化',
+        intro: 'AI 嵌入商户 SaaS：智能对账、异常预警、自然语言查数，让经营分析从「看报表」变成「问一句就有答案」。',
+        points: ['自然语言查数', '跨月退款智能匹配', '经营异常预警'],
+        stats: [{ n: 'AI', l: '对话式分析' }, { n: '12+', l: '经营看板' }],
+        tone: 'from-[#F0F4FF] via-white to-[#E8F4FF]',
+        accent: '#0094FF',
+        visual: 'ai',
+        image: 'cases/ai-saas-visual.png'
+      },
+      {
+        id: 'group-chain',
+        partner: '集团总部商户',
+        title: '总部统一财务对账',
+        industry: '连锁品牌 · 集团企业',
+        intro: '总部维护分公司、加盟与合作伙伴的多层级组织，子商户独立收单、账务按区域隔离；日汇总与自定义账单、交易明细及数据看板一站汇总，替代分散人工对账。',
+        points: ['5 级商户层级灵活搭建', '区域角色权限与数据隔离', '账单下载 · 明细查询 · 数据看板'],
+        stats: [{ n: '5 级', l: '组织层级' }, { n: '全渠道', l: '统一对账' }],
+        tone: 'from-[#F5FAFF] via-white to-[#EEF6FF]',
+        accent: '#0094FF',
+        visual: 'chain',
+        image: 'cases/group-chain-visual.png'
+      }
+    ];
+
+    function Ico({ name, className = 'w-5 h-5' }) {
+      const p = { className, fill: 'none', stroke: 'currentColor', strokeWidth: 1.7, strokeLinecap: 'round', strokeLinejoin: 'round', viewBox: '0 0 24 24' };
+      const paths = {
+        help: <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3M12 17h.01M12 22a10 10 0 1 1 0-20 10 10 0 0 1 0 20z" />,
+        open: <><path d="M10 6H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4" /><path d="M14 4h6v6" /><path d="M10 14 20 4" /></>,
+        arrow: <path d="M5 12h14M13 6l6 6-6 6" />,
+        prev: <path d="M19 12H5M11 6l-6 6 6 6" />,
+        chevron: <path d="M6 9l6 6 6-6" />,
+        lock: <><rect x="4" y="11" width="16" height="10" rx="2" /><path d="M8 11V8a4 4 0 0 1 8 0v3" /></>,
+        user: <><circle cx="12" cy="8" r="3.2" /><path d="M5 19c1.2-3 3.5-4.5 7-4.5S17.8 16 19 19" /></>,
+        phone: <rect x="7" y="2.5" width="10" height="19" rx="2" />,
+        check: <path d="M5 13l4 4L19 7" />,
+        wechat: <path d="M9.6 4.2C5.7 4.2 2.5 6.8 2.5 10c0 1.9 1.1 3.5 2.8 4.6L4.6 17l2.7-1.4c.9.3 1.8.4 2.8.4.3 0 .6 0 .9-.1-.2-.6-.3-1.2-.3-1.8 0-3.2 3-5.8 6.7-5.8.3 0 .6 0 .9.1C17.3 6 13.8 4.2 9.6 4.2zm-1.7 3.3a.9.9 0 1 1 0 1.8.9.9 0 0 1 0-1.8zm3.8 0a.9.9 0 1 1 0 1.8.9.9 0 0 1 0-1.8zM17.4 9.2c-3.1 0-5.6 2.1-5.6 4.8s2.5 4.8 5.6 4.8c.7 0 1.3-.1 1.9-.3l2.1 1.1-.5-1.8c1.4-.9 2.2-2.2 2.2-3.8 0-2.7-2.5-4.8-5.7-4.8zm-1.2 3.2a.7.7 0 1 1 0 1.4.7.7 0 0 1 0-1.4zm2.4 0a.7.7 0 1 1 0 1.4.7.7 0 0 1 0-1.4z" fill="currentColor" stroke="none" />,
+        chat: <path d="M21 12a8 8 0 0 1-8 8H7l-4 3V12a8 8 0 1 1 18 0z" />,
+        top: <path d="M12 19V5M6 11l6-6 6 6" />,
+        menu: <path d="M4 7h16M4 12h16M4 17h16" />,
+        close: <path d="M6 6l12 12M18 6 6 18" />,
+        shield: <path d="M12 3 5 6v6c0 5 3.2 7.8 7 9 3.8-1.2 7-4 7-9V6l-7-3z" />,
+        spark: <path d="M12 3v4M12 17v4M4.9 6.5l2.8 2.8M16.3 14.7l2.8 2.8M3 12h4M17 12h4M4.9 17.5l2.8-2.8M16.3 9.3l2.8-2.8" />
+      };
+      return <svg {...p}>{paths[name]}</svg>;
+    }
+
+    function Logo({ light = false, compact = false }) {
+      return (
+        <a href="#top" className="flex items-center gap-2.5 group" aria-label="盛意旺首页">
+          <img
+            src="logo.png"
+            alt="盛意旺 Logo"
+            className="h-9 w-9 rounded-[10px] object-cover shadow-[0_8px_20px_rgba(0,148,255,.28)]"
+            width="36"
+            height="36"
+          />
+          <span className="leading-none">
+            <span className={`block text-[17px] font-semibold tracking-wide ${light ? 'text-white' : 'text-syw-ink'}`}>盛意旺</span>
+            {!compact && (
+              <span className={`mt-0.5 block font-mono text-[9px] uppercase tracking-[0.22em] ${light ? 'text-white/55' : 'text-syw-mute'}`}>ShengYiWang</span>
+            )}
+          </span>
+        </a>
+      );
+    }
+
+    function PersonaSwitch({ persona, setPersona, size = 'md' }) {
+      const compact = size === 'sm';
+      return (
+        <div className={`inline-flex rounded-full bg-syw-mist p-1 ring-1 ring-syw-line ${compact ? 'h-9' : 'h-10'}`} role="tablist" aria-label="登录身份">
+          {[
+            { id: 'merchant', label: '我是商户' },
+            { id: 'partner', label: '我是服务商' }
+          ].map((t) => (
+            <button
+              key={t.id}
+              type="button"
+              role="tab"
+              aria-selected={persona === t.id}
+              onClick={() => setPersona(t.id)}
+              className={`${compact ? 'h-7 px-3 text-[12px]' : 'h-8 px-4 text-[13px]'} rounded-full font-medium transition-all duration-300 ease-in-out ${persona === t.id ? 'bg-[#0094FF] text-white shadow-[0_6px_16px_rgba(0,148,255,.28)]' : 'text-syw-mute hover:text-syw-ink'}`}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+      );
+    }
+
+    const DEV_CENTER_URL = 'http://docs.sdptest.shengpay.com/owldoc/#/api/';
+    const PARTNER_LOGIN_URL = 'https://d.shengpay.com/login?redirect=/welcome';
+
+    function QrImg({ src, alt, size = 88, label, hoverZoom = false }) {
+      return (
+        <div className={`flex flex-col items-center ${hoverZoom ? 'group relative z-0 hover:z-20' : ''}`}>
+          <div
+            className={`overflow-hidden rounded-lg bg-white p-1 ring-1 ring-white/80 transition-all duration-300 ease-in-out ${hoverZoom ? 'origin-center group-hover:scale-[1.55] group-hover:shadow-lift' : ''}`}
+            style={{ width: size, height: size }}
+          >
+            <img src={src} alt={alt} className="h-full w-full object-contain" width={size} height={size} />
+          </div>
+          {label && <span className="mt-2 text-[11px] text-syw-mute">{label}</span>}
+        </div>
+      );
+    }
+
+    function QrMark({ seed = 7, size = 132, center = 'wx' }) {
+      const cells = useMemo(() => {
+        const n = 21;
+        const on = (x, y) => {
+          const inFinder = (ox, oy) => x >= ox && x < ox + 7 && y >= oy && y < oy + 7;
+          const finderCell = (ox, oy) => {
+            const lx = x - ox, ly = y - oy;
+            return lx === 0 || ly === 0 || lx === 6 || ly === 6 || (lx >= 2 && lx <= 4 && ly >= 2 && ly <= 4);
+          };
+          if (inFinder(0, 0)) return finderCell(0, 0);
+          if (inFinder(14, 0)) return finderCell(14, 0);
+          if (inFinder(0, 14)) return finderCell(0, 14);
+          if (x >= 8 && x <= 12 && y >= 8 && y <= 12) return false;
+          return ((x * 17 + y * 29 + seed * 11) % 5) > 1;
+        };
+        const list = [];
+        for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) if (on(x, y)) list.push(`${x}-${y}`);
+        return list;
+      }, [seed]);
+      return (
+        <div className="relative rounded-md bg-white p-1.5 ring-1 ring-syw-line" style={{ width: size, height: size }}>
+          <svg viewBox="0 0 21 21" className="h-full w-full" aria-hidden="true">
+            {cells.map((k) => {
+              const [x, y] = k.split('-').map(Number);
+              return <rect key={k} x={x} y={y} width="0.92" height="0.92" rx="0.08" fill="#0C1B2E" />;
+            })}
+          </svg>
+          <span className="absolute left-1/2 top-1/2 grid h-8 w-8 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-md bg-white shadow-sm">
+            {center === 'wx' ? (
+              <svg viewBox="0 0 24 24" className="h-5 w-5 text-[#07C160]" fill="currentColor" aria-hidden="true">
+                <path d="M9.5 8.6c.3-2.3 2.8-4.1 5.8-4.1 3.4 0 6.1 2.2 6.1 4.9 0 2.6-2.7 4.8-6.1 4.8-.5 0-1 0-1.4-.1l-2.4 1.2.5-1.8C10.7 12.6 9.5 10.8 9.5 8.6zm2.3.3c.4 0 .7.3.7.7s-.3.8-.7.8-.8-.3-.8-.8.4-.7.8-.7zm4.4 0c.4 0 .7.3.7.7s-.3.8-.7.8-.8-.3-.8-.8.4-.7.8-.7zM8.6 11.5c-3.1 0-5.6 2-5.6 4.5 0 1.5.9 2.8 2.3 3.7l-.4 1.5 1.8-.9c.4.1.8.1 1.2.1 3.1 0 5.6-2 5.6-4.5 0-.3 0-.5-.1-.8-1.4-1.1-3.3-1.6-4.8-1.6zM7.2 14c.3 0 .6.3.6.6s-.3.6-.6.6-.6-.3-.6-.6.3-.6.6-.6zm3.6 0c.3 0 .6.3.6.6s-.3.6-.6.6-.6-.3-.6-.6.3-.6.6-.6z" />
+              </svg>
+            ) : (
+              <svg viewBox="0 0 24 24" className="h-5 w-5 text-[#0094FF]" fill="none" stroke="currentColor" strokeWidth="1.8">
+                <path d="M21 12a8 8 0 0 1-8 8H7l-4 3V12a8 8 0 1 1 18 0z" />
+              </svg>
+            )}
+          </span>
+        </div>
+      );
+    }
+
+    function Toast({ msg, onDone }) {
+      useEffect(() => {
+        const t = setTimeout(onDone, 2600);
+        return () => clearTimeout(t);
+      }, [onDone]);
+      return (
+        <div className="fixed bottom-8 left-1/2 z-[80] -translate-x-1/2 rise rounded-full bg-syw-ink px-5 py-2.5 text-sm text-white shadow-lift">
+          {msg}
+        </div>
+      );
+    }
+
+    function Header({ onLead, onOpenMenu, menuOpen, persona, setPersona }) {
+      return (
+        <header className="sticky top-0 z-50 border-b border-white/60 bg-white/75 backdrop-blur-xl">
+          <div className="mx-auto flex h-16 max-w-[1200px] items-center gap-4 px-6">
+            <Logo />
+            <div className="hidden sm:block">
+              <PersonaSwitch persona={persona} setPersona={setPersona} />
+            </div>
+            <nav className="ml-auto hidden items-center gap-7 md:flex" aria-label="主导航">
+              <a href={DEV_CENTER_URL} target="_blank" rel="noopener noreferrer" className="text-[14px] text-syw-mute transition-all duration-300 ease-in-out hover:text-syw">开发者中心</a>
+              <button
+                onClick={onLead}
+                className="inline-flex h-10 items-center rounded-full bg-[#0094FF] px-5 text-[14px] font-medium text-white shadow-[0_8px_18px_rgba(0,148,255,.28)] transition-all duration-300 ease-in-out hover:bg-syw-deep hover:-translate-y-0.5"
+              >
+                免费获取方案
+              </button>
+            </nav>
+            <button
+              className="ml-auto grid h-11 w-11 place-items-center rounded-lg text-syw-ink md:hidden"
+              aria-label={menuOpen ? '关闭菜单' : '打开菜单'}
+              onClick={onOpenMenu}
+            >
+              <Ico name={menuOpen ? 'close' : 'menu'} />
+            </button>
+          </div>
+          <div className={`md:hidden overflow-hidden border-t border-syw-line bg-white transition-all duration-300 ease-in-out ${menuOpen ? 'max-h-64 opacity-100' : 'max-h-0 opacity-0'}`}>
+            <div className="flex flex-col gap-3 px-6 py-3">
+              <div className="sm:hidden">
+                <PersonaSwitch persona={persona} setPersona={setPersona} size="sm" />
+              </div>
+              <a href={DEV_CENTER_URL} target="_blank" rel="noopener noreferrer" className="py-2 text-sm text-syw-ink">开发者中心</a>
+              <button onClick={onLead} className="h-11 rounded-full bg-[#0094FF] text-sm font-medium text-white">免费获取方案</button>
+            </div>
+          </div>
+        </header>
+      );
+    }
+
+    function HardwareGallery() {
+      const carouselRef = useRef(null);
+
+      useEffect(() => {
+        const el = carouselRef.current;
+        if (!el || typeof window.initHardwareCarousel !== 'function') return undefined;
+        return window.initHardwareCarousel(el);
+      }, []);
+
+      return (
+        <div id="my-carousel" ref={carouselRef}>
+          <button type="button" className="carousel-arrow carousel-prev" aria-label="上一张">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6" /></svg>
+          </button>
+          <div className="carousel-scene">
+            <div className="carousel-ring" />
+          </div>
+          <button type="button" className="carousel-arrow carousel-next" aria-label="下一张">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6" /></svg>
+          </button>
+          <span className="carousel-page">1/9</span>
+        </div>
+      );
+    }
+
+    function ProductScreenshot({ src, alt, className = 'h-full min-h-[80px]' }) {
+      return (
+        <div className={`overflow-hidden rounded-lg bg-syw-mist ring-1 ring-syw-line ${className}`}>
+          <img src={src} alt={alt} className="h-full w-full object-cover object-left-top" />
+        </div>
+      );
+    }
+
+    function MiniSaasPlatform() {
+      return (
+        <div className="grid h-full min-h-0 flex-1 grid-cols-2 gap-2 bg-gradient-to-b from-syw-mist/50 to-white p-2.5">
+          <div className="flex min-h-0 flex-col gap-2">
+            <span className="px-0.5 text-[9px] font-semibold tracking-wide text-syw">商户端</span>
+            <ProductScreenshot src="products/merchant-saas_masked.png" alt="商户数字化 SaaS 首页界面" className="min-h-0 flex-1" />
+            <ProductScreenshot src="products/merchant-reconcile_masked.png" alt="商户数字化 SaaS 对账界面" className="min-h-0 flex-1" />
+          </div>
+          <div className="flex min-h-0 flex-col gap-2">
+            <span className="px-0.5 text-[9px] font-semibold tracking-wide text-syw">代理商端</span>
+            <ProductScreenshot src="products/agent-platform_masked.png" alt="代理商展业平台界面" className="min-h-0 flex-1" />
+          </div>
+        </div>
+      );
+    }
+
+    function MiniMcp() {
+      return (
+        <div className="flex h-full min-h-0 flex-1 flex-col justify-between overflow-hidden bg-[#071422] p-4 font-mono text-[11px] leading-relaxed">
+          <div className="flex items-center gap-2.5">
+            <span className="grid h-9 w-9 place-items-center rounded-lg bg-[#0094FF]/20 text-[#7DD3FC]">
+              <Ico name="spark" className="h-4 w-4" />
+            </span>
+            <div>
+              <p className="text-[13px] font-medium text-white/92">SaaS MCP Server</p>
+              <p className="text-[10px] text-white/40">Model Context Protocol</p>
+            </div>
+          </div>
+          <div className="my-3 space-y-1 rounded-lg bg-white/5 p-3 ring-1 ring-white/8">
+            <p className="text-white/35">tools/</p>
+            <p className="pl-2 text-[#86EFAC]">query_reconcile</p>
+            <p className="pl-2 text-[#86EFAC]">list_refund_orders</p>
+            <p className="pl-2 text-[#86EFAC]">merchant_onboard</p>
+            <p className="pl-2 text-[#86EFAC]">split_settlement</p>
+          </div>
+          <div className="flex items-center gap-2 text-[10px] text-white/55">
+            <span className="inline-flex rounded bg-[#0094FF]/20 px-2 py-0.5 text-[#7DD3FC]">AI Agent</span>
+            <span>→ MCP → 盛意旺 SaaS</span>
+          </div>
+        </div>
+      );
+    }
+
+    function MiniApi() {
+      return (
+        <div className="flex h-full min-h-0 flex-1 flex-col justify-center overflow-hidden bg-[#071422] p-4 font-mono text-[11px] leading-relaxed sm:p-5">
+          <div className="text-white/35">POST /v1/payments</div>
+          <div className="text-[#7DD3FC]">{'{'}</div>
+          <div className="pl-3 text-white/80">amount: <span className="text-[#FDE68A]">12800</span>,</div>
+          <div className="pl-3 text-white/80">channel: <span className="text-[#86EFAC]">"wxpay"</span>,</div>
+          <div className="pl-3 text-white/80">notify_url: <span className="text-[#7DD3FC]">"https://..."</span></div>
+          <div className="text-[#7DD3FC]">{'}'}</div>
+          <div className="mt-3 inline-flex w-fit items-center gap-1 rounded bg-[#0094FF]/20 px-2 py-1 text-[11px] text-[#7DD3FC]">200 OK · 42ms</div>
+        </div>
+      );
+    }
+
+    function MiniMobile() {
+      const apps = [
+        { id: 'syw-app', name: '盛意旺 APP', role: '商户移动端', badge: '商户', image: 'products/syw-app.png' },
+        { id: 'syt-app', name: '盛意通 APP', role: '服务商移动端', badge: '服务商', image: 'products/syt-app.png' },
+        { id: 'mp', name: '商家服务小程序', role: '盛意旺商家服务', badge: '小程序', image: 'products/merchant-mp.png' }
+      ];
+      return (
+        <div className="grid h-full min-h-0 flex-1 grid-cols-3 gap-2 bg-gradient-to-b from-syw-mist/60 to-white p-2.5 sm:p-3">
+          {apps.map((app) => (
+            <div key={app.id} className="flex min-h-0 flex-col overflow-hidden rounded-xl bg-white ring-1 ring-syw-line">
+              <div className="flex items-center justify-between px-2 pt-2">
+                <span className="rounded-full bg-[#0094FF]/10 px-1.5 py-0.5 text-[9px] font-medium text-[#0094FF]">{app.badge}</span>
+                <span className="h-1.5 w-1.5 rounded-full bg-[#1AAE6F]" aria-hidden="true" />
+              </div>
+              <div className="mx-auto mt-1.5 mb-1 w-[88%] max-w-[110px] flex-1 min-h-0 overflow-hidden rounded-[14px] bg-[#F5F7FA] shadow-[0_8px_20px_rgba(12,27,46,.08)] ring-1 ring-syw-line">
+                <img
+                  src={app.image}
+                  alt={`${app.name}界面`}
+                  className="h-full w-full object-cover object-top"
+                  loading="lazy"
+                />
+              </div>
+              <div className="px-1.5 pb-2 text-center">
+                <p className="truncate text-[10px] font-semibold leading-tight text-syw-ink">{app.name}</p>
+                <p className="truncate text-[9px] leading-tight text-syw-mute">{app.role}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      );
+    }
+
+    const VISUAL = { hw: HardwareGallery, 'saas-platform': MiniSaasPlatform, api: MiniApi, mcp: MiniMcp, mobile: MiniMobile };
+
+    function AuthCard({ toast, persona }) {
+      const isPartner = persona === 'partner';
+      const [loginMode, setLoginMode] = useState('password');
+      const [login, setLogin] = useState({ account: '', password: '', phone: '', code: '', pwdControl: false });
+      const [err, setErr] = useState('');
+      const [sec, setSec] = useState(0);
+
+      useEffect(() => {
+        setLoginMode('password');
+        setErr('');
+        setSec(0);
+      }, [persona]);
+
+      useEffect(() => {
+        if (sec <= 0) return undefined;
+        const t = setTimeout(() => setSec((n) => n - 1), 1000);
+        return () => clearTimeout(t);
+      }, [sec]);
+
+      const phoneOk = (v) => /^1[3-9]\d{9}$/.test(v);
+
+      const sendCode = () => {
+        if (!phoneOk(login.phone)) {
+          setErr('请输入有效的 11 位手机号');
+          return;
+        }
+        setErr('');
+        setSec(60);
+        toast('验证码已发送（演示环境，任意 6 位即可）');
+      };
+
+      const submitLogin = (e) => {
+        e.preventDefault();
+        if (loginMode === 'password') {
+          if (!login.account.trim() || login.password.length < 6) {
+            setErr('请输入账号，且密码不少于 6 位');
+            return;
+          }
+        } else {
+          if (!phoneOk(login.phone)) {
+            setErr('请输入有效的 11 位手机号');
+            return;
+          }
+          if (!/^\d{6}$/.test(login.code)) {
+            setErr('请输入 6 位短信验证码');
+            return;
+          }
+        }
+        setErr('');
+        toast(isPartner ? '演示环境：即将对接服务商统一认证' : '演示环境：即将对接商户统一认证');
+      };
+
+      const portalName = isPartner ? '服务商' : '商户';
+
+      return (
+        <div className="relative">
+          <div className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-[#0094FF]/25 blur-3xl" />
+          <div className="glass-card relative overflow-hidden rounded-[22px] p-6 shadow-glass ring-1 ring-white/80 sm:p-7">
+            <p className="text-[15px] font-semibold text-syw-ink">{portalName}登录</p>
+            <p className="mt-1 mb-5 text-[12px] text-syw-mute">
+              {isPartner ? '渠道分润、进件与展业工具，请前往服务商统一认证平台登录' : '收款、对账与门店经营，同一账号登录'}
+            </p>
+
+            {isPartner ? (
+              <div className="space-y-4">
+                <div className="rounded-xl border border-syw-line bg-syw-mist/70 px-4 py-3.5">
+                  <p className="text-[13px] font-medium text-syw-ink">服务商统一登录入口</p>
+                  <p className="mt-1.5 text-[12px] leading-5 text-syw-mute">
+                    账号密码与权限管理由盛付通服务商平台统一提供，请跳转至官方登录页完成认证。
+                  </p>
+                </div>
+                <a
+                  href={PARTNER_LOGIN_URL}
+                  className="inline-flex h-11 w-full items-center justify-center rounded-xl bg-[#0094FF] text-sm font-medium text-white transition-all duration-300 ease-in-out hover:bg-syw-deep"
+                >
+                  前往服务商登录
+                </a>
+                <p className="flex items-center justify-center gap-1.5 text-[11px] text-syw-mute">
+                  <Ico name="lock" className="h-3.5 w-3.5" />
+                  跳转至 d.shengpay.com 安全登录
+                </p>
+              </div>
+            ) : (
+              <form onSubmit={submitLogin} className="space-y-3.5" noValidate>
+                <div className="flex gap-5 border-b border-syw-line">
+                  {[
+                    { id: 'password', label: '账号密码登录' },
+                    { id: 'sms', label: '手机验证码登录' }
+                  ].map((m) => (
+                    <button
+                      key={m.id}
+                      type="button"
+                      onClick={() => { setLoginMode(m.id); setErr(''); }}
+                      className={`-mb-px pb-2 text-[13px] font-medium transition-all duration-300 ease-in-out ${loginMode === m.id ? 'border-b-2 border-[#0094FF] text-syw' : 'text-syw-mute hover:text-syw-ink'}`}
+                    >
+                      {m.label}
+                    </button>
+                  ))}
+                </div>
+
+                {loginMode === 'password' ? (
+                  <>
+                    <label className="block">
+                      <span className="mb-1.5 block text-[12px] text-syw-mute">账号</span>
+                      <input
+                        value={login.account}
+                        onChange={(e) => setLogin({ ...login, account: e.target.value })}
+                        className="h-11 w-full rounded-xl border border-syw-line bg-white px-3.5 text-sm transition-all duration-300 ease-in-out focus:border-[#0094FF]"
+                        placeholder="请输入商户账号"
+                        autoComplete="username"
+                      />
+                    </label>
+                    <label className="block">
+                      <span className="mb-1.5 block text-[12px] text-syw-mute">密码</span>
+                      <input
+                        type="password"
+                        value={login.password}
+                        onChange={(e) => setLogin({ ...login, password: e.target.value })}
+                        className="h-11 w-full rounded-xl border border-syw-line bg-white px-3.5 text-sm transition-all duration-300 ease-in-out focus:border-[#0094FF]"
+                        placeholder="请输入密码"
+                        autoComplete="current-password"
+                      />
+                    </label>
+                    <div className="flex items-center justify-between text-[12px]">
+                      <label className="flex cursor-pointer items-center gap-2 text-syw-mute">
+                        <input type="checkbox" checked={login.pwdControl} onChange={(e) => setLogin({ ...login, pwdControl: e.target.checked })} className="h-4 w-4 accent-[#0094FF]" />
+                        使用密码控件登录
+                      </label>
+                      <a href="#help" className="text-syw hover:underline">忘记密码</a>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <label className="block">
+                      <span className="mb-1.5 block text-[12px] text-syw-mute">手机号</span>
+                      <input
+                        value={login.phone}
+                        onChange={(e) => setLogin({ ...login, phone: e.target.value })}
+                        className="h-11 w-full rounded-xl border border-syw-line bg-white px-3.5 text-sm transition-all duration-300 ease-in-out focus:border-[#0094FF]"
+                        placeholder="请输入手机号"
+                        inputMode="numeric"
+                        maxLength={11}
+                        autoComplete="tel"
+                      />
+                    </label>
+                    <label className="block">
+                      <span className="mb-1.5 block text-[12px] text-syw-mute">短信验证码</span>
+                      <div className="flex gap-2">
+                        <input
+                          value={login.code}
+                          onChange={(e) => setLogin({ ...login, code: e.target.value })}
+                          className="h-11 min-w-0 flex-1 rounded-xl border border-syw-line bg-white px-3.5 text-sm transition-all duration-300 ease-in-out focus:border-[#0094FF]"
+                          placeholder="6 位验证码"
+                          inputMode="numeric"
+                          maxLength={6}
+                          autoComplete="one-time-code"
+                        />
+                        <button
+                          type="button"
+                          onClick={sendCode}
+                          disabled={sec > 0}
+                          className="h-11 shrink-0 rounded-xl bg-syw-soft px-3.5 text-[13px] font-medium text-syw transition-all duration-300 ease-in-out hover:bg-[#d6ecff] disabled:cursor-not-allowed disabled:text-syw-mute"
+                        >
+                          {sec > 0 ? `${sec}s 后重发` : '获取验证码'}
+                        </button>
+                      </div>
+                    </label>
+                  </>
+                )}
+                {err && <p className="text-[12px] text-[#E11D48]">{err}</p>}
+                <button type="submit" className="h-11 w-full rounded-xl bg-[#0094FF] text-sm font-medium text-white transition-all duration-300 ease-in-out hover:bg-syw-deep">
+                  登录{portalName}平台
+                </button>
+                <p className="flex items-center justify-center gap-1.5 pt-1 text-[11px] text-syw-mute">
+                  <Ico name="lock" className="h-3.5 w-3.5" />
+                  资金由合作银行存管 · TLS 加密传输
+                </p>
+              </form>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    function Hero({ persona, toast, onLead }) {
+      const copy = PERSONA[persona];
+      return (
+        <section className="reveal-band-a relative overflow-hidden grain">
+          <div className="pointer-events-none absolute inset-0 ledger-grid" />
+          <div className="pointer-events-none absolute -left-24 top-10 h-72 w-72 rounded-full bg-[#0094FF]/15 blur-3xl" />
+          <div className="pointer-events-none absolute right-[32%] bottom-0 h-56 w-56 rounded-full bg-[#7DD3FC]/20 blur-3xl" />
+          <div className="relative mx-auto grid max-w-[1200px] grid-cols-1 items-center gap-10 px-6 py-14 lg:grid-cols-10 lg:gap-12 lg:py-20">
+            <Reveal id="hero-copy" delay={0} className="lg:col-span-6">
+              <p className="font-mono text-[11px] uppercase tracking-[0.28em] text-syw">{copy.kicker}</p>
+              <h1 key={persona} className="mt-3 text-[34px] font-semibold leading-[1.22] tracking-tight text-syw-ink sm:text-[44px]">
+                {copy.title[0]}
+                <br />
+                <span className="relative">
+                  {copy.title[1]}
+                  <span className="absolute -bottom-1 left-0 h-[3px] w-16 rounded-full bg-syw-gold/80" />
+                </span>
+              </h1>
+              <p key={persona + '-s'} className="mt-5 max-w-[520px] text-[15px] leading-7 text-syw-mute">
+                {copy.sub}
+              </p>
+              <div className="mt-6 flex flex-wrap gap-2">
+                {copy.chips.map((c, i) => (
+                  <Reveal key={c} id={`hero-chip-${i}`} as="span" delay={i + 1} className="rounded-full bg-white px-3 py-1.5 text-[12px] text-syw-ink ring-1 ring-syw-line">{c}</Reveal>
+                ))}
+              </div>
+              <div className="mt-8 flex flex-wrap items-center gap-4">
+                <a
+                  href="#products"
+                  className="inline-flex h-11 items-center gap-2 rounded-full bg-syw-ink px-6 text-sm font-medium text-white transition-all duration-300 ease-in-out hover:-translate-y-0.5 hover:bg-black"
+                >
+                  了解盛意旺产品 <Ico name="arrow" className="h-4 w-4" />
+                </a>
+                <button onClick={onLead} className="text-sm text-syw transition-all duration-300 ease-in-out hover:underline">先获取方案 →</button>
+              </div>
+            </Reveal>
+            <Reveal id="hero-auth" delay={1} className="lg:col-span-4">
+              <AuthCard toast={toast} persona={persona} />
+            </Reveal>
+          </div>
+        </section>
+      );
+    }
+
+    const PRODUCT_ROWS = [
+      ['hw', 'saas-platform'],
+      ['api', 'mcp', 'mobile']
+    ];
+
+    function ProductCardFooter({ p, onLead }) {
+      return (
+        <div className="product-bento-hw-footer">
+          <div className="flex flex-col gap-2">
+            <div className="product-footer-head flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+              <div className="product-footer-title min-w-0">
+                <p className="product-footer-kicker font-mono text-[10px] uppercase tracking-[0.16em] text-syw">{p.kicker}</p>
+                <h3 className="product-footer-name mt-0.5 text-[16px] font-semibold text-syw-ink md:text-[17px]">{p.title}</h3>
+              </div>
+              <div className="product-footer-meta flex shrink-0 flex-wrap items-center gap-2 sm:justify-end">
+                {p.stats.map((s) => (
+                  <div key={s.l} className="rounded-lg bg-syw-mist px-2.5 py-1.5 text-center">
+                    <div className="num text-[14px] font-semibold leading-none text-syw-ink">{s.n}</div>
+                    <div className="mt-0.5 text-[9px] text-syw-mute">{s.l}</div>
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  onClick={onLead}
+                  className="inline-flex h-8 items-center rounded-full bg-[#0094FF] px-3.5 text-[12px] font-medium text-white transition-all duration-300 ease-in-out hover:bg-syw-deep"
+                >
+                  获取方案
+                </button>
+              </div>
+            </div>
+            <p className="text-[10px] leading-[1.65] text-syw-mute sm:text-[11px]">{p.pain}</p>
+          </div>
+        </div>
+      );
+    }
+
+    function ProductCard({ p, onLead, revealIndex = 0 }) {
+      const Visual = VISUAL[p.id];
+      const heroClass = p.id === 'hw' ? 'product-bento-hw-card' : 'product-bento-hero-card';
+      const rev = useReveal(`product-${p.id}`, revealIndex);
+
+      return (
+        <article
+          ref={rev.ref}
+          id={p.id === 'api' ? 'open-platform' : undefined}
+          className={[rev.className, 'product-bento-card', heroClass, 'group relative overflow-hidden rounded-2xl bg-white ring-1 ring-syw-line'].filter(Boolean).join(' ')}
+          style={rev.style}
+        >
+          <div className="product-bento-visual">
+            <Visual />
+          </div>
+          <ProductCardFooter p={p} onLead={onLead} />
+        </article>
+      );
+    }
+
+    const PAYMENT_METHODS = [
+      { id: 'scan', label: '扫码支付', logo: 'payments/scan.svg' },
+      { id: 'miniprogram', label: '小程序支付', logo: 'payments/miniprogram.svg' },
+      { id: 'app', label: 'APP支付', logo: 'payments/app.svg' },
+      { id: 'h5', label: 'H5支付', logo: 'payments/h5.svg' },
+      { id: 'ecny', label: '数字人民币', logo: 'payments/ecny.svg' },
+      { id: 'huabei', label: '花呗', logo: 'payments/huabei.svg' },
+      { id: 'jd-baitiao', label: '京东白条', logo: 'payments/jd-baitiao.svg' },
+      { id: 'wxpay-score', label: '微信支付分', logo: 'payments/wxpay-score.svg' }
+    ];
+
+    function PaymentMethods() {
+      return (
+        <section id="payment-methods" className="reveal-band-b border-t border-syw-line/70 py-8 md:py-10">
+          <div className="mx-auto max-w-[1200px] px-6">
+            <Reveal id="payment-head" delay={0} className="mb-5 md:mb-6">
+              <p className="font-mono text-[11px] uppercase tracking-[0.28em] text-syw">Payment Methods</p>
+              <h2 className="mt-1.5 text-[24px] font-semibold tracking-tight text-syw-ink md:text-[26px]">支持的支付方式</h2>
+              <p className="mt-1 whitespace-nowrap text-[13px] leading-5 text-syw-mute">全渠道收款能力，覆盖线上线下主流支付场景</p>
+            </Reveal>
+            <div className="payment-methods-grid">
+              {PAYMENT_METHODS.map((item, i) => (
+                <Reveal key={item.id} id={`pay-${item.id}`} delay={i} className="payment-method-item">
+                  <img className="payment-method-logo" src={item.logo} alt={item.label} width="40" height="40" loading="lazy" />
+                  <span className="payment-method-label">{item.label}</span>
+                </Reveal>
+              ))}
+            </div>
+          </div>
+        </section>
+      );
+    }
+
+    function Products({ persona, onLead }) {
+      const productMap = Object.fromEntries(PRODUCTS.map((p) => [p.id, p]));
+      return (
+        <section id="products" className="product-matrix reveal-band-c relative py-8 md:py-9 lg:py-10">
+          <div className="mx-auto max-w-[1200px] px-6">
+            <Reveal id="products-head" delay={0} className="mb-4 flex items-end justify-between gap-4 md:mb-5">
+              <div>
+                <p className="font-mono text-[11px] uppercase tracking-[0.28em] text-syw">Product Matrix</p>
+                <h2 className="mt-1.5 text-[24px] font-semibold tracking-tight text-syw-ink md:text-[26px]">核心产品矩阵</h2>
+                <p className="mt-1 whitespace-nowrap text-[13px] leading-5 text-syw-mute">硬件、SaaS、开放 API、MCP 与移动端全链路产品能力</p>
+              </div>
+            </Reveal>
+            <div className="product-bento">
+              {PRODUCT_ROWS.map((row, rowIdx) => (
+                <div key={rowIdx} className={`product-bento-row product-bento-row-${rowIdx + 1}`}>
+                  {row.map((id, i) => (
+                    <ProductCard key={id} p={productMap[id]} persona={persona} onLead={onLead} revealIndex={i} />
+                  ))}
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      );
+    }
+
+    function SolutionVisual({ type, accent, image, alt = '' }) {
+      const card = 'rounded-xl bg-white/90 p-3 ring-1 ring-white/80 shadow-[0_8px_24px_rgba(12,27,46,.08)]';
+      if (image) {
+        return (
+          <div className="absolute inset-0 overflow-hidden bg-[#F5F7FA]">
+            <img src={image} alt={alt} className="h-full w-full object-cover object-[50%_42%]" loading="lazy" />
+          </div>
+        );
+      }
+      if (type === 'fuel') {
+        return (
+          <div className="relative flex h-full min-h-[240px] md:min-h-0 items-center justify-center p-6">
+            <div className="absolute inset-0 rounded-2xl bg-[radial-gradient(circle_at_30%_20%,rgba(0,148,255,.18),transparent_55%)]" />
+            <div className="relative grid w-full max-w-[360px] grid-cols-[1fr_auto_1fr] items-center gap-3">
+              <div className={`${card} text-center`}>
+                <div className="mx-auto mb-2 grid h-12 w-12 place-items-center rounded-full bg-[#0094FF]/10 text-[#0094FF]">
+                  <Ico name="phone" className="h-6 w-6" />
+                </div>
+                <p className="text-[11px] font-medium text-syw-ink">加油支付</p>
+                <p className="num mt-1 text-[18px] font-semibold text-syw">¥320.00</p>
+              </div>
+              <div className="flex flex-col items-center gap-1 text-[#0094FF]">
+                <span className="text-[10px]">联动</span>
+                <Ico name="arrow" className="h-4 w-4" />
+              </div>
+              <div className={`${card} text-center`}>
+                <div className="mx-auto mb-2 grid h-12 w-12 place-items-center rounded-full bg-[#1AAE6F]/10 text-[#1AAE6F]">
+                  <Ico name="check" className="h-6 w-6" />
+                </div>
+                <p className="text-[11px] font-medium text-syw-ink">电子发票</p>
+                <p className="mt-1 text-[10px] text-[#1AAE6F]">已开具 · 乐企联用</p>
+              </div>
+            </div>
+            <div className={`absolute bottom-6 left-6 right-6 ${card} flex items-center justify-between px-4 py-2.5`}>
+              <span className="text-[11px] text-syw-mute">驾油吧 × 乐企联用</span>
+              <span className="rounded-full bg-[#0094FF]/10 px-2 py-0.5 text-[10px] font-medium text-[#0094FF]">支付即开票</span>
+            </div>
+          </div>
+        );
+      }
+      if (type === 'bar') {
+        return (
+          <div className="relative flex h-full min-h-[240px] md:min-h-0 items-center justify-center p-6 text-white">
+            <div className="absolute inset-0 rounded-2xl bg-[radial-gradient(circle_at_70%_30%,rgba(196,163,90,.25),transparent_50%)]" />
+            <div className="relative w-full max-w-[380px] space-y-3">
+              <div className={`${card} !bg-white/10 !ring-white/15 text-center`}>
+                <p className="text-[11px] text-white/70">消费入账</p>
+                <p className="num text-[22px] font-semibold">¥12,680</p>
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                {[
+                  { l: '场地方', n: '45%', c: accent },
+                  { l: '酒水供应', n: '35%', c: '#7DD3FC' },
+                  { l: '艺人 / DJ', n: '20%', c: '#86EFAC' }
+                ].map((x) => (
+                  <div key={x.l} className={`${card} !bg-white/10 !ring-white/15 text-center`}>
+                    <p className="text-[10px] text-white/65">{x.l}</p>
+                    <p className="num mt-1 text-[16px] font-semibold" style={{ color: x.c }}>{x.n}</p>
+                  </div>
+                ))}
+              </div>
+              <div className={`${card} !bg-white/10 !ring-white/15 flex items-center justify-between px-4 py-2`}>
+                <span className="text-[11px] text-white/70">分账状态</span>
+                <span className="text-[11px] font-medium text-[#86EFAC]">实时清分 · 可提现</span>
+              </div>
+            </div>
+          </div>
+        );
+      }
+      if (type === 'cross') {
+        return (
+          <div className="relative flex h-full min-h-[240px] md:min-h-0 items-center justify-center p-6">
+            <div className="absolute inset-0 rounded-2xl bg-[radial-gradient(circle_at_50%_40%,rgba(0,118,204,.12),transparent_60%)]" />
+            <div className="relative w-full max-w-[360px]">
+              <div className="mx-auto mb-4 grid h-20 w-20 place-items-center rounded-full bg-white ring-1 ring-syw-line shadow-sm">
+                <svg viewBox="0 0 64 64" className="h-14 w-14" aria-hidden="true">
+                  <circle cx="32" cy="32" r="28" fill="none" stroke="#0094FF" strokeWidth="2" opacity=".35" />
+                  <ellipse cx="32" cy="32" rx="28" ry="11" fill="none" stroke="#0094FF" strokeWidth="1.5" opacity=".5" />
+                  <path d="M32 4v56M4 32h56" stroke="#0094FF" strokeWidth="1" opacity=".35" />
+                </svg>
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                {['USD', 'EUR', 'HKD'].map((c) => (
+                  <div key={c} className={`${card} text-center`}>
+                    <p className="font-mono text-[12px] font-semibold text-syw">{c}</p>
+                    <p className="mt-1 text-[10px] text-syw-mute">收款 ✓</p>
+                  </div>
+                ))}
+              </div>
+              <div className={`mt-3 ${card} flex items-center justify-between px-4 py-2.5`}>
+                <span className="text-[11px] text-syw-mute">合规申报</span>
+                <span className="text-[11px] font-medium text-[#0094FF]">通道已对接</span>
+              </div>
+            </div>
+          </div>
+        );
+      }
+      if (type === 'chain') {
+        return (
+          <div className="relative flex h-full min-h-[240px] md:min-h-0 items-center justify-center p-6">
+            <div className="absolute inset-0 rounded-2xl bg-[radial-gradient(circle_at_40%_25%,rgba(0,148,255,.14),transparent_55%)]" />
+            <div className="relative w-full max-w-[380px] space-y-2.5">
+              <div className={`${card} mx-auto max-w-[168px] text-center`}>
+                <p className="text-[10px] text-syw-mute">总部商户 · 统管</p>
+                <p className="text-[12px] font-semibold text-syw-ink">品牌集团总部</p>
+              </div>
+              <div className="mx-auto flex h-3 w-px bg-[#0094FF]/25" aria-hidden="true" />
+              <div className="grid grid-cols-3 gap-2">
+                {[
+                  { l: '华东区', n: '86', s: '子商户' },
+                  { l: '华南区', n: '52', s: '子商户' },
+                  { l: '华北区', n: '41', s: '子商户' }
+                ].map((x) => (
+                  <div key={x.l} className={`${card} text-center`}>
+                    <p className="text-[10px] text-syw-mute">{x.l}</p>
+                    <p className="num mt-1 text-[15px] font-semibold" style={{ color: accent }}>{x.n}</p>
+                    <p className="text-[9px] text-syw-mute">{x.s}</p>
+                  </div>
+                ))}
+              </div>
+              <div className={`${card} grid grid-cols-2 gap-2 px-3 py-2.5`}>
+                <div>
+                  <p className="text-[10px] text-syw-mute">今日交易汇总</p>
+                  <p className="num text-[14px] font-semibold text-[#0094FF]">¥286,420</p>
+                </div>
+                <div className="border-l border-syw-line pl-3">
+                  <p className="text-[10px] text-syw-mute">对账状态</p>
+                  <p className="text-[11px] font-medium text-[#1AAE6F]">日账单已生成</p>
+                </div>
+              </div>
+              <div className={`${card} flex items-center justify-between px-4 py-2`}>
+                <span className="text-[11px] text-syw-mute">集团总部商户</span>
+                <span className="rounded-full bg-[#0094FF]/10 px-2 py-0.5 text-[10px] font-medium text-[#0094FF]">区域权限隔离</span>
+              </div>
+            </div>
+          </div>
+        );
+      }
+      return (
+        <div className="relative flex h-full min-h-[240px] md:min-h-0 items-center justify-center p-6">
+          <div className="absolute inset-0 rounded-2xl bg-[radial-gradient(circle_at_80%_20%,rgba(0,148,255,.15),transparent_55%)]" />
+          <div className={`relative w-full max-w-[360px] ${card} p-4`}>
+            <div className="mb-3 flex items-center gap-2">
+              <span className="grid h-8 w-8 place-items-center rounded-lg bg-[#0094FF]/10 text-[#0094FF]"><Ico name="spark" className="h-4 w-4" /></span>
+              <div>
+                <p className="text-[11px] font-medium text-syw-ink">AI 经营助手</p>
+                <p className="text-[10px] text-syw-mute">自然语言查数</p>
+              </div>
+            </div>
+            <div className="rounded-lg bg-syw-mist px-3 py-2 text-[12px] text-syw-ink">「上周跨月退款匹配情况？」</div>
+            <div className="mt-2 rounded-lg border border-[#0094FF]/20 bg-[#0094FF]/5 px-3 py-2.5 text-[11px] leading-5 text-syw-mute">
+              已匹配 <span className="num font-semibold text-syw">2</span> 笔跨月退款，差异 <span className="num font-semibold text-syw">¥0</span>，建议关注门店 B 异常波动。
+            </div>
+            <div className="mt-3 flex h-10 items-end gap-1">
+              {[35, 55, 42, 78, 50, 92, 68].map((h, i) => (
+                <div key={i} className="flex-1 rounded-sm bg-[#0094FF]/15">
+                  <div className="w-full rounded-sm bg-[#0094FF]" style={{ height: `${h}%` }} />
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    function IndustrySolutions({ onLead }) {
+      const [active, setActive] = useState(0);
+      const tabsRef = useRef(null);
+      const [panelHeight, setPanelHeight] = useState(null);
+      const item = SOLUTIONS[active];
+
+      const tabGroup = useRevealGroup('sol-tabs-desktop', SOLUTIONS.length);
+      const mobileTabGroup = useRevealGroup('sol-tabs-mobile', SOLUTIONS.length);
+
+      useEffect(() => {
+        const el = tabsRef.current;
+        if (!el) return undefined;
+
+        const syncHeight = () => {
+          if (window.innerWidth < 1024) {
+            setPanelHeight(null);
+            return;
+          }
+          setPanelHeight(el.offsetHeight);
+        };
+
+        syncHeight();
+        const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(syncHeight) : null;
+        if (ro) ro.observe(el);
+        window.addEventListener('resize', syncHeight);
+        return () => {
+          if (ro) ro.disconnect();
+          window.removeEventListener('resize', syncHeight);
+        };
+      }, []);
+
+      // 合并 tabsRef（量高）与分组显现 containerRef
+      const setTabsNode = React.useCallback((node) => {
+        tabsRef.current = node;
+        tabGroup.setContainerRef(node);
+      }, [tabGroup.setContainerRef]);
+
+      return (
+        <section id="solutions" className="reveal-band-d relative border-t border-syw-line/70 py-16">
+          <div className="pointer-events-none absolute inset-0 ledger-grid opacity-40" />
+          <div className="relative mx-auto max-w-[1200px] px-6">
+            <Reveal id="solutions-head" delay={0} className="mb-8 flex items-end justify-between gap-6">
+              <div>
+                <p className="font-mono text-[11px] uppercase tracking-[0.28em] text-syw">Industry Solutions</p>
+                <h2 className="mt-2 text-[28px] font-semibold tracking-tight text-syw-ink">行业解决方案</h2>
+                <p className="mt-2 whitespace-nowrap text-sm leading-6 text-syw-mute">能源、夜生活、跨境、AI 经营与集团连锁垂直行业方案</p>
+              </div>
+              <button type="button" onClick={onLead} className="hidden h-10 items-center rounded-full bg-[#0094FF] px-5 text-[13px] font-medium text-white shadow-[0_8px_18px_rgba(0,148,255,.28)] transition-all duration-300 ease-in-out hover:bg-syw-deep md:inline-flex">
+                咨询行业方案
+              </button>
+            </Reveal>
+            <div
+              ref={mobileTabGroup.setContainerRef}
+              className="mb-4 flex gap-2 overflow-x-auto pb-1 lg:hidden"
+              role="tablist"
+              aria-label="行业解决方案"
+            >
+              {SOLUTIONS.map((s, i) => {
+                const { className: rClass, style: rStyle, ...rAttrs } = mobileTabGroup.itemProps(i);
+                return (
+                  <button
+                    key={s.id}
+                    type="button"
+                    role="tab"
+                    aria-selected={active === i}
+                    onClick={() => setActive(i)}
+                    {...rAttrs}
+                    className={[rClass, 'shrink-0 rounded-full px-4 py-2 text-[12px] font-medium', mobileTabGroup.phase === 'done' ? 'transition-colors duration-300 ease-in-out' : '', active === i ? 'bg-[#0094FF] text-white' : 'bg-white text-syw-mute ring-1 ring-syw-line'].filter(Boolean).join(' ')}
+                    style={rStyle}
+                  >
+                    {s.title}
+                  </button>
+                );
+              })}
+            </div>
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-12 lg:items-start">
+              <div ref={setTabsNode} className="hidden space-y-2 overflow-visible lg:col-span-4 lg:block" role="tablist" aria-label="行业解决方案">
+                {SOLUTIONS.map((s, i) => {
+                  const { className: rClass, style: rStyle, ...rAttrs } = tabGroup.itemProps(i);
+                  return (
+                    <button
+                      key={s.id}
+                      type="button"
+                      role="tab"
+                      aria-selected={active === i}
+                      onClick={() => setActive(i)}
+                      {...rAttrs}
+                      className={[rClass, 'w-full rounded-2xl px-4 py-4 text-left ring-1', tabGroup.phase === 'done' ? 'transition-colors duration-300 ease-in-out' : '', active === i ? 'solution-tab-active bg-white ring-[#0094FF]/40' : 'bg-white/70 ring-syw-line hover:bg-white hover:ring-[#0094FF]/20'].filter(Boolean).join(' ')}
+                      style={rStyle}
+                    >
+                      <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-syw">{s.partner}</p>
+                      <p className="mt-1 text-[16px] font-semibold text-syw-ink">{s.title}</p>
+                      <p className="mt-1 text-[12px] text-syw-mute">{s.industry}</p>
+                    </button>
+                  );
+                })}
+              </div>
+              {/* 外层稳定显现；内层仅切换内容，避免左侧 Tab 与右侧大卡被反复隐藏 */}
+              <Reveal
+                id="solutions-panel"
+                delay={0}
+                className="lg:col-span-8"
+                style={panelHeight ? { height: panelHeight } : undefined}
+              >
+                <article
+                  key={item.id}
+                  className="h-full overflow-hidden rounded-2xl bg-white ring-1 ring-syw-line"
+                  role="tabpanel"
+                >
+                  <div className="grid h-full min-h-0 grid-cols-1 md:grid-cols-2">
+                    <div className={`relative h-full min-h-[240px] overflow-hidden bg-gradient-to-br md:min-h-0 ${item.tone} ${item.visual === 'bar' ? 'text-white' : ''} ${item.image ? '!bg-[#F5F7FA]' : ''}`}>
+                      <SolutionVisual type={item.visual} accent={item.accent} image={item.image} alt={`${item.title} · ${item.partner}`} />
+                      <div className="solution-seam-fade" aria-hidden="true" />
+                    </div>
+                    <div className="relative flex h-full min-h-0 flex-col justify-center overflow-y-auto bg-white p-6 md:p-6 lg:py-5 lg:pl-6 lg:pr-7">
+                      <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-syw">{item.partner}</p>
+                      <h3 className="mt-2 text-[22px] font-semibold tracking-tight text-syw-ink">{item.title}</h3>
+                      <p className="mt-1 text-[12px] font-medium text-syw">{item.industry}</p>
+                      <p className="mt-4 text-[14px] leading-7 text-syw-mute">{item.intro}</p>
+                      <ul className="mt-4 space-y-2">
+                        {item.points.map((pt) => (
+                          <li key={pt} className="flex items-start gap-2 text-[13px] text-syw-ink">
+                            <Ico name="check" className="mt-0.5 h-4 w-4 shrink-0 text-[#0094FF]" />
+                            {pt}
+                          </li>
+                        ))}
+                      </ul>
+                      <div className="mt-5 grid grid-cols-2 gap-3">
+                        {item.stats.map((st) => (
+                          <div key={st.l} className="rounded-xl bg-syw-mist px-3 py-2.5">
+                            <div className="num text-[18px] font-semibold text-syw-ink">{st.n}</div>
+                            <div className="text-[11px] text-syw-mute">{st.l}</div>
+                          </div>
+                        ))}
+                      </div>
+                      <button type="button" onClick={onLead} className="mt-6 inline-flex h-10 w-fit items-center rounded-full bg-[#0094FF] px-4 text-[13px] font-medium text-white transition-all duration-300 ease-in-out hover:bg-syw-deep">
+                        获取 {item.title} 方案
+                      </button>
+                    </div>
+                  </div>
+                </article>
+              </Reveal>
+            </div>
+          </div>
+        </section>
+      );
+    }
+
+    function Cases() {
+      const accordionRef = useRef(null);
+
+      useEffect(() => {
+        const el = accordionRef.current;
+        if (!el || typeof window.initPartnerAccordion !== 'function') return undefined;
+        const cleanup = window.initPartnerAccordion(el);
+        const track = el.querySelector('.accordion-track') || el;
+        delete track.dataset.revealGroupBound;
+        const cards = [...el.querySelectorAll('.accordion-card')];
+        // 整组监听：轨道进入视口后，5 张竖卡从左到右交错升起
+        bindVanillaRevealGroup(track, cards);
+        return cleanup;
+      }, []);
+
+      return (
+        <section id="cases" className="reveal-band-b pb-16 pt-4">
+          <div className="mx-auto max-w-[1200px] px-6">
+            <Reveal id="cases-head" delay={0} className="mb-8">
+              <p className="font-mono text-[11px] uppercase tracking-[0.28em] text-syw">Partner Cases</p>
+              <h2 className="mt-2 text-[28px] font-semibold tracking-tight text-syw-ink">合作案例</h2>
+              <p className="mt-2 whitespace-nowrap text-sm leading-6 text-syw-mute">携手生态伙伴，覆盖零售、餐饮、商超、财税与夜场</p>
+            </Reveal>
+            <div id="partner-accordion" ref={accordionRef}>
+              <div className="accordion-track" role="tablist" aria-label="合作案例" />
+            </div>
+          </div>
+        </section>
+      );
+    }
+
+    function PartnerMerchants() {
+      const merchantMap = Object.fromEntries(PARTNER_MERCHANTS.map((m) => [m.id, m]));
+      const hexTotal = PARTNER_HONEYCOMB_ROWS.reduce((n, r) => n + r.ids.length, 0);
+      const hexGroup = useRevealGroup('partner-hex-group', hexTotal);
+      let hexIndex = 0;
+      return (
+        <section id="partners" className="reveal-band-e border-t border-syw-line/70 pb-16 pt-12">
+          <div className="mx-auto max-w-[1200px] px-6">
+            <Reveal id="partners-head" delay={0} className="mb-8 text-center md:mb-10">
+              <p className="font-mono text-[11px] uppercase tracking-[0.28em] text-syw">Partner Network</p>
+              <h2 className="mt-2 text-[24px] font-semibold tracking-tight text-syw-ink md:text-[26px]">更多合作商户</h2>
+              <p className="mx-auto mt-2 max-w-lg text-[13px] leading-6 text-syw-mute">携手零售、餐饮、生活服务等业态商户，共建开放支付生态。以下为部分合作品牌展示。</p>
+            </Reveal>
+            <div className="partner-honeycomb mx-auto max-w-[680px] sm:max-w-[760px]">
+              <div ref={hexGroup.setContainerRef} className="partner-honeycomb-rows" role="list" aria-label="合作商户">
+                {PARTNER_HONEYCOMB_ROWS.map((row, rowIdx) => (
+                  <div
+                    key={rowIdx}
+                    className="partner-honeycomb-row"
+                    role="presentation"
+                  >
+                    {row.ids.map((id) => {
+                      const m = merchantMap[id];
+                      const delayIdx = hexIndex++;
+                      const { className: rClass, style: rStyle, ...rAttrs } = hexGroup.itemProps(delayIdx);
+                      return (
+                        <div
+                          key={id}
+                          {...rAttrs}
+                          className={[rClass, 'partner-hex is-placeholder'].filter(Boolean).join(' ')}
+                          style={rStyle}
+                          role="listitem"
+                          title={m.name}
+                        >
+                          <div className="partner-hex-shape" aria-hidden="true" />
+                          <div className="partner-hex-inner">
+                            {m.logo ? (
+                              <img src={m.logo} alt={m.name} className="h-[42%] w-[42%] object-contain" />
+                            ) : (
+                              <span className="partner-hex-mark" aria-hidden="true">{m.abbr}</span>
+                            )}
+                            <span className="partner-hex-name">{m.name}</span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+      );
+    }
+
+    function Trust() {
+      const items = [
+        { n: '百亿级', l: '日均交易量', d: '覆盖零售、餐饮、政企采购等场景' },
+        { n: '银行级', l: '资金合规', d: '备付金存管 · 支付业务许可经营' },
+        { n: '7×24', l: '小时技术保障', d: '交易、结算、对账链路全天候值守' }
+      ];
+      return (
+        <section className="relative overflow-hidden bg-[#0094FF] py-16">
+          <div className="pointer-events-none absolute inset-0 opacity-50" style={{ backgroundImage: 'radial-gradient(circle at 18% 22%, rgba(255,255,255,.22), transparent 44%), radial-gradient(circle at 82% 78%, rgba(0,118,204,.35), transparent 42%)' }} />
+          <div className="relative mx-auto max-w-[1200px] px-6">
+            <Reveal id="trust-head" delay={0} className="mb-10 flex items-center gap-3">
+              <span className="grid h-9 w-9 place-items-center rounded-lg bg-white/15 ring-1 ring-white/25 text-white">
+                <Ico name="shield" className="h-5 w-5" />
+              </span>
+              <div>
+                <p className="font-mono text-[11px] uppercase tracking-[0.28em] text-white/75">Trust &amp; Compliance</p>
+                <h2 className="text-[22px] font-semibold text-white">金融级安全，可被审计的确定性</h2>
+              </div>
+            </Reveal>
+            <div className="grid grid-cols-1 divide-y divide-white/20 md:grid-cols-3 md:divide-x md:divide-y-0">
+              {items.map((it, i) => (
+                <Reveal key={it.l} id={`trust-${i}`} delay={i} className="px-0 py-6 md:px-10 md:py-2 first:pl-0 last:pr-0">
+                  <div className="num text-[40px] font-semibold leading-none tracking-tight text-white">{it.n}</div>
+                  <div className="mt-3 text-[15px] text-white/90">{it.l}</div>
+                  <p className="mt-2 text-[13px] text-white/65">{it.d}</p>
+                </Reveal>
+              ))}
+            </div>
+          </div>
+        </section>
+      );
+    }
+
+    function LeadBand({ toast, persona }) {
+      const [form, setForm] = useState({
+        company: '',
+        phone: '',
+        demand: persona === 'partner' ? 'agent' : 'pay'
+      });
+      const [err, setErr] = useState('');
+      const [qrOpen, setQrOpen] = useState(false);
+
+      useEffect(() => {
+        setForm((s) => ({ ...s, demand: persona === 'partner' ? 'agent' : 'pay' }));
+        setErr('');
+      }, [persona]);
+
+      const onSubmit = (e) => {
+        e.preventDefault();
+        if (!form.company.trim()) { setErr('请填写企业名称'); return; }
+        if (!/^1[3-9]\d{9}$/.test(form.phone)) { setErr('请输入有效的 11 位手机号'); return; }
+        setErr('');
+        setQrOpen(true);
+        setForm({ company: '', phone: '', demand: persona === 'partner' ? 'agent' : 'pay' });
+      };
+
+      const isPartner = persona === 'partner';
+
+      return (
+        <section id="lead" className="relative overflow-hidden bg-[#0076CC] py-16">
+          <LeadQrModal open={qrOpen} persona={persona} onClose={() => setQrOpen(false)} />
+          <div className="pointer-events-none absolute inset-0 opacity-40" style={{ backgroundImage: 'linear-gradient(180deg, rgba(0,118,204,.35) 0%, transparent 55%)' }} />
+          <div className="relative mx-auto grid max-w-[1200px] grid-cols-1 items-start gap-10 px-6 lg:grid-cols-10">
+            <Reveal id="lead-form" delay={0} className="lg:col-span-6">
+              <p className="font-mono text-[11px] uppercase tracking-[0.28em] text-white/75">Get a proposal</p>
+              <h2 className="mt-2 text-[28px] font-semibold text-white">资深顾问 30 分钟内提供专属报价</h2>
+              <p className="mt-3 max-w-xl text-sm leading-6 text-white/80">
+                {isPartner
+                  ? '留下服务商接入意向，我们将匹配 API 对接、SaaS 展业与分润政策方案。'
+                  : '留下商户接入意向，我们将匹配收款、硬件与费率方案。'}
+              </p>
+              <form onSubmit={onSubmit} className="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4" noValidate>
+                <input
+                  value={form.company}
+                  onChange={(e) => setForm({ ...form, company: e.target.value })}
+                  placeholder="企业名称"
+                  className="h-12 rounded-xl border border-white/25 bg-white/15 px-4 text-sm text-white placeholder:text-white/55 transition-all duration-300 ease-in-out focus:border-white focus:bg-white/20"
+                />
+                <input
+                  value={form.phone}
+                  onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                  placeholder="手机号"
+                  inputMode="numeric"
+                  maxLength={11}
+                  className="h-12 rounded-xl border border-white/25 bg-white/15 px-4 text-sm text-white placeholder:text-white/55 transition-all duration-300 ease-in-out focus:border-white focus:bg-white/20"
+                />
+                <select
+                  value={form.demand}
+                  onChange={(e) => setForm({ ...form, demand: e.target.value })}
+                  className="h-12 rounded-xl border border-white/25 bg-white/15 px-4 text-sm text-white transition-all duration-300 ease-in-out focus:border-white focus:bg-white/20"
+                >
+                  {DEMANDS.map((d) => <option key={d.value} value={d.value} className="text-syw-ink">{d.label}</option>)}
+                </select>
+                <button type="submit" className="h-12 rounded-xl bg-white text-sm font-medium text-[#0094FF] transition-all duration-300 ease-in-out hover:bg-white/90">
+                  提交需求
+                </button>
+              </form>
+              {err && <p className="mt-3 text-[12px] text-[#FFE4E6]">{err}</p>}
+            </Reveal>
+            <Reveal id="lead-steps" delay={1} className="lg:col-span-4">
+              <LeadSteps persona={persona} />
+            </Reveal>
+          </div>
+        </section>
+      );
+    }
+
+    function Footer() {
+      const qrItems = [
+        { title: '盛意旺公众号', src: 'qr/wechat-oa.png', alt: '盛意旺公众号二维码' },
+        { title: '盛意旺 APP', src: 'qr/app-download.png', alt: '盛意旺 APP 下载二维码' },
+        { title: '企微客服', src: 'qr/wecom-cs.png', alt: '企微客服二维码' }
+      ];
+      return (
+        <footer id="help" className="border-t border-syw-line bg-syw-mist py-10">
+          <div className="mx-auto flex max-w-[1200px] flex-col gap-8 px-6 md:flex-row md:items-end md:justify-between">
+            <div>
+              <Logo compact />
+              <p className="mt-4 max-w-md text-[12px] leading-6 text-syw-mute">
+                © 2026 盛意旺科技有限公司 保留所有权利<br />
+                支付业务许可证编号：Z2017XXXXXXXX · ICP备XXXXXXXX号-1
+              </p>
+              <div className="mt-3 flex gap-4 text-[12px] text-syw-mute">
+                <a href="#help" className="hover:text-syw">隐私政策</a>
+                <a href="#help" className="hover:text-syw">服务协议</a>
+                <a href="#open-platform" className="hover:text-syw">开放平台</a>
+              </div>
+            </div>
+            <div className="flex flex-wrap justify-center gap-6 overflow-visible pt-2 sm:justify-end">
+              {qrItems.map((q) => (
+                <QrImg key={q.title} src={q.src} alt={q.alt} size={88} label={q.title} hoverZoom />
+              ))}
+            </div>
+          </div>
+        </footer>
+      );
+    }
+
+    function FloatBar() {
+      const [showTop, setShowTop] = useState(false);
+      const [hover, setHover] = useState(null);
+      useEffect(() => {
+        const onScroll = () => setShowTop(window.scrollY > 420);
+        window.addEventListener('scroll', onScroll, { passive: true });
+        return () => window.removeEventListener('scroll', onScroll);
+      }, []);
+      const items = [
+        { id: 'cs', label: '企微客服', icon: 'chat', src: 'qr/wecom-cs.png', copy: '扫码添加企微客服' },
+        { id: 'wx', label: '官方微信', icon: 'wechat', src: 'qr/wechat-oa.png', copy: '扫码关注官方公众号' }
+      ];
+      return (
+        <div className="fixed bottom-6 right-5 z-50 flex flex-col items-end gap-2">
+          {items.map((it) => (
+            <div
+              key={it.id}
+              className="relative"
+              onMouseEnter={() => setHover(it.id)}
+              onMouseLeave={() => setHover(null)}
+            >
+              <div className={`absolute right-[58px] top-1/2 w-[176px] -translate-y-1/2 rounded-2xl bg-white p-3 shadow-lift ring-1 ring-syw-line transition-all duration-300 ease-in-out ${hover === it.id ? 'opacity-100 translate-x-0' : 'pointer-events-none translate-x-2 opacity-0'}`}>
+                <div className="overflow-hidden rounded-md bg-white">
+                  <img src={it.src} alt={it.label} width="152" height="152" className="h-[152px] w-[152px] object-contain" />
+                </div>
+                <p className="mt-2 text-center text-[11px] text-syw-mute">{it.copy}</p>
+              </div>
+              <button
+                aria-label={it.label}
+                aria-expanded={hover === it.id}
+                onClick={() => setHover(it.id)}
+                className="grid h-12 w-12 place-items-center rounded-2xl bg-white text-syw-ink shadow-sm ring-1 ring-syw-line transition-all duration-300 ease-in-out hover:text-syw"
+              >
+                <Ico name={it.icon} />
+              </button>
+            </div>
+          ))}
+          <button
+            aria-label="返回顶部"
+            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            className={`grid h-12 w-12 place-items-center rounded-2xl bg-syw-ink text-white shadow-sm transition-all duration-300 ease-in-out ${showTop ? 'opacity-100' : 'pointer-events-none opacity-0'}`}
+          >
+            <Ico name="top" />
+          </button>
+        </div>
+      );
+    }
+
+    function App() {
+      const [persona, setPersona] = useState('merchant');
+      const [menuOpen, setMenuOpen] = useState(false);
+      const [toast, setToast] = useState('');
+      const goLead = () => {
+        setMenuOpen(false);
+        document.getElementById('lead')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      };
+      return (
+        <div id="top" className="min-h-screen bg-syw-mist">
+          <a href="#products" className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[90] focus:rounded-md focus:bg-white focus:px-3 focus:py-2">跳到产品矩阵</a>
+          <Header onLead={goLead} menuOpen={menuOpen} onOpenMenu={() => setMenuOpen((v) => !v)} persona={persona} setPersona={setPersona} />
+          <main>
+            <Hero persona={persona} toast={setToast} onLead={goLead} />
+            <PaymentMethods />
+            <Products persona={persona} onLead={goLead} />
+            <IndustrySolutions onLead={goLead} />
+            <Cases />
+            <PartnerMerchants />
+            <Trust />
+            <LeadBand toast={setToast} persona={persona} />
+          </main>
+          <Footer />
+          <FloatBar />
+          {toast && <Toast msg={toast} onDone={() => setToast('')} />}
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
