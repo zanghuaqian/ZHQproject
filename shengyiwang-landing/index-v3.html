@@ -5,13 +5,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>盛意旺 · 让每一笔生意更兴旺（V3 滚动动效）</title>
   <meta name="description" content="盛意旺综合商户平台：极速收款、数字化经营、服务商分润与开放 API。面向收单商户与收单服务商的金融科技门户。" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="vendor/tailwindcss.js"></script>
   <script>
     tailwind.config = {
       theme: {
+        screens: {
+          sm: '0px',
+          md: '0px',
+          lg: '0px',
+          xl: '0px',
+          '2xl': '0px'
+        },
         extend: {
           colors: {
             syw: {
@@ -43,12 +47,26 @@
     };
   </script>
   <style>
-    :root { --syw: #0094FF; }
+    :root { --syw: #0094FF; --page-min-width: 1280px; }
+    html {
+      min-width: var(--page-min-width);
+    }
     html, body { background: #F5F7FA; }
     body {
+      min-width: var(--page-min-width);
       font-family: 'Noto Sans SC', 'IBM Plex Sans', 'PingFang SC', 'Microsoft YaHei', sans-serif;
       color: #0C1B2E;
       -webkit-font-smoothing: antialiased;
+    }
+    .syw-label-tag,
+    .product-footer-kicker {
+      font-family: 'PingFang SC', 'Microsoft YaHei Light', 'Noto Sans SC', 'Microsoft YaHei', sans-serif;
+      font-size: 12px;
+      font-weight: 300;
+      font-synthesis: none;
+      letter-spacing: 0.02em;
+      text-transform: none;
+      line-height: 1.4;
     }
     .ledger-grid {
       background-image:
@@ -122,6 +140,120 @@
                   box-shadow 0.3s ease;
       transition-delay: var(--reveal-delay, 0s), var(--reveal-delay, 0s), 0s;
     }
+    /* 首屏登录区：背景图铺满并上延至顶部通栏下方 */
+    /* Hero + 支付渠道：共用扩图后的主 KV，单层连续延伸（无中间渐变缝） */
+    .hero-pay-band {
+      position: relative;
+      overflow: hidden;
+      margin-top: -4rem; /* 对齐 header h-16 */
+      padding-top: 4rem;
+      background-color: #F5F7FA;
+    }
+    .hero-pay-band-bg {
+      position: absolute;
+      inset: 0;
+      background-size: cover;
+      background-position: center top;
+      background-repeat: no-repeat;
+    }
+    .hero-pay-band.is-partner .hero-pay-band-bg {
+      /* 服务商 KV 主体偏左上，拉近构图避免被蒙层洗成空白 */
+      background-position: 58% 12%;
+      background-size: cover;
+    }
+    .hero-pay-band-overlay {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      /* 左侧轻雾保可读；支付区尽量透出 KV；底部极短距离柔和衔接到产品矩阵 */
+      background:
+        linear-gradient(102deg,
+          rgba(245,247,250,0.82) 0%,
+          rgba(245,247,250,0.42) 18%,
+          rgba(245,247,250,0.10) 34%,
+          transparent 54%),
+        linear-gradient(180deg,
+          transparent 0%,
+          transparent 72%,
+          rgba(245,247,250,0.08) 84%,
+          rgba(255,255,255,0.55) 94%,
+          #ffffff 100%);
+    }
+    .hero-pay-band.is-partner .hero-pay-band-overlay {
+      background:
+        linear-gradient(102deg,
+          rgba(245,247,250,0.52) 0%,
+          rgba(245,247,250,0.22) 16%,
+          rgba(245,247,250,0.06) 30%,
+          transparent 48%),
+        linear-gradient(180deg,
+          transparent 0%,
+          transparent 76%,
+          rgba(245,247,250,0.10) 88%,
+          rgba(255,255,255,0.55) 96%,
+          #ffffff 100%);
+    }
+    /* 底部过渡压在内容之下，避免盖住支付区/衔接文字 */
+    .hero-pay-band-bg,
+    .hero-pay-band-overlay {
+      z-index: 0;
+    }
+    .hero-pay-band > :not(.hero-pay-band-bg):not(.hero-pay-band-overlay) {
+      position: relative;
+      z-index: 1;
+    }
+    .hero-shell {
+      position: relative;
+      z-index: 1;
+      overflow: visible;
+      min-height: clamp(500px, 66vh, 640px);
+      background: transparent;
+    }
+    /* 首屏左右垂直居中；登录卡固定高度，切换时不带动左侧抖动 */
+    .hero-shell-grid {
+      position: relative;
+      z-index: 2;
+      align-items: center;
+    }
+    /* 首屏文案：与支付渠道相同的半透明白羽化毛玻璃底 */
+    .hero-copy {
+      position: relative;
+      z-index: 1;
+    }
+    .hero-copy-panel {
+      pointer-events: none;
+      position: absolute;
+      z-index: 0;
+      inset: -36px -56px -40px -40px;
+      border: none;
+      border-radius: 48px;
+      background: radial-gradient(ellipse 68% 64% at 42% 48%,
+        rgba(255,255,255,0.48) 0%,
+        rgba(255,255,255,0.26) 40%,
+        rgba(255,255,255,0.08) 68%,
+        rgba(255,255,255,0) 100%);
+      box-shadow: 0 28px 80px rgba(12, 27, 46, 0.04);
+      backdrop-filter: blur(22px) saturate(1.18);
+      -webkit-backdrop-filter: blur(22px) saturate(1.18);
+      -webkit-mask-image: radial-gradient(ellipse 78% 74% at 42% 50%,
+        #000 22%,
+        rgba(0,0,0,0.82) 48%,
+        rgba(0,0,0,0.35) 72%,
+        transparent 100%);
+      mask-image: radial-gradient(ellipse 78% 74% at 42% 50%,
+        #000 22%,
+        rgba(0,0,0,0.82) 48%,
+        rgba(0,0,0,0.35) 72%,
+        transparent 100%);
+    }
+    .hero-copy > :not(.hero-copy-panel) {
+      position: relative;
+      z-index: 1;
+    }
+    .auth-card-stable {
+      min-height: 469px;
+      contain: layout;
+    }
     /* 独立大模块轻微背景区分，便于验证连续触发 */
     .reveal-band-a { background-color: #F5F7FA; }
     .reveal-band-b { background-color: #FFFFFF; }
@@ -172,58 +304,320 @@
     /* ── 支付方式 ── */
     #payment-methods {
       scroll-margin-top: 4rem;
+      position: relative;
+      z-index: 1;
+      overflow: hidden;
+      margin-top: 0;
+      padding: 12px 0 28px;
+      background: transparent;
+      color: #0C1B2E;
     }
-    #payment-methods .payment-methods-grid {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 10px;
+    #payment-methods .pay-scatter-shell {
+      position: relative;
+      z-index: 2;
+      width: 1200px;
+      height: 600px;
+      min-height: 600px;
+      max-width: 1200px;
+      perspective: 800px;
     }
-    @media (min-width: 640px) {
-      #payment-methods .payment-methods-grid {
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-        gap: 12px;
-      }
+    /* 半透明毛玻璃浮层：托住图标圆环与中心文案（边缘羽化，无清晰描边） */
+    #payment-methods .pay-scatter-panel {
+      pointer-events: none;
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      z-index: 1;
+      width: min(96%, 800px);
+      height: min(94%, 560px);
+      transform: translate(-50%, -50%);
+      border: none;
+      border-radius: 48px;
+      background: radial-gradient(ellipse 68% 64% at 50% 48%,
+        rgba(255,255,255,0.48) 0%,
+        rgba(255,255,255,0.26) 40%,
+        rgba(255,255,255,0.08) 68%,
+        rgba(255,255,255,0) 100%);
+      box-shadow: 0 28px 80px rgba(12, 27, 46, 0.04);
+      backdrop-filter: blur(22px) saturate(1.18);
+      -webkit-backdrop-filter: blur(22px) saturate(1.18);
+      -webkit-mask-image: radial-gradient(ellipse 78% 74% at 50% 50%,
+        #000 22%,
+        rgba(0,0,0,0.82) 48%,
+        rgba(0,0,0,0.35) 72%,
+        transparent 100%);
+      mask-image: radial-gradient(ellipse 78% 74% at 50% 50%,
+        #000 22%,
+        rgba(0,0,0,0.82) 48%,
+        rgba(0,0,0,0.35) 72%,
+        transparent 100%);
     }
-    @media (min-width: 1024px) {
-      #payment-methods .payment-methods-grid {
-        grid-template-columns: repeat(8, minmax(0, 1fr));
-      }
+    #payment-methods .pay-scatter-stars {
+      pointer-events: none;
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      overflow: hidden;
     }
-    #payment-methods .payment-method-item {
+    #payment-methods .pay-scatter-star {
+      position: absolute;
+      width: 2px;
+      height: 2px;
+      border-radius: 50%;
+      background: rgba(0, 148, 255, 0.45);
+      box-shadow: 0 0 8px rgba(0, 148, 255, 0.28);
+      animation: pay-star-twinkle 3.6s ease-in-out infinite;
+    }
+    @keyframes pay-star-twinkle {
+      0%, 100% { opacity: 0.2; transform: scale(0.8); }
+      50% { opacity: 0.75; transform: scale(1.35); }
+    }
+    #payment-methods .pay-scatter-world {
+      position: absolute;
+      inset: 0;
+      z-index: 3;
+      transform-style: preserve-3d;
+    }
+    #payment-methods .pay-scatter-node {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 88px;
+      margin-left: -44px;
+      margin-top: -44px;
+      transform-style: preserve-3d;
+      transform: translate3d(0, 0, 0) scale(0.22);
+      opacity: 0;
+      transition:
+        transform var(--pay-duration, 2s) var(--pay-ease, cubic-bezier(0.34, 1.56, 0.64, 1)),
+        opacity 0.9s ease;
+      transition-delay: var(--pay-delay, 0s);
+      will-change: transform, opacity;
+    }
+    #payment-methods .pay-scatter-node.is-spread {
+      transform: translate3d(var(--tx), var(--ty), var(--tz)) scale(1);
+      opacity: 1;
+    }
+    #payment-methods .pay-scatter-breathe {
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
       gap: 8px;
-      padding: 14px 8px;
-      border-radius: 12px;
-      background: #fff;
-      border: 1px solid #E3E8EF;
-      box-shadow: 0 4px 14px rgba(12, 27, 46, 0.04);
-      transition: border-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
+      transform-style: preserve-3d;
     }
-    #payment-methods .payment-method-item:hover {
-      border-color: rgba(0, 148, 255, 0.35);
-      box-shadow: 0 8px 22px rgba(0, 148, 255, 0.1);
-      transform: translateY(-2px);
+    #payment-methods .pay-scatter-breathe.is-breathing {
+      animation: pay-breathe var(--breathe-dur, 3.6s) ease-in-out infinite;
+      animation-delay: var(--breathe-delay, 0s);
     }
-    #payment-methods .payment-method-logo {
-      width: 40px;
-      height: 40px;
+    @keyframes pay-breathe {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-6px); }
+    }
+    #payment-methods .pay-scatter-face {
+      transform-style: preserve-3d;
+      /* 散开后保持正面，不做球状偏转 */
+      transform: none;
+    }
+    #payment-methods .pay-scatter-badge {
+      position: relative;
+      display: grid;
+      place-items: center;
+      width: 60px;
+      height: 60px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.72);
+      border: 1px solid rgba(255, 255, 255, 0.9);
+      box-shadow:
+        0 10px 28px rgba(12, 27, 46, 0.08),
+        0 0 20px var(--glow),
+        inset 0 1px 0 rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(12px) saturate(1.3);
+      -webkit-backdrop-filter: blur(12px) saturate(1.3);
+    }
+    #payment-methods .pay-scatter-badge::after {
+      content: '';
+      position: absolute;
+      inset: -8px;
+      border-radius: inherit;
+      background: radial-gradient(circle, var(--glow) 0%, transparent 70%);
+      z-index: -1;
+      opacity: 0.28;
+    }
+    #payment-methods .pay-scatter-logo {
+      width: 34px;
+      height: 34px;
       object-fit: contain;
+      filter: drop-shadow(0 2px 6px rgba(12, 27, 46, 0.12));
     }
-    #payment-methods .payment-method-label {
+    #payment-methods .pay-scatter-label {
+      max-width: 108px;
       font-size: 12px;
       font-weight: 500;
-      line-height: 1.3;
+      line-height: 1.25;
       color: #0C1B2E;
       text-align: center;
+      text-shadow: none;
       white-space: nowrap;
+    }
+    #payment-methods .pay-scatter-copy {
+      pointer-events: none;
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      z-index: 4;
+      width: min(92vw, 420px);
+      transform: translate(-50%, -50%);
+      text-align: center;
+      opacity: 0;
+      filter: blur(6px);
+      transition: opacity 0.9s ease, filter 0.9s ease, transform 0.9s ease;
+      transition-delay: var(--copy-delay, 0.45s);
+    }
+    #payment-methods .pay-scatter-copy.is-in {
+      opacity: 1;
+      filter: blur(0);
+      transform: translate(-50%, -50%) scale(1);
+    }
+    #payment-methods .pay-scatter-kicker {
+      font-family: 'IBM Plex Mono', ui-monospace, monospace;
+      font-size: 11px;
+      letter-spacing: 0.28em;
+      text-transform: uppercase;
+      color: #0094FF;
+    }
+    #payment-methods .pay-scatter-title {
+      margin-top: 10px;
+      font-size: clamp(26px, 4vw, 36px);
+      font-weight: 650;
+      letter-spacing: -0.02em;
+      line-height: 1.2;
+      color: #0C1B2E;
+      text-shadow: 0 8px 28px rgba(255, 255, 255, 0.65);
+    }
+    #payment-methods .pay-scatter-sub {
+      margin-top: 10px;
+      font-size: 14px;
+      line-height: 1.6;
+      color: #5B6B7C;
+    }
+    @media (max-width: 0px) {
+      #payment-methods .pay-scatter-shell {
+        min-height: 500px;
+      }
+      #payment-methods .pay-scatter-label {
+        font-size: 11px;
+      }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      #payment-methods .pay-scatter-node,
+      #payment-methods .pay-scatter-face,
+      #payment-methods .pay-scatter-copy {
+        transition: none !important;
+      }
+      #payment-methods .pay-scatter-breathe.is-breathing,
+      #payment-methods .pay-scatter-star {
+        animation: none !important;
+      }
+      #payment-methods .pay-scatter-node {
+        opacity: 1;
+        transform: translate3d(var(--tx), var(--ty), var(--tz)) scale(1);
+      }
+      #payment-methods .pay-scatter-copy {
+        opacity: 1;
+        filter: none;
+      }
     }
 
     /* ── 核心产品矩阵 · 2+3 错落布局 ── */
     .product-matrix {
       scroll-margin-top: 4rem;
+      position: relative;
+      z-index: 2;
+      /* 与支付区白底柔和衔接，底部半透明溶入雾灰 */
+      background: linear-gradient(180deg,
+        #ffffff 0%,
+        #ffffff 48%,
+        rgba(245,247,250,0.38) 78%,
+        #F5F7FA 100%);
+    }
+    .product-matrix > * {
+      position: relative;
+      z-index: 1;
+    }
+
+    /* ── 区块半透明衔接：相邻区域长渐变互溶，不要实线/硬色切 ── */
+    .section-soft {
+      position: relative;
+      border-top: none !important;
+    }
+    .section-soft > * {
+      position: relative;
+      z-index: 1;
+    }
+    #solutions.section-soft {
+      background: linear-gradient(180deg,
+        #F5F7FA 0%,
+        #F5F7FA 14%,
+        rgba(255,255,255,0.42) 48%,
+        #F5F7FA 100%);
+    }
+    #cases.section-soft {
+      background: linear-gradient(180deg,
+        #F5F7FA 0%,
+        rgba(255,255,255,0.55) 22%,
+        #ffffff 46%,
+        #ffffff 72%,
+        rgba(245,247,250,0.72) 100%);
+    }
+    #partners.section-soft {
+      /* 蜂窝区浅天蓝；底部不收成实色，交给信任区从透明溶入，避免色块硬切 */
+      background: linear-gradient(180deg,
+        #ffffff 0%,
+        #F5F7FA 22%,
+        #F5F7FA 40%,
+        #F2F8FF 52%,
+        #E4F2FF 64%,
+        #C8E6FF 76%,
+        #A3D4FF 88%,
+        #7EC4FF 100%);
+      overflow: hidden;
+    }
+    #partners.section-soft::after {
+      display: none;
+    }
+    .trust-band {
+      position: relative;
+      overflow: hidden;
+      margin-top: -8rem;
+      background: linear-gradient(180deg, transparent 0%, #0094FF 8rem, #0094FF 100%);
+      border-top: none;
+    }
+    .trust-band::before {
+      display: none;
+    }
+    .trust-band > .pointer-events-none.absolute {
+      -webkit-mask-image: linear-gradient(180deg, transparent 0%, #000 8rem);
+      mask-image: linear-gradient(180deg, transparent 0%, #000 8rem);
+    }
+    .trust-band > * {
+      position: relative;
+      z-index: 2;
+    }
+    .lead-band {
+      position: relative;
+      overflow: hidden;
+      background: #0094FF;
+      border-top: none;
+    }
+    .lead-band > * {
+      position: relative;
+      z-index: 2;
+    }
+    .site-footer {
+      position: relative;
+      border-top: none !important;
+      background: linear-gradient(180deg, rgba(245,247,250,0.94) 0%, #F5F7FA 22%, #F5F7FA 100%);
+      margin-top: -1px;
     }
     .product-bento {
       display: flex;
@@ -236,7 +630,7 @@
       gap: 0.75rem;
       align-items: stretch;
     }
-    @media (min-width: 768px) {
+    @media (min-width: 0px) {
       .product-bento-row-1 {
         grid-template-columns: 7fr 5fr;
       }
@@ -256,7 +650,7 @@
         min-height: 168px;
       }
     }
-    @media (min-width: 1024px) {
+    @media (min-width: 0px) {
       .product-bento-row-1 .product-bento-hw-card .product-bento-visual {
         min-height: 320px;
       }
@@ -274,7 +668,7 @@
       width: 4.5rem;
       background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,.55) 45%, rgba(255,255,255,.92) 100%);
     }
-    @media (max-width: 767px) {
+    @media (max-width: 0px) {
       .solution-seam-fade {
         inset-block: auto;
         inset-inline: 0;
@@ -304,7 +698,7 @@
       display: flex;
       flex-direction: column;
     }
-    @media (min-width: 768px) {
+    @media (min-width: 0px) {
       .product-bento-row-1 .product-bento-hero-card .product-bento-visual {
         min-height: 300px;
       }
@@ -312,7 +706,7 @@
         min-height: 260px;
       }
     }
-    @media (min-width: 1024px) {
+    @media (min-width: 0px) {
       .product-bento-row-1 .product-bento-hero-card .product-bento-visual {
         min-height: 320px;
       }
@@ -326,7 +720,7 @@
       background: #fff;
       padding: 0.75rem 1rem;
     }
-    @media (min-width: 768px) {
+    @media (min-width: 0px) {
       .product-bento-hw-footer {
         padding: 0.875rem 1.125rem;
       }
@@ -346,7 +740,7 @@
       text-overflow: ellipsis;
     }
     .product-bento-row-2 .product-bento-hw-footer .product-footer-kicker {
-      letter-spacing: 0.08em;
+      letter-spacing: 0.02em;
     }
     .product-bento-row-2 .product-bento-hw-footer .product-footer-meta {
       justify-content: flex-start;
@@ -371,7 +765,7 @@
       flex-direction: column;
       gap: 0.375rem;
     }
-    @media (min-width: 768px) {
+    @media (min-width: 0px) {
       .product-bento-card:hover {
         transform: translateY(-3px);
         box-shadow: 0 18px 36px rgba(12, 27, 46, 0.1);
@@ -505,22 +899,43 @@
       z-index: 30;
       width: 36px;
       height: 36px;
-      border: none;
+      isolation: isolate;
+      border: 1px solid rgba(255, 255, 255, 0.78);
       border-radius: 50%;
-      background: #0094FF;
-      color: #fff;
+      background:
+        linear-gradient(165deg, rgba(255, 255, 255, 0.48) 0%, rgba(255, 255, 255, 0.16) 44%, rgba(210, 236, 255, 0.26) 100%);
+      color: #0094FF;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
       transform: translateY(-50%);
-      box-shadow: 0 8px 20px rgba(0, 148, 255, 0.35);
-      transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+      backdrop-filter: blur(18px) saturate(180%);
+      -webkit-backdrop-filter: blur(18px) saturate(180%);
+      box-shadow:
+        inset 0 1.5px 0 rgba(255, 255, 255, 0.95),
+        inset 0 -1px 2px rgba(0, 148, 255, 0.08),
+        0 8px 22px rgba(12, 27, 46, 0.12);
+      transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    }
+    #my-carousel .carousel-arrow::before {
+      content: '';
+      position: absolute;
+      inset: 1px auto auto 18%;
+      width: 64%;
+      height: 42%;
+      border-radius: 50%;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.85) 0%, rgba(255, 255, 255, 0) 100%);
+      pointer-events: none;
     }
     #my-carousel .carousel-arrow:hover {
-      background: #0076CC;
+      border-color: rgba(255, 255, 255, 0.95);
+      background:
+        linear-gradient(165deg, rgba(255, 255, 255, 0.62) 0%, rgba(232, 246, 255, 0.28) 46%, rgba(255, 255, 255, 0.34) 100%);
       transform: translateY(-50%) scale(1.06);
-      box-shadow: 0 10px 24px rgba(0, 148, 255, 0.42);
+      box-shadow:
+        inset 0 1.5px 0 rgba(255, 255, 255, 1),
+        0 10px 26px rgba(0, 148, 255, 0.16);
     }
     #my-carousel .carousel-arrow:active {
       transform: translateY(-50%) scale(0.96);
@@ -528,6 +943,8 @@
     #my-carousel .carousel-prev { left: 10px; }
     #my-carousel .carousel-next { right: 10px; }
     #my-carousel .carousel-arrow svg {
+      position: relative;
+      z-index: 1;
       width: 18px;
       height: 18px;
       fill: none;
@@ -562,7 +979,7 @@
       /* 蜂巢行距：使斜向邻边间距 = 同行左右间距 (--hex-gap) */
       --hex-row-step: calc(var(--hex-h) * 0.75 + var(--hex-gap));
     }
-    @media (min-width: 640px) {
+    @media (min-width: 0px) {
       .partner-honeycomb {
         --hex-w: 88px;
         --hex-gap: 14px;
@@ -635,7 +1052,7 @@
       text-overflow: ellipsis;
       white-space: nowrap;
     }
-    @media (min-width: 640px) {
+    @media (min-width: 0px) {
       .partner-hex-name { font-size: 11px; }
     }
 
@@ -986,7 +1403,7 @@
       -webkit-line-clamp: 3;
       overflow: hidden;
     }
-    @media (max-width: 767px) {
+    @media (max-width: 0px) {
       #partner-accordion {
         height: auto;
         min-height: 420px;
@@ -1378,9 +1795,9 @@
       {
         name: '银豹',
         logo: 'cases/yinbao-logo.png',
-        visual: 'cases/yinbao-visual.png',
+        visual: 'cases/yinbao-visual.png?v=2',
         industry: '新零售 · 餐饮',
-        desc: '盛意旺 × 银豹：一步就位，打造 O2O 门店，覆盖零售、餐饮、茶饮与烘焙收银，帮助商户打通线上线下一体化经营。',
+        desc: '一步就位，打造 O2O 门店，覆盖零售、餐饮、茶饮与烘焙收银，帮助商户打通线上线下一体化经营。',
         theme: {
           cardPhoto: 'cases/yinbao-card-bg.png',
           useOriginalLogo: true
@@ -1391,7 +1808,7 @@
         logo: 'cases/taimi-logo.png',
         visual: 'cases/taimi-visual.png',
         industry: '加油站 · 零售',
-        desc: '盛意旺 × 太米：让商户体验快捷的收款服务，覆盖加油站、零售与休闲娱乐场景，提升收银效率与资金到账体验。',
+        desc: '让商户体验快捷的收款服务，覆盖加油站、零售与休闲娱乐场景，提升收银效率与资金到账体验。',
         theme: {
           cardPhoto: 'cases/taimi-card-bg.png',
           useOriginalLogo: true
@@ -1402,7 +1819,7 @@
         logo: 'cases/zhongwan-logo.png',
         visual: 'cases/zhongwan-visual.png',
         industry: '商超 · 便利 · 百货',
-        desc: '盛意旺 × 中皖知托付：助力商家数字化转型升级，打通商超、便利店与百货收银链路，实现收款、对账与经营一体化。',
+        desc: '助力商家数字化转型升级，打通商超、便利店与百货收银链路，实现收款、对账与经营一体化。',
         theme: {
           cardPhoto: 'cases/zhongwan-card-bg.png',
           useOriginalLogo: true
@@ -1413,7 +1830,7 @@
         logo: 'cases/shijiaoshou-logo.png',
         visual: 'cases/shijiaoshou-visual.png',
         industry: '工商财税',
-        desc: '盛意旺 × 十角兽：小微企业记账报税新时代，覆盖工商、记账、报税与财税服务，为商户提供合规便捷的财税数字化能力。',
+        desc: '小微企业记账报税新时代，覆盖工商、记账、报税与财税服务，为商户提供合规便捷的财税数字化能力。',
         theme: {
           cardPhoto: 'cases/shijiaoshou-card-bg.png',
           useOriginalLogo: true
@@ -1424,7 +1841,7 @@
         logo: 'cases/jiudianban-logo.png',
         visual: 'cases/jiudianban-visual.png',
         industry: '夜生活',
-        desc: '盛意旺 × 九点半：为夜而生，用芯相伴，酒吧系统与创投顾问一体赋能夜间消费场景，助力夜场商户高效收款与经营。',
+        desc: '为夜而生，用芯相伴，酒吧系统与创投顾问一体赋能夜间消费场景，助力夜场商户高效收款与经营。',
         theme: {
           cardPhoto: 'cases/jiudianban-card-bg.png',
           useOriginalLogo: true
@@ -1546,9 +1963,9 @@
     window.initPartnerAccordion = initPartnerAccordion;
   </script>
 
-  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" crossorigin="anonymous"></script>
-  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" crossorigin="anonymous"></script>
-  <script src="https://unpkg.com/@babel/standalone@7.26.7/babel.min.js" crossorigin="anonymous"></script>
+  <script src="vendor/react.development.js"></script>
+  <script src="vendor/react-dom.development.js"></script>
+  <script src="vendor/babel.min.js"></script>
 
   <script type="text/babel" data-presets="react">
     const { useState, useEffect, useMemo, useRef } = React;
@@ -1751,7 +2168,7 @@
         kicker: '收单商户',
         title: ['盛意旺，让每一笔', '生意更兴旺'],
         sub: '极速到账、费率透明、门店数字化一体打通。收银硬件即插即用，对账与经营数据实时可见，让收款从“能用”变成“好用”。',
-        chips: ['T+0 / D0 到账', '费率可谈', '硬件即插即用', '多门店对账']
+        chips: ['T0 / D0 到账', '费率可谈', '硬件即插即用', '多门店对账']
       },
       partner: {
         kicker: '收单服务商',
@@ -1780,7 +2197,7 @@
         kicker: '商户对账 · 代理商展业',
         pain: '商户跨通道自动对账、退款全程可追踪；代理商一键进件、分润实时透明，下级渠道集中管控。',
         stats: [
-          { n: 'T+0', l: '对账时效' },
+          { n: 'D+0', l: '对账时效' },
           { n: '实时', l: '分润结算' }
         ]
       },
@@ -1893,28 +2310,16 @@
       const steps = LEAD_STEPS[persona] || LEAD_STEPS.merchant;
 
       return (
-        <div className="mx-auto w-full max-w-[320px] rounded-2xl bg-white/12 p-5 ring-1 ring-white/25 lg:ml-auto lg:max-w-none">
-          <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-white/70">Onboarding</p>
+        <div className="mx-auto w-full max-w-[320px] rounded-2xl border border-white/50 bg-white/28 p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.78),0_18px_48px_rgba(12,27,46,0.10)] backdrop-blur-2xl lg:ml-auto lg:max-w-none">
+          <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-white/75">Onboarding</p>
           <p className="mt-1 text-[15px] font-semibold text-white">接入步骤</p>
-          <ol className="mt-4 space-y-0">
+          <ol className="mt-4 grid grid-cols-1 gap-2.5 sm:grid-cols-2">
             {steps.map((label, index) => (
-              <li key={label} className="relative flex gap-3 pb-4 last:pb-0">
-                {index < steps.length - 1 && (
-                  <span className="absolute left-[13px] top-7 h-[calc(100%-12px)] w-px bg-white/25" aria-hidden="true" />
-                )}
-                <span
-                  className={`relative z-[1] flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold ${
-                    index === 0 ? 'bg-white text-[#0094FF]' : 'bg-white/15 text-white/85 ring-1 ring-white/20'
-                  }`}
-                >
+              <li key={label} className="flex items-center gap-3 rounded-xl bg-white/18 px-3 py-2.5 ring-1 ring-white/30">
+                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white text-[12px] font-semibold text-[#0094FF] shadow-[0_4px_10px_rgba(12,27,46,0.08)]">
                   {index + 1}
                 </span>
-                <div className="min-w-0 pt-0.5">
-                  <p className={`text-[13px] font-medium leading-5 ${index === 0 ? 'text-white' : 'text-white/80'}`}>{label}</p>
-                  {index === 0 && (
-                    <p className="mt-0.5 text-[11px] text-white/60">当前步骤</p>
-                  )}
-                </div>
+                <p className="min-w-0 text-[13px] font-medium leading-5 text-white">{label}</p>
               </li>
             ))}
           </ol>
@@ -1953,7 +2358,8 @@
         partner: '驾油吧 × 乐企联用',
         title: '支付即开票',
         industry: '加油站 · 能源零售',
-        intro: '加油支付完成后自动触发乐企联用开票，司机与企业无需二次操作，税控合规与对账一次完成。',
+        intro: '支付完成后自动开票，无需二次操作，税控对账一次完成。',
+        highlights: ['自动开票', '无需二次操作', '一次完成'],
         points: ['支付成功即开票', '乐企联用税控对接', '车队 / 企业批量对账'],
         stats: [{ n: '≤3s', l: '开票触发' }, { n: '100%', l: '票款一致' }],
         tone: 'from-[#E8F4FF] via-white to-[#F5F7FA]',
@@ -1966,7 +2372,8 @@
         partner: '酒吧业态',
         title: '行业分账',
         industry: '夜生活 · 娱乐餐饮',
-        intro: '场地方、酒水供应商、艺人等多方按规则实时分账，账单透明、提现可查，适配高频夜间交易场景。',
+        intro: '多方按规则实时分账，账单透明可查，适配高频夜间交易。',
+        highlights: ['实时分账', '账单透明可查', '高频夜间交易'],
         points: ['多角色分账规则', '实时清分可提现', '与 POS / 存酒联动'],
         stats: [{ n: 'T+0', l: '分账到账' }, { n: '多层级', l: '渠道穿透' }],
         tone: 'from-[#E8F4FF] via-white to-[#F5F7FA]',
@@ -1979,7 +2386,8 @@
         partner: '跨境支付',
         title: '多币种收款结算',
         industry: '外贸 · 跨境电商',
-        intro: '支持多币种收款、跨境结算与合规申报，汇率透明、到账路径可追踪，降低出海商户接入成本。',
+        intro: '多币种收款与跨境结算，汇率透明，到账路径可追踪。',
+        highlights: ['多币种收款', '汇率透明', '到账路径可追踪'],
         points: ['多币种收款', '合规申报通道', '汇率与手续费透明'],
         stats: [{ n: '10+', l: '主流币种' }, { n: '7×24', l: '跨境清算' }],
         tone: 'from-[#EEF6FF] via-white to-[#E8F4FF]',
@@ -1992,7 +2400,8 @@
         partner: 'AI + SaaS',
         title: '智能经营助手',
         industry: '全业态 · 数字化',
-        intro: 'AI 嵌入商户 SaaS：智能对账、异常预警、自然语言查数，让经营分析从「看报表」变成「问一句就有答案」。',
+        intro: 'AI 嵌入 SaaS：自然语言查数、异常预警，问一句即有答案。',
+        highlights: ['自然语言查数', '异常预警', '问一句即有答案'],
         points: ['自然语言查数', '跨月退款智能匹配', '经营异常预警'],
         stats: [{ n: 'AI', l: '对话式分析' }, { n: '12+', l: '经营看板' }],
         tone: 'from-[#F0F4FF] via-white to-[#E8F4FF]',
@@ -2005,7 +2414,8 @@
         partner: '集团总部商户',
         title: '总部统一财务对账',
         industry: '连锁品牌 · 集团企业',
-        intro: '总部维护分公司、加盟与合作伙伴的多层级组织，子商户独立收单、账务按区域隔离；日汇总与自定义账单、交易明细及数据看板一站汇总，替代分散人工对账。',
+        intro: '多层级组织统一对账，区域数据隔离，账单与看板一站汇总。',
+        highlights: ['统一对账', '区域数据隔离', '一站汇总'],
         points: ['5 级商户层级灵活搭建', '区域角色权限与数据隔离', '账单下载 · 明细查询 · 数据看板'],
         stats: [{ n: '5 级', l: '组织层级' }, { n: '全渠道', l: '统一对账' }],
         tone: 'from-[#F5FAFF] via-white to-[#EEF6FF]',
@@ -2014,6 +2424,22 @@
         image: 'cases/group-chain-visual.png'
       }
     ];
+
+    function highlightPhrases(text, phrases = []) {
+      if (!text || !phrases.length) return text;
+      const escaped = phrases
+        .filter(Boolean)
+        .sort((a, b) => b.length - a.length)
+        .map((p) => p.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+      if (!escaped.length) return text;
+      const re = new RegExp(`(${escaped.join('|')})`, 'g');
+      const parts = text.split(re);
+      return parts.map((part, i) => (
+        phrases.includes(part)
+          ? <strong key={i} className="font-semibold text-syw-ink">{part}</strong>
+          : <React.Fragment key={i}>{part}</React.Fragment>
+      ));
+    }
 
     function Ico({ name, className = 'w-5 h-5' }) {
       const p = { className, fill: 'none', stroke: 'currentColor', strokeWidth: 1.7, strokeLinecap: 'round', strokeLinejoin: 'round', viewBox: '0 0 24 24' };
@@ -2154,7 +2580,7 @@
 
     function Header({ onLead, onOpenMenu, menuOpen, persona, setPersona }) {
       return (
-        <header className="sticky top-0 z-50 border-b border-white/60 bg-white/75 backdrop-blur-xl">
+        <header className="sticky top-0 z-50 border-b border-white/10 bg-white/45 backdrop-blur-xl">
           <div className="mx-auto flex h-16 max-w-[1200px] items-center gap-4 px-6">
             <Logo />
             <div className="hidden sm:block">
@@ -2241,66 +2667,61 @@
 
     function MiniMcp() {
       return (
-        <div className="flex h-full min-h-0 flex-1 flex-col justify-between overflow-hidden bg-[#071422] p-4 font-mono text-[11px] leading-relaxed">
-          <div className="flex items-center gap-2.5">
-            <span className="grid h-9 w-9 place-items-center rounded-lg bg-[#0094FF]/20 text-[#7DD3FC]">
-              <Ico name="spark" className="h-4 w-4" />
-            </span>
-            <div>
-              <p className="text-[13px] font-medium text-white/92">SaaS MCP Server</p>
-              <p className="text-[10px] text-white/40">Model Context Protocol</p>
-            </div>
-          </div>
-          <div className="my-3 space-y-1 rounded-lg bg-white/5 p-3 ring-1 ring-white/8">
-            <p className="text-white/35">tools/</p>
-            <p className="pl-2 text-[#86EFAC]">query_reconcile</p>
-            <p className="pl-2 text-[#86EFAC]">list_refund_orders</p>
-            <p className="pl-2 text-[#86EFAC]">merchant_onboard</p>
-            <p className="pl-2 text-[#86EFAC]">split_settlement</p>
-          </div>
-          <div className="flex items-center gap-2 text-[10px] text-white/55">
-            <span className="inline-flex rounded bg-[#0094FF]/20 px-2 py-0.5 text-[#7DD3FC]">AI Agent</span>
-            <span>→ MCP → 盛意旺 SaaS</span>
-          </div>
+        <div className="h-full min-h-0 flex-1 overflow-hidden bg-[#F4F8FC]">
+          <img
+            src="products/saas-mcp.png"
+            alt="SaaS MCP：AI Agent 通过 MCP 调用支付能力示意"
+            className="h-full w-full object-cover object-[center_18%]"
+          />
         </div>
       );
     }
 
     function MiniApi() {
       return (
-        <div className="flex h-full min-h-0 flex-1 flex-col justify-center overflow-hidden bg-[#071422] p-4 font-mono text-[11px] leading-relaxed sm:p-5">
-          <div className="text-white/35">POST /v1/payments</div>
-          <div className="text-[#7DD3FC]">{'{'}</div>
-          <div className="pl-3 text-white/80">amount: <span className="text-[#FDE68A]">12800</span>,</div>
-          <div className="pl-3 text-white/80">channel: <span className="text-[#86EFAC]">"wxpay"</span>,</div>
-          <div className="pl-3 text-white/80">notify_url: <span className="text-[#7DD3FC]">"https://..."</span></div>
-          <div className="text-[#7DD3FC]">{'}'}</div>
-          <div className="mt-3 inline-flex w-fit items-center gap-1 rounded bg-[#0094FF]/20 px-2 py-1 text-[11px] text-[#7DD3FC]">200 OK · 42ms</div>
+        <div className="h-full min-h-0 flex-1 overflow-hidden bg-[#D6ECFF]">
+          <img
+            src="products/open-platform-api.png"
+            alt="API / SDK 开放平台：支付接口接入示意"
+            className="h-full w-full object-cover object-[center_20%]"
+          />
         </div>
       );
     }
 
     function MiniMobile() {
       const apps = [
-        { id: 'syw-app', name: '盛意旺 APP', role: '商户移动端', badge: '商户', image: 'products/syw-app.png' },
-        { id: 'syt-app', name: '盛意通 APP', role: '服务商移动端', badge: '服务商', image: 'products/syt-app.png' },
-        { id: 'mp', name: '商家服务小程序', role: '盛意旺商家服务', badge: '小程序', image: 'products/merchant-mp.png' }
+        { id: 'syw-app', name: '盛意旺 APP', role: '商户移动端', badge: '商户', image: 'products/syw-app.png', qr: 'qr/syw-app.png', qrHint: '扫码下载' },
+        { id: 'syt-app', name: '盛意通 APP', role: '服务商移动端', badge: '服务商', image: 'products/syt-app.png', qr: 'qr/syt-app.png', qrHint: '扫码下载' },
+        { id: 'mp', name: '商家服务小程序', role: '盛意旺商家服务', badge: '小程序', image: 'products/merchant-mp.png', qr: 'qr/miniprogram.png', qrHint: '扫码体验' }
       ];
+
       return (
         <div className="grid h-full min-h-0 flex-1 grid-cols-3 gap-2 bg-gradient-to-b from-syw-mist/60 to-white p-2.5 sm:p-3">
           {apps.map((app) => (
-            <div key={app.id} className="flex min-h-0 flex-col overflow-hidden rounded-xl bg-white ring-1 ring-syw-line">
+            <div key={app.id} className="group/app relative z-0 flex min-h-0 flex-col overflow-hidden rounded-xl bg-white ring-1 ring-syw-line hover:z-10">
               <div className="flex items-center justify-between px-2 pt-2">
                 <span className="rounded-full bg-[#0094FF]/10 px-1.5 py-0.5 text-[9px] font-medium text-[#0094FF]">{app.badge}</span>
                 <span className="h-1.5 w-1.5 rounded-full bg-[#1AAE6F]" aria-hidden="true" />
               </div>
-              <div className="mx-auto mt-1.5 mb-1 w-[88%] max-w-[110px] flex-1 min-h-0 overflow-hidden rounded-[14px] bg-[#F5F7FA] shadow-[0_8px_20px_rgba(12,27,46,.08)] ring-1 ring-syw-line">
+              <div className="relative mx-auto mt-1.5 mb-1 w-[88%] max-w-[110px] min-h-0 flex-1 overflow-hidden rounded-[14px] bg-[#F5F7FA] shadow-[0_8px_20px_rgba(12,27,46,.08)] ring-1 ring-syw-line">
                 <img
                   src={app.image}
                   alt={`${app.name}界面`}
                   className="h-full w-full object-cover object-top"
                   loading="lazy"
                 />
+                <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-1.5 bg-[rgba(12,27,46,0.58)] px-1.5 opacity-0 backdrop-blur-[1.5px] transition-opacity duration-200 ease-in-out group-hover/app:opacity-100">
+                  <div className="rounded-lg bg-white p-1 shadow-[0_6px_16px_rgba(12,27,46,0.18)]">
+                    <img
+                      src={app.qr}
+                      alt={`${app.name}二维码`}
+                      className="h-[72px] w-[72px] max-w-full object-contain"
+                      loading="lazy"
+                    />
+                  </div>
+                  <span className="text-[9px] font-medium leading-none text-white/95">{app.qrHint}</span>
+                </div>
               </div>
               <div className="px-1.5 pb-2 text-center">
                 <p className="truncate text-[10px] font-semibold leading-tight text-syw-ink">{app.name}</p>
@@ -2371,7 +2792,7 @@
       return (
         <div className="relative">
           <div className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-[#0094FF]/25 blur-3xl" />
-          <div className="glass-card relative overflow-hidden rounded-[22px] p-6 shadow-glass ring-1 ring-white/80 sm:p-7">
+          <div className={`glass-card relative overflow-hidden rounded-[22px] p-6 shadow-glass ring-1 ring-white/80 sm:p-7 ${isPartner ? '' : 'auth-card-stable'}`}>
             <p className="text-[15px] font-semibold text-syw-ink">{portalName}登录</p>
             <p className="mt-1 mb-5 text-[12px] text-syw-mute">
               {isPartner ? '渠道分润、进件与展业工具，请前往服务商统一认证平台登录' : '收款、对账与门店经营，同一账号登录'}
@@ -2397,8 +2818,8 @@
                 </p>
               </div>
             ) : (
-              <form onSubmit={submitLogin} className="space-y-3.5" noValidate>
-                <div className="flex gap-5 border-b border-syw-line">
+              <form onSubmit={submitLogin} className="flex flex-col gap-3.5" noValidate>
+                <div className="grid grid-cols-2 border-b border-syw-line">
                   {[
                     { id: 'password', label: '账号密码登录' },
                     { id: 'sms', label: '手机验证码登录' }
@@ -2407,15 +2828,19 @@
                       key={m.id}
                       type="button"
                       onClick={() => { setLoginMode(m.id); setErr(''); }}
-                      className={`-mb-px pb-2 text-[13px] font-medium transition-all duration-300 ease-in-out ${loginMode === m.id ? 'border-b-2 border-[#0094FF] text-syw' : 'text-syw-mute hover:text-syw-ink'}`}
+                      className={`-mb-px w-full pb-2 text-center text-[13px] font-medium transition-all duration-300 ease-in-out ${loginMode === m.id ? 'border-b-2 border-[#0094FF] text-syw' : 'text-syw-mute hover:text-syw-ink'}`}
                     >
                       {m.label}
                     </button>
                   ))}
                 </div>
 
-                {loginMode === 'password' ? (
-                  <>
+                {/* 双面板叠放：高度取较高者，切换模式时登录区高度不变 */}
+                <div className="grid">
+                  <div
+                    className={`col-start-1 row-start-1 flex flex-col gap-3.5 ${loginMode === 'password' ? '' : 'invisible pointer-events-none'}`}
+                    aria-hidden={loginMode !== 'password'}
+                  >
                     <label className="block">
                       <span className="mb-1.5 block text-[12px] text-syw-mute">账号</span>
                       <input
@@ -2424,6 +2849,7 @@
                         className="h-11 w-full rounded-xl border border-syw-line bg-white px-3.5 text-sm transition-all duration-300 ease-in-out focus:border-[#0094FF]"
                         placeholder="请输入商户账号"
                         autoComplete="username"
+                        tabIndex={loginMode === 'password' ? 0 : -1}
                       />
                     </label>
                     <label className="block">
@@ -2435,18 +2861,21 @@
                         className="h-11 w-full rounded-xl border border-syw-line bg-white px-3.5 text-sm transition-all duration-300 ease-in-out focus:border-[#0094FF]"
                         placeholder="请输入密码"
                         autoComplete="current-password"
+                        tabIndex={loginMode === 'password' ? 0 : -1}
                       />
                     </label>
-                    <div className="flex items-center justify-between text-[12px]">
+                    <div className="flex h-5 items-center justify-between text-[12px]">
                       <label className="flex cursor-pointer items-center gap-2 text-syw-mute">
-                        <input type="checkbox" checked={login.pwdControl} onChange={(e) => setLogin({ ...login, pwdControl: e.target.checked })} className="h-4 w-4 accent-[#0094FF]" />
+                        <input type="checkbox" checked={login.pwdControl} onChange={(e) => setLogin({ ...login, pwdControl: e.target.checked })} className="h-4 w-4 accent-[#0094FF]" tabIndex={loginMode === 'password' ? 0 : -1} />
                         使用密码控件登录
                       </label>
-                      <a href="#help" className="text-syw hover:underline">忘记密码</a>
+                      <a href="#help" className="text-syw hover:underline" tabIndex={loginMode === 'password' ? 0 : -1}>忘记密码</a>
                     </div>
-                  </>
-                ) : (
-                  <>
+                  </div>
+                  <div
+                    className={`col-start-1 row-start-1 flex flex-col gap-3.5 ${loginMode === 'sms' ? '' : 'invisible pointer-events-none'}`}
+                    aria-hidden={loginMode !== 'sms'}
+                  >
                     <label className="block">
                       <span className="mb-1.5 block text-[12px] text-syw-mute">手机号</span>
                       <input
@@ -2457,6 +2886,7 @@
                         inputMode="numeric"
                         maxLength={11}
                         autoComplete="tel"
+                        tabIndex={loginMode === 'sms' ? 0 : -1}
                       />
                     </label>
                     <label className="block">
@@ -2470,24 +2900,30 @@
                           inputMode="numeric"
                           maxLength={6}
                           autoComplete="one-time-code"
+                          tabIndex={loginMode === 'sms' ? 0 : -1}
                         />
                         <button
                           type="button"
                           onClick={sendCode}
-                          disabled={sec > 0}
+                          disabled={sec > 0 || loginMode !== 'sms'}
+                          tabIndex={loginMode === 'sms' ? 0 : -1}
                           className="h-11 shrink-0 rounded-xl bg-syw-soft px-3.5 text-[13px] font-medium text-syw transition-all duration-300 ease-in-out hover:bg-[#d6ecff] disabled:cursor-not-allowed disabled:text-syw-mute"
                         >
                           {sec > 0 ? `${sec}s 后重发` : '获取验证码'}
                         </button>
                       </div>
                     </label>
-                  </>
-                )}
-                {err && <p className="text-[12px] text-[#E11D48]">{err}</p>}
+                    <div className="h-5" aria-hidden="true" />
+                  </div>
+                </div>
+
+                <div className="min-h-[18px]">
+                  {err ? <p className="text-[12px] leading-[18px] text-[#E11D48]">{err}</p> : null}
+                </div>
                 <button type="submit" className="h-11 w-full rounded-xl bg-[#0094FF] text-sm font-medium text-white transition-all duration-300 ease-in-out hover:bg-syw-deep">
                   登录{portalName}平台
                 </button>
-                <p className="flex items-center justify-center gap-1.5 pt-1 text-[11px] text-syw-mute">
+                <p className="flex items-center justify-center gap-1.5 text-[11px] text-syw-mute">
                   <Ico name="lock" className="h-3.5 w-3.5" />
                   资金由合作银行存管 · TLS 加密传输
                 </p>
@@ -2501,12 +2937,10 @@
     function Hero({ persona, toast, onLead }) {
       const copy = PERSONA[persona];
       return (
-        <section className="reveal-band-a relative overflow-hidden grain">
-          <div className="pointer-events-none absolute inset-0 ledger-grid" />
-          <div className="pointer-events-none absolute -left-24 top-10 h-72 w-72 rounded-full bg-[#0094FF]/15 blur-3xl" />
-          <div className="pointer-events-none absolute right-[32%] bottom-0 h-56 w-56 rounded-full bg-[#7DD3FC]/20 blur-3xl" />
-          <div className="relative mx-auto grid max-w-[1200px] grid-cols-1 items-center gap-10 px-6 py-14 lg:grid-cols-10 lg:gap-12 lg:py-20">
-            <Reveal id="hero-copy" delay={0} className="lg:col-span-6">
+        <section className="hero-shell">
+          <div className="hero-shell-grid relative mx-auto grid max-w-[1200px] grid-cols-1 gap-10 px-6 pt-14 pb-8 lg:grid-cols-10 lg:gap-12 lg:pt-16 lg:pb-10">
+            <Reveal id="hero-copy" delay={0} className="hero-copy lg:col-span-6">
+              <div className="hero-copy-panel" aria-hidden="true" />
               <p className="font-mono text-[11px] uppercase tracking-[0.28em] text-syw">{copy.kicker}</p>
               <h1 key={persona} className="mt-3 text-[34px] font-semibold leading-[1.22] tracking-tight text-syw-ink sm:text-[44px]">
                 {copy.title[0]}
@@ -2521,13 +2955,13 @@
               </p>
               <div className="mt-6 flex flex-wrap gap-2">
                 {copy.chips.map((c, i) => (
-                  <Reveal key={c} id={`hero-chip-${i}`} as="span" delay={i + 1} className="rounded-full bg-white px-3 py-1.5 text-[12px] text-syw-ink ring-1 ring-syw-line">{c}</Reveal>
+                  <Reveal key={c} id={`hero-chip-${i}`} as="span" delay={i + 1} className="rounded-full bg-white/90 px-3 py-1.5 text-[12px] text-syw-ink ring-1 ring-syw-line/80 backdrop-blur-sm">{c}</Reveal>
                 ))}
               </div>
               <div className="mt-8 flex flex-wrap items-center gap-4">
                 <a
                   href="#products"
-                  className="inline-flex h-11 items-center gap-2 rounded-full bg-syw-ink px-6 text-sm font-medium text-white transition-all duration-300 ease-in-out hover:-translate-y-0.5 hover:bg-black"
+                  className="inline-flex h-11 items-center gap-2 rounded-full bg-[#0094FF] px-6 text-sm font-medium text-white shadow-[0_8px_18px_rgba(0,148,255,.28)] transition-all duration-300 ease-in-out hover:-translate-y-0.5 hover:bg-syw-deep"
                 >
                   了解盛意旺产品 <Ico name="arrow" className="h-4 w-4" />
                 </a>
@@ -2553,7 +2987,7 @@
           <div className="flex flex-col gap-2">
             <div className="product-footer-head flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
               <div className="product-footer-title min-w-0">
-                <p className="product-footer-kicker font-mono text-[10px] uppercase tracking-[0.16em] text-syw">{p.kicker}</p>
+                <p className="product-footer-kicker syw-label-tag font-light text-syw">{p.kicker}</p>
                 <h3 className="product-footer-name mt-0.5 text-[16px] font-semibold text-syw-ink md:text-[17px]">{p.title}</h3>
               </div>
               <div className="product-footer-meta flex shrink-0 flex-wrap items-center gap-2 sm:justify-end">
@@ -2599,32 +3033,168 @@
     }
 
     const PAYMENT_METHODS = [
-      { id: 'scan', label: '扫码支付', logo: 'payments/scan.svg' },
-      { id: 'miniprogram', label: '小程序支付', logo: 'payments/miniprogram.svg' },
-      { id: 'app', label: 'APP支付', logo: 'payments/app.svg' },
-      { id: 'h5', label: 'H5支付', logo: 'payments/h5.svg' },
-      { id: 'ecny', label: '数字人民币', logo: 'payments/ecny.svg' },
-      { id: 'huabei', label: '花呗', logo: 'payments/huabei.svg' },
-      { id: 'jd-baitiao', label: '京东白条', logo: 'payments/jd-baitiao.svg' },
-      { id: 'wxpay-score', label: '微信支付分', logo: 'payments/wxpay-score.svg' }
+      { id: 'scan', label: '扫码支付', logo: 'payments/scan.svg', glow: '#0094FF' },
+      { id: 'bankcard', label: '银行卡支付', logo: 'payments/bankcard.svg', glow: '#2B6DE5' },
+      { id: 'unionpay-installment', label: '银联分期', logo: 'payments/unionpay-installment.svg', glow: '#E21836' },
+      { id: 'unionpay-pass', label: '银联无感支付', logo: 'payments/unionpay-pass.svg', glow: '#E21836' },
+      { id: 'miniprogram', label: '小程序支付', logo: 'payments/miniprogram.svg', glow: '#07C160' },
+      { id: 'app', label: 'APP支付', logo: 'payments/app.svg', glow: '#5B6BFF' },
+      { id: 'h5', label: 'H5支付', logo: 'payments/h5.svg', glow: '#FF8A00' },
+      { id: 'ecny', label: '数字人民币', logo: 'payments/ecny.svg', glow: '#E02E24' },
+      { id: 'huabei', label: '花呗', logo: 'payments/huabei.svg', glow: '#4182FA' },
+      { id: 'jd-baitiao', label: '京东白条', logo: 'payments/jd-baitiao.svg', glow: '#D12C28' },
+      { id: 'wxpay-score', label: '微信支付分', logo: 'payments/wxpay-score.svg', glow: '#07C160' }
     ];
 
+    const PAY_SCENE_CONFIG = {
+      ICON_COUNT: null,          // null = 使用全部支付方式
+      RADIUS: 210,               // 统一散开半径（等距）
+      Z_DEPTH: 0,
+      AUTO_PLAY: true,
+      DURATION_S: 2,
+      EASING: 'cubic-bezier(0.34, 1.56, 0.64, 1)',
+      STAGGER_MAX_S: 0.28,       // 烟花感：环向短错峰
+      TITLE_DELAY_S: 0.45,
+      BREATHE: true,
+      PARTICLE_COUNT: 36
+    };
+
+    function buildPayScatterLayout(items) {
+      const cfg = PAY_SCENE_CONFIG;
+      const count = items.length;
+      const r = cfg.RADIUS || 210;
+
+      return items.map((item, i) => {
+        // 等角均分 360°，同一半径等距散开（像素固定，不随窗口缩放）
+        const angle = -(i / count) * Math.PI * 2 - Math.PI / 2;
+        const x = Math.cos(angle) * r;
+        const yy = Math.sin(angle) * r;
+        const z = 0;
+
+        const delay = (i / count) * cfg.STAGGER_MAX_S;
+        return {
+          ...item,
+          tx: `${x.toFixed(1)}px`,
+          ty: `${yy.toFixed(1)}px`,
+          tz: `${z.toFixed(1)}px`,
+          rx: '0deg',
+          ry: '0deg',
+          glow: item.glow || '#0094FF',
+          delay: `${delay.toFixed(3)}s`,
+          breatheDur: `${(3.2 + (i % 5) * 0.25).toFixed(2)}s`,
+          breatheDelay: `${(delay + cfg.DURATION_S * 0.2).toFixed(2)}s`
+        };
+      });
+    }
+
     function PaymentMethods() {
+      const cfg = PAY_SCENE_CONFIG;
+      const items = useMemo(() => {
+        const source = cfg.ICON_COUNT ? PAYMENT_METHODS.slice(0, cfg.ICON_COUNT) : PAYMENT_METHODS;
+        return buildPayScatterLayout(source);
+      }, []);
+      const stars = useMemo(() => Array.from({ length: cfg.PARTICLE_COUNT }, (_, i) => ({
+        id: i,
+        left: `${(i * 37 + 11) % 100}%`,
+        top: `${(i * 53 + 7) % 100}%`,
+        delay: `${((i * 13) % 40) / 10}s`,
+        size: 1 + (i % 3)
+      })), []);
+
+      const sectionRef = useRef(null);
+      const [spread, setSpread] = useState(false);
+      const [breathing, setBreathing] = useState(false);
+      const [titleIn, setTitleIn] = useState(false);
+      const playedRef = useRef(false);
+
+      useEffect(() => {
+        const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        const play = () => {
+          if (playedRef.current) return;
+          playedRef.current = true;
+          if (reduce) {
+            setSpread(true);
+            setTitleIn(true);
+            setBreathing(cfg.BREATHE);
+            return;
+          }
+          requestAnimationFrame(() => {
+            setSpread(true);
+            setTitleIn(true);
+            window.setTimeout(() => setBreathing(cfg.BREATHE), (cfg.DURATION_S + cfg.STAGGER_MAX_S) * 1000);
+          });
+        };
+
+        if (!cfg.AUTO_PLAY) return undefined;
+        const el = sectionRef.current;
+        if (!el || typeof IntersectionObserver === 'undefined') {
+          play();
+          return undefined;
+        }
+        const io = new IntersectionObserver((entries) => {
+          if (entries.some((e) => e.isIntersecting && e.intersectionRatio > 0.25)) {
+            play();
+            io.disconnect();
+          }
+        }, { threshold: [0.25, 0.4] });
+        io.observe(el);
+        return () => io.disconnect();
+      }, []);
+
       return (
-        <section id="payment-methods" className="reveal-band-b border-t border-syw-line/70 py-8 md:py-10">
-          <div className="mx-auto max-w-[1200px] px-6">
-            <Reveal id="payment-head" delay={0} className="mb-5 md:mb-6">
-              <p className="font-mono text-[11px] uppercase tracking-[0.28em] text-syw">Payment Methods</p>
-              <h2 className="mt-1.5 text-[24px] font-semibold tracking-tight text-syw-ink md:text-[26px]">支持的支付方式</h2>
-              <p className="mt-1 whitespace-nowrap text-[13px] leading-5 text-syw-mute">全渠道收款能力，覆盖线上线下主流支付场景</p>
-            </Reveal>
-            <div className="payment-methods-grid">
-              {PAYMENT_METHODS.map((item, i) => (
-                <Reveal key={item.id} id={`pay-${item.id}`} delay={i} className="payment-method-item">
-                  <img className="payment-method-logo" src={item.logo} alt={item.label} width="40" height="40" loading="lazy" />
-                  <span className="payment-method-label">{item.label}</span>
-                </Reveal>
+        <section id="payment-methods" ref={sectionRef}>
+          <div className="pay-scatter-shell mx-auto max-w-[1200px]">
+            <div className="pay-scatter-panel" aria-hidden="true" />
+            <div className="pay-scatter-stars" aria-hidden="true">
+              {stars.map((s) => (
+                <span
+                  key={s.id}
+                  className="pay-scatter-star"
+                  style={{ left: s.left, top: s.top, width: s.size, height: s.size, animationDelay: s.delay }}
+                />
               ))}
+            </div>
+
+            <div
+              className="pay-scatter-world"
+              style={{
+                ['--pay-duration']: `${cfg.DURATION_S}s`,
+                ['--pay-ease']: cfg.EASING,
+                ['--copy-delay']: `${cfg.TITLE_DELAY_S}s`
+              }}
+            >
+              {items.map((item) => (
+                <div
+                  key={item.id}
+                  className={`pay-scatter-node${spread ? ' is-spread' : ''}`}
+                  style={{
+                    ['--tx']: item.tx,
+                    ['--ty']: item.ty,
+                    ['--tz']: item.tz,
+                    ['--rx']: item.rx,
+                    ['--ry']: item.ry,
+                    ['--pay-delay']: item.delay,
+                    ['--glow']: item.glow,
+                    ['--breathe-dur']: item.breatheDur,
+                    ['--breathe-delay']: item.breatheDelay
+                  }}
+                >
+                  <div className={`pay-scatter-breathe${breathing ? ' is-breathing' : ''}`}>
+                    <div className="pay-scatter-face">
+                      <div className="pay-scatter-badge">
+                        <img className="pay-scatter-logo" src={item.logo} alt="" width="34" height="34" loading="lazy" />
+                      </div>
+                    </div>
+                    <span className="pay-scatter-label">{item.label}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className={`pay-scatter-copy${titleIn ? ' is-in' : ''}`}>
+              <p className="pay-scatter-kicker">Payment Methods</p>
+              <h2 className="pay-scatter-title">全场景支付渠道</h2>
+              <p className="pay-scatter-sub">覆盖线上线下主流支付场景</p>
             </div>
           </div>
         </section>
@@ -2824,43 +3394,13 @@
 
     function IndustrySolutions({ onLead }) {
       const [active, setActive] = useState(0);
-      const tabsRef = useRef(null);
-      const [panelHeight, setPanelHeight] = useState(null);
       const item = SOLUTIONS[active];
 
       const tabGroup = useRevealGroup('sol-tabs-desktop', SOLUTIONS.length);
       const mobileTabGroup = useRevealGroup('sol-tabs-mobile', SOLUTIONS.length);
 
-      useEffect(() => {
-        const el = tabsRef.current;
-        if (!el) return undefined;
-
-        const syncHeight = () => {
-          if (window.innerWidth < 1024) {
-            setPanelHeight(null);
-            return;
-          }
-          setPanelHeight(el.offsetHeight);
-        };
-
-        syncHeight();
-        const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(syncHeight) : null;
-        if (ro) ro.observe(el);
-        window.addEventListener('resize', syncHeight);
-        return () => {
-          if (ro) ro.disconnect();
-          window.removeEventListener('resize', syncHeight);
-        };
-      }, []);
-
-      // 合并 tabsRef（量高）与分组显现 containerRef
-      const setTabsNode = React.useCallback((node) => {
-        tabsRef.current = node;
-        tabGroup.setContainerRef(node);
-      }, [tabGroup.setContainerRef]);
-
       return (
-        <section id="solutions" className="reveal-band-d relative border-t border-syw-line/70 py-16">
+        <section id="solutions" className="section-soft reveal-band-d relative py-16">
           <div className="pointer-events-none absolute inset-0 ledger-grid opacity-40" />
           <div className="relative mx-auto max-w-[1200px] px-6">
             <Reveal id="solutions-head" delay={0} className="mb-8 flex items-end justify-between gap-6">
@@ -2897,8 +3437,8 @@
                 );
               })}
             </div>
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-12 lg:items-start">
-              <div ref={setTabsNode} className="hidden space-y-2 overflow-visible lg:col-span-4 lg:block" role="tablist" aria-label="行业解决方案">
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
+              <div ref={tabGroup.setContainerRef} className="hidden h-fit space-y-2 overflow-visible lg:col-span-4 lg:block" role="tablist" aria-label="行业解决方案">
                 {SOLUTIONS.map((s, i) => {
                   const { className: rClass, style: rStyle, ...rAttrs } = tabGroup.itemProps(i);
                   return (
@@ -2909,12 +3449,12 @@
                       aria-selected={active === i}
                       onClick={() => setActive(i)}
                       {...rAttrs}
-                      className={[rClass, 'w-full rounded-2xl px-4 py-4 text-left ring-1', tabGroup.phase === 'done' ? 'transition-colors duration-300 ease-in-out' : '', active === i ? 'solution-tab-active bg-white ring-[#0094FF]/40' : 'bg-white/70 ring-syw-line hover:bg-white hover:ring-[#0094FF]/20'].filter(Boolean).join(' ')}
+                      className={[rClass, 'w-full shrink-0 rounded-2xl px-4 py-4 text-left ring-1', tabGroup.phase === 'done' ? 'transition-colors duration-300 ease-in-out' : '', active === i ? 'solution-tab-active bg-white ring-[#0094FF]/40' : 'bg-white/70 ring-syw-line hover:bg-white hover:ring-[#0094FF]/20'].filter(Boolean).join(' ')}
                       style={rStyle}
                     >
-                      <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-syw">{s.partner}</p>
-                      <p className="mt-1 text-[16px] font-semibold text-syw-ink">{s.title}</p>
-                      <p className="mt-1 text-[12px] text-syw-mute">{s.industry}</p>
+                      <p className="syw-label-tag whitespace-nowrap font-light text-syw">{s.partner}</p>
+                      <p className="mt-1 whitespace-nowrap text-[16px] font-semibold text-syw-ink">{s.title}</p>
+                      <p className="mt-1 whitespace-nowrap text-[12px] text-syw-mute">{s.industry}</p>
                     </button>
                   );
                 })}
@@ -2923,8 +3463,7 @@
               <Reveal
                 id="solutions-panel"
                 delay={0}
-                className="lg:col-span-8"
-                style={panelHeight ? { height: panelHeight } : undefined}
+                className="h-0 min-h-full overflow-hidden lg:col-span-8"
               >
                 <article
                   key={item.id}
@@ -2932,32 +3471,26 @@
                   role="tabpanel"
                 >
                   <div className="grid h-full min-h-0 grid-cols-1 md:grid-cols-2">
-                    <div className={`relative h-full min-h-[240px] overflow-hidden bg-gradient-to-br md:min-h-0 ${item.tone} ${item.visual === 'bar' ? 'text-white' : ''} ${item.image ? '!bg-[#F5F7FA]' : ''}`}>
+                    <div className={`relative h-full min-h-0 overflow-hidden bg-gradient-to-br ${item.tone} ${item.visual === 'bar' ? 'text-white' : ''} ${item.image ? '!bg-[#F5F7FA]' : ''}`}>
                       <SolutionVisual type={item.visual} accent={item.accent} image={item.image} alt={`${item.title} · ${item.partner}`} />
                       <div className="solution-seam-fade" aria-hidden="true" />
                     </div>
                     <div className="relative flex h-full min-h-0 flex-col justify-center overflow-y-auto bg-white p-6 md:p-6 lg:py-5 lg:pl-6 lg:pr-7">
-                      <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-syw">{item.partner}</p>
+                      <p className="syw-label-tag font-light text-syw">{item.partner}</p>
                       <h3 className="mt-2 text-[22px] font-semibold tracking-tight text-syw-ink">{item.title}</h3>
                       <p className="mt-1 text-[12px] font-medium text-syw">{item.industry}</p>
-                      <p className="mt-4 text-[14px] leading-7 text-syw-mute">{item.intro}</p>
-                      <ul className="mt-4 space-y-2">
-                        {item.points.map((pt) => (
-                          <li key={pt} className="flex items-start gap-2 text-[13px] text-syw-ink">
-                            <Ico name="check" className="mt-0.5 h-4 w-4 shrink-0 text-[#0094FF]" />
-                            {pt}
-                          </li>
-                        ))}
-                      </ul>
-                      <div className="mt-5 grid grid-cols-2 gap-3">
+                      <p className="mt-3 text-[14px] leading-7 text-syw-mute">
+                        {highlightPhrases(item.intro, item.highlights)}
+                      </p>
+                      <div className="mt-4 grid grid-cols-2 gap-2">
                         {item.stats.map((st) => (
-                          <div key={st.l} className="rounded-xl bg-syw-mist px-3 py-2.5">
-                            <div className="num text-[18px] font-semibold text-syw-ink">{st.n}</div>
-                            <div className="text-[11px] text-syw-mute">{st.l}</div>
+                          <div key={st.l} className="rounded-lg bg-syw-mist/80 px-2.5 py-1.5">
+                            <div className="num text-[15px] font-semibold leading-tight text-syw-ink">{st.n}</div>
+                            <div className="mt-0.5 text-[10px] leading-none text-syw-mute">{st.l}</div>
                           </div>
                         ))}
                       </div>
-                      <button type="button" onClick={onLead} className="mt-6 inline-flex h-10 w-fit items-center rounded-full bg-[#0094FF] px-4 text-[13px] font-medium text-white transition-all duration-300 ease-in-out hover:bg-syw-deep">
+                      <button type="button" onClick={onLead} className="mt-5 inline-flex h-10 w-fit items-center rounded-full bg-[#0094FF] px-4 text-[13px] font-medium text-white transition-all duration-300 ease-in-out hover:bg-syw-deep">
                         获取 {item.title} 方案
                       </button>
                     </div>
@@ -2986,7 +3519,7 @@
       }, []);
 
       return (
-        <section id="cases" className="reveal-band-b pb-16 pt-4">
+        <section id="cases" className="section-soft reveal-band-b pb-16 pt-4">
           <div className="mx-auto max-w-[1200px] px-6">
             <Reveal id="cases-head" delay={0} className="mb-8">
               <p className="font-mono text-[11px] uppercase tracking-[0.28em] text-syw">Partner Cases</p>
@@ -3007,7 +3540,7 @@
       const hexGroup = useRevealGroup('partner-hex-group', hexTotal);
       let hexIndex = 0;
       return (
-        <section id="partners" className="reveal-band-e border-t border-syw-line/70 pb-16 pt-12">
+        <section id="partners" className="section-soft reveal-band-e pb-32 pt-12">
           <div className="mx-auto max-w-[1200px] px-6">
             <Reveal id="partners-head" delay={0} className="mb-8 text-center md:mb-10">
               <p className="font-mono text-[11px] uppercase tracking-[0.28em] text-syw">Partner Network</p>
@@ -3063,8 +3596,8 @@
         { n: '7×24', l: '小时技术保障', d: '交易、结算、对账链路全天候值守' }
       ];
       return (
-        <section className="relative overflow-hidden bg-[#0094FF] py-16">
-          <div className="pointer-events-none absolute inset-0 opacity-50" style={{ backgroundImage: 'radial-gradient(circle at 18% 22%, rgba(255,255,255,.22), transparent 44%), radial-gradient(circle at 82% 78%, rgba(0,118,204,.35), transparent 42%)' }} />
+        <section className="trust-band py-16">
+          <div className="pointer-events-none absolute inset-0 opacity-50" style={{ backgroundImage: 'radial-gradient(circle at 18% 48%, rgba(255,255,255,.18), transparent 44%), radial-gradient(circle at 82% 78%, rgba(0,118,204,.35), transparent 42%)' }} />
           <div className="relative mx-auto max-w-[1200px] px-6">
             <Reveal id="trust-head" delay={0} className="mb-10 flex items-center gap-3">
               <span className="grid h-9 w-9 place-items-center rounded-lg bg-white/15 ring-1 ring-white/25 text-white">
@@ -3115,10 +3648,10 @@
       const isPartner = persona === 'partner';
 
       return (
-        <section id="lead" className="relative overflow-hidden bg-[#0076CC] py-16">
+        <section id="lead" className="lead-band py-16">
           <LeadQrModal open={qrOpen} persona={persona} onClose={() => setQrOpen(false)} />
-          <div className="pointer-events-none absolute inset-0 opacity-40" style={{ backgroundImage: 'linear-gradient(180deg, rgba(0,118,204,.35) 0%, transparent 55%)' }} />
-          <div className="relative mx-auto grid max-w-[1200px] grid-cols-1 items-start gap-10 px-6 lg:grid-cols-10">
+          <div className="pointer-events-none absolute inset-0 opacity-35" style={{ backgroundImage: 'radial-gradient(circle at 18% 22%, rgba(255,255,255,.16), transparent 44%), radial-gradient(circle at 82% 78%, rgba(0,118,204,.18), transparent 42%)' }} />
+          <div className="relative z-[2] mx-auto grid max-w-[1200px] grid-cols-1 items-start gap-10 px-6 lg:grid-cols-10">
             <Reveal id="lead-form" delay={0} className="lg:col-span-6">
               <p className="font-mono text-[11px] uppercase tracking-[0.28em] text-white/75">Get a proposal</p>
               <h2 className="mt-2 text-[28px] font-semibold text-white">资深顾问 30 分钟内提供专属报价</h2>
@@ -3170,13 +3703,14 @@
         { title: '企微客服', src: 'qr/wecom-cs.png', alt: '企微客服二维码' }
       ];
       return (
-        <footer id="help" className="border-t border-syw-line bg-syw-mist py-10">
+        <footer id="help" className="site-footer py-10">
           <div className="mx-auto flex max-w-[1200px] flex-col gap-8 px-6 md:flex-row md:items-end md:justify-between">
             <div>
               <Logo compact />
               <p className="mt-4 max-w-md text-[12px] leading-6 text-syw-mute">
-                © 2026 盛意旺科技有限公司 保留所有权利<br />
-                支付业务许可证编号：Z2017XXXXXXXX · ICP备XXXXXXXX号-1
+                © 2026 盛付通电子支付服务有限公司 保留所有权利<br />
+                客服支持：400-720-8888 人工服务：9:00-22:00 自助服务：7x24小时<br />
+                沪公网备31011502001963号 沪ICP备08024653号-10
               </p>
               <div className="mt-3 flex gap-4 text-[12px] text-syw-mute">
                 <a href="#help" className="hover:text-syw">隐私政策</a>
@@ -3242,6 +3776,24 @@
       );
     }
 
+    function HeroPayBand({ persona, toast, onLead }) {
+      const isPartner = persona === 'partner';
+      const kvSrc = isPartner ? 'kv-partner.png' : 'kv-merchant-extend.png';
+      return (
+        <div className={`hero-pay-band${isPartner ? ' is-partner' : ''}`}>
+          <div
+            key={kvSrc}
+            className="hero-pay-band-bg pointer-events-none"
+            style={{ backgroundImage: `url('${kvSrc}')` }}
+            aria-hidden="true"
+          />
+          <div className="hero-pay-band-overlay pointer-events-none" aria-hidden="true" />
+          <Hero persona={persona} toast={toast} onLead={onLead} />
+          <PaymentMethods />
+        </div>
+      );
+    }
+
     function App() {
       const [persona, setPersona] = useState('merchant');
       const [menuOpen, setMenuOpen] = useState(false);
@@ -3255,8 +3807,7 @@
           <a href="#products" className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[90] focus:rounded-md focus:bg-white focus:px-3 focus:py-2">跳到产品矩阵</a>
           <Header onLead={goLead} menuOpen={menuOpen} onOpenMenu={() => setMenuOpen((v) => !v)} persona={persona} setPersona={setPersona} />
           <main>
-            <Hero persona={persona} toast={setToast} onLead={goLead} />
-            <PaymentMethods />
+            <HeroPayBand persona={persona} toast={setToast} onLead={goLead} />
             <Products persona={persona} onLead={goLead} />
             <IndustrySolutions onLead={goLead} />
             <Cases />
