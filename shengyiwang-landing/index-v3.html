@@ -881,6 +881,43 @@
         height: 320px;
       }
     }
+    /* 行业方案：左右同高；竖图按高度算宽度，完整显示，余下给文案 */
+    .solution-visual-pane {
+      position: relative;
+      overflow: hidden;
+      width: 100%;
+      min-height: 240px;
+      aspect-ratio: 695 / 1024;
+      max-height: 360px;
+    }
+    .solution-card-split {
+      display: grid;
+      grid-template-columns: 1fr;
+    }
+    .solution-copy-pane {
+      min-width: 0;
+    }
+    @media (min-width: 768px) {
+      .solution-card-split {
+        display: flex;
+        flex-direction: row;
+        align-items: stretch;
+        height: 100%;
+        min-height: 0;
+      }
+      .solution-visual-pane {
+        flex: 0 0 auto;
+        width: auto;
+        height: 100%;
+        max-height: none;
+        min-height: 0;
+        aspect-ratio: 695 / 1024;
+        max-width: 46%;
+      }
+      .solution-copy-pane {
+        flex: 1 1 0%;
+      }
+    }
     /* 行业方案大卡 · 左右衔接蒙层 */
     .solution-seam-fade {
       pointer-events: none;
@@ -1283,7 +1320,11 @@
     #partner-accordion {
       position: relative;
       width: 100%;
-      height: 420px;
+      /* 版心 1500 后宽度变大，高度随宽度按原 1152×420 比例放大，避免压扁 */
+      height: auto;
+      aspect-ratio: 2.76 / 1;
+      min-height: 520px;
+      max-height: 560px;
       background:
         radial-gradient(ellipse 120% 90% at 8% 50%, rgba(253, 182, 7, 0.28), transparent 58%),
         radial-gradient(ellipse 100% 80% at 32% 45%, rgba(39, 97, 255, 0.22), transparent 55%),
@@ -1377,13 +1418,13 @@
       display: none;
     }
     #partner-accordion.has-active .accordion-card.is-expanded {
-      flex-grow: 2.6;
+      flex-grow: 3;
       border-color: rgba(0, 148, 255, 0.45);
       border-left-width: 3px;
       box-shadow: 0 14px 36px rgba(0, 148, 255, 0.14);
     }
     #partner-accordion.has-active .accordion-card.is-narrow {
-      flex-grow: 0.6;
+      flex-grow: 0.5;
     }
     #partner-accordion .accordion-card.has-card-photo:not(.is-expanded).theme-ready {
       background: transparent;
@@ -1570,7 +1611,7 @@
       display: block;
       width: 100%;
       height: 100%;
-      object-fit: cover;
+      object-fit: contain;
       object-position: center center;
     }
     #partner-accordion .accordion-card-detail {
@@ -3690,8 +3731,8 @@
       const card = 'rounded-xl bg-white/90 p-3 ring-1 ring-white/80 shadow-[0_8px_24px_rgba(12,27,46,.08)]';
       if (image) {
         return (
-          <div className="absolute inset-0 overflow-hidden bg-[#F5F7FA]">
-            <img src={image} alt={alt} className="h-full w-full object-cover object-[50%_42%]" loading="lazy" />
+          <div className="absolute inset-0 overflow-hidden bg-[#F5F7FA] p-3">
+            <img src={image} alt={alt} className="h-full w-full object-contain object-center" loading="lazy" />
           </div>
         );
       }
@@ -3896,8 +3937,8 @@
                 );
               })}
             </div>
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
-              <div ref={tabGroup.setContainerRef} className="hidden h-fit space-y-2 overflow-visible lg:col-span-4 lg:block" role="tablist" aria-label="行业解决方案">
+            <div className="grid grid-cols-1 items-stretch gap-6 lg:grid-cols-12 lg:min-h-[540px]">
+              <div ref={tabGroup.setContainerRef} className="hidden h-full flex-col gap-2 overflow-visible lg:col-span-4 lg:flex" role="tablist" aria-label="行业解决方案">
                 {SOLUTIONS.map((s, i) => {
                   const { className: rClass, style: rStyle, ...rAttrs } = tabGroup.itemProps(i);
                   return (
@@ -3908,7 +3949,7 @@
                       aria-selected={active === i}
                       onClick={() => setActive(i)}
                       {...rAttrs}
-                      className={[rClass, 'w-full shrink-0 rounded-2xl px-4 py-4 text-left ring-1', tabGroup.phase === 'done' ? 'transition-colors duration-300 ease-in-out' : '', active === i ? 'solution-tab-active bg-white ring-[#0094FF]/40' : 'bg-white/70 ring-syw-line hover:bg-white hover:ring-[#0094FF]/20'].filter(Boolean).join(' ')}
+                      className={[rClass, 'flex w-full flex-1 flex-col justify-center rounded-2xl px-4 py-4 text-left ring-1', tabGroup.phase === 'done' ? 'transition-colors duration-300 ease-in-out' : '', active === i ? 'solution-tab-active bg-white ring-[#0094FF]/40' : 'bg-white/70 ring-syw-line hover:bg-white hover:ring-[#0094FF]/20'].filter(Boolean).join(' ')}
                       style={rStyle}
                     >
                       <p className="syw-label-tag whitespace-nowrap font-light text-syw">{s.partner}</p>
@@ -3922,19 +3963,19 @@
               <Reveal
                 id="solutions-panel"
                 delay={0}
-                className="h-0 min-h-full overflow-hidden lg:col-span-8"
+                className="min-h-0 overflow-hidden lg:col-span-8 lg:h-0 lg:min-h-full"
               >
                 <article
                   key={item.id}
                   className="h-full overflow-hidden rounded-2xl bg-white ring-1 ring-syw-line"
                   role="tabpanel"
                 >
-                  <div className="grid h-full min-h-0 grid-cols-1 md:grid-cols-2">
-                    <div className={`relative h-full min-h-0 overflow-hidden bg-gradient-to-br ${item.tone} ${item.visual === 'bar' ? 'text-white' : ''} ${item.image ? '!bg-[#F5F7FA]' : ''}`}>
+                  <div className="solution-card-split">
+                    <div className={`solution-visual-pane bg-gradient-to-br ${item.tone} ${item.visual === 'bar' ? 'text-white' : ''} ${item.image ? '!bg-[#F5F7FA]' : ''}`}>
                       <SolutionVisual type={item.visual} accent={item.accent} image={item.image} alt={`${item.title} · ${item.partner}`} />
                       <div className="solution-seam-fade" aria-hidden="true" />
                     </div>
-                    <div className="relative flex h-full min-h-0 flex-col justify-center overflow-y-auto bg-white p-6 md:p-6 lg:py-5 lg:pl-6 lg:pr-7">
+                    <div className="solution-copy-pane relative flex min-h-0 flex-col justify-center bg-white p-6 md:p-6 lg:py-5 lg:pl-6 lg:pr-7">
                       <p className="syw-label-tag font-light text-syw">{item.partner}</p>
                       <h3 className="mt-2 text-[22px] font-semibold tracking-tight text-syw-ink">{item.title}</h3>
                       <p className="mt-1 text-[12px] font-medium text-syw">{item.industry}</p>
