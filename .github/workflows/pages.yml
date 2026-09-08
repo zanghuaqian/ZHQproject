@@ -1,4 +1,7 @@
-# 将 docs/ 作为站点根目录部署到 GitHub Pages（发布后 /product-list.html 即 docs/product-list.html）
+# 将 docs/ 与落地页一并部署到 GitHub Pages
+# 发布后：
+#   /product-list.html → docs/product-list.html
+#   /shengyiwang-landing/index-v3.html → shengyiwang-landing/index-v3.html
 #
 # 首次使用请到：仓库 Settings → Pages → Build and deployment
 # → Source 选「GitHub Actions」（不要与普通「Deploy from branch」混用）。
@@ -31,10 +34,21 @@ jobs:
       - name: Configure Pages
         uses: actions/configure-pages@v4
 
+      - name: Assemble site
+        run: |
+          mkdir -p _pages
+          cp -a docs/. _pages/
+          cp -a shengyiwang-landing _pages/shengyiwang-landing
+          rm -rf _pages/shengyiwang-landing/__pycache__ \
+                 _pages/shengyiwang-landing/data \
+                 _pages/shengyiwang-landing/.tools
+          rm -f _pages/shengyiwang-landing/.env
+          touch _pages/.nojekyll
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: docs
+          path: _pages
 
       - name: Deploy to GitHub Pages
         id: deployment
