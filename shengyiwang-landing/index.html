@@ -615,7 +615,7 @@
     }
     #payment-methods .pay-scatter-info-kicker {
       font-family: 'IBM Plex Mono', ui-monospace, monospace;
-      font-size: 10px;
+      font-size: 12px;
       letter-spacing: 0.2em;
       text-transform: uppercase;
       color: var(--glow, #0094FF);
@@ -1057,7 +1057,7 @@
     #my-carousel .carousel-card-overlay p {
       margin: 0;
       color: #fff;
-      font-size: 10px;
+      font-size: 12px;
       line-height: 1.45;
       text-align: center;
       display: -webkit-box;
@@ -1216,7 +1216,7 @@
     .partner-hex-name {
       margin-top: 6px;
       max-width: calc(var(--hex-w) - 10px);
-      font-size: 10px;
+      font-size: 12px;
       font-weight: 500;
       line-height: 1.3;
       color: #5B6B7C;
@@ -1225,7 +1225,7 @@
       white-space: nowrap;
     }
     @media (min-width: 0px) {
-      .partner-hex-name { font-size: 11px; }
+      .partner-hex-name { font-size: 12px; }
     }
 
     /* ── 合作案例 · 水平手风琴 (#partner-accordion) ── */
@@ -1553,7 +1553,7 @@
     }
     #partner-accordion .accordion-detail-desc {
       margin: 0;
-      font-size: 10px;
+      font-size: 12px;
       line-height: 1.45;
       color: #5B6B7C;
       display: -webkit-box;
@@ -2419,7 +2419,7 @@
 
       return (
         <div className="flex h-full min-h-[280px] w-full flex-col rounded-2xl border border-white/50 bg-white/28 p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.78),0_18px_48px_rgba(12,27,46,0.10)] backdrop-blur-2xl lg:ml-auto">
-          <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-white/75">Onboarding</p>
+          <p className="font-mono text-[12px] uppercase tracking-[0.22em] text-white/75">Onboarding</p>
           <p className="mt-1 text-[15px] font-semibold text-white">接入步骤</p>
           <ol className="mt-4 flex min-h-0 flex-1 flex-col justify-between gap-2.5">
             {steps.map((label, index) => (
@@ -2799,12 +2799,10 @@
 
     function MiniPhoneQr({ app }) {
       const [hovered, setHovered] = useState(false);
-      const [zoomed, setZoomed] = useState(false);
-      const showQr = hovered || zoomed;
 
       return (
         <div
-          className={`relative z-0 flex min-h-0 flex-col overflow-hidden rounded-xl bg-white ring-1 ring-syw-line hover:z-10 ${zoomed ? 'z-20' : ''}`}
+          className={`relative z-0 flex min-h-0 flex-col overflow-hidden rounded-xl bg-white ring-1 ring-syw-line hover:z-10 ${hovered ? 'z-20' : ''}`}
           onMouseEnter={() => setHovered(true)}
           onMouseLeave={() => setHovered(false)}
         >
@@ -2812,7 +2810,7 @@
             <span className="rounded-full bg-[#0094FF]/10 px-1.5 py-0.5 text-[9px] font-medium text-[#0094FF]">{app.badge}</span>
             <span className="h-1.5 w-1.5 rounded-full bg-[#1AAE6F]" aria-hidden="true" />
           </div>
-          <div className="relative mx-auto mt-1.5 mb-1 w-[88%] max-w-[110px] min-h-0 flex-1 overflow-hidden rounded-[14px] bg-[#F5F7FA] shadow-[0_8px_20px_rgba(12,27,46,.08)] ring-1 ring-syw-line">
+          <div className="relative mx-2 mt-1.5 mb-1 min-h-0 w-auto flex-1 overflow-hidden rounded-[14px] bg-[#F5F7FA] shadow-[0_8px_20px_rgba(12,27,46,.08)] ring-1 ring-syw-line">
             <img
               src={app.image}
               alt={`${app.name}界面`}
@@ -2822,39 +2820,22 @@
             />
           </div>
           <div className="px-1.5 pb-2 text-center">
-            <p className="truncate text-[10px] font-semibold leading-tight text-syw-ink">{app.name}</p>
+            <p className="truncate text-[12px] font-semibold leading-tight text-syw-ink">{app.name}</p>
             <p className="truncate text-[9px] leading-tight text-syw-mute">{app.role}</p>
           </div>
           <div
-            className={`absolute inset-0 z-30 flex flex-col p-1.5 backdrop-blur-[2px] transition-opacity duration-200 ease-in-out ${showQr ? 'opacity-100' : 'opacity-0'}`}
-            style={{ pointerEvents: showQr ? 'auto' : 'none', touchAction: 'pan-y', background: 'rgba(72,76,84,0.58)' }}
+            className={`absolute inset-0 z-30 flex items-center justify-center p-1 backdrop-blur-[2px] transition-opacity duration-200 ease-in-out ${hovered ? 'opacity-100' : 'opacity-0'}`}
+            style={{ pointerEvents: 'none', background: 'rgba(72,76,84,0.58)' }}
             data-qr-overlay={app.id}
-            data-qr-zoomed={zoomed ? '1' : '0'}
-            onClick={(e) => {
-              e.stopPropagation();
-              if (zoomed) setZoomed(false);
-            }}
           >
-            {zoomed ? (
-              <img
-                src={app.qr}
-                alt={`${app.name}二维码`}
-                className="min-h-0 w-full flex-1 object-contain"
-                draggable="false"
-              />
-            ) : (
-              <button
-                type="button"
-                className="mx-auto mt-auto select-none rounded-lg p-1"
-                onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); setZoomed(true); }}
-                onClick={(e) => { e.stopPropagation(); setZoomed(true); }}
-                aria-label={`点击放大${app.name}二维码`}
-              >
-                <img src={app.qr} alt={`${app.name}二维码`} className="h-[64px] w-[64px] object-contain" draggable="false" />
-              </button>
-            )}
-            <span className="pointer-events-none mt-auto pb-0.5 text-center text-[9px] font-medium leading-none text-white/95">
-              {zoomed ? '点击空白处关闭' : app.qrHint}
+            <img
+              src={app.qr}
+              alt={`${app.name}二维码`}
+              className="h-full w-full object-contain"
+              draggable="false"
+            />
+            <span className="pointer-events-none absolute inset-x-0 bottom-1.5 text-center text-[9px] font-medium leading-none text-white/95">
+              {app.qrHint}
             </span>
           </div>
         </div>
@@ -3150,7 +3131,7 @@
                 </button>
               </div>
             </div>
-            <p className="text-[10px] leading-[1.65] text-syw-mute sm:text-[11px]">{p.pain}</p>
+            <p className="text-[12px] leading-[1.65] text-syw-mute">{p.pain}</p>
           </div>
         </div>
       );
@@ -3468,7 +3449,7 @@
                 <p className="num mt-1 text-[18px] font-semibold text-syw">¥320.00</p>
               </div>
               <div className="flex flex-col items-center gap-1 text-[#0094FF]">
-                <span className="text-[10px]">联动</span>
+                <span className="text-[12px]">联动</span>
                 <Ico name="arrow" className="h-4 w-4" />
               </div>
               <div className={`${card} text-center`}>
@@ -3476,12 +3457,12 @@
                   <Ico name="check" className="h-6 w-6" />
                 </div>
                 <p className="text-[11px] font-medium text-syw-ink">电子发票</p>
-                <p className="mt-1 text-[10px] text-[#1AAE6F]">已开具 · 乐企联用</p>
+                <p className="mt-1 text-[12px] text-[#1AAE6F]">已开具 · 乐企联用</p>
               </div>
             </div>
             <div className={`absolute bottom-6 left-6 right-6 ${card} flex items-center justify-between px-4 py-2.5`}>
               <span className="text-[11px] text-syw-mute">驾油吧 × 乐企联用</span>
-              <span className="rounded-full bg-[#0094FF]/10 px-2 py-0.5 text-[10px] font-medium text-[#0094FF]">支付即开票</span>
+              <span className="rounded-full bg-[#0094FF]/10 px-2 py-0.5 text-[12px] font-medium text-[#0094FF]">支付即开票</span>
             </div>
           </div>
         );
@@ -3502,7 +3483,7 @@
                   { l: '艺人 / DJ', n: '20%', c: '#86EFAC' }
                 ].map((x) => (
                   <div key={x.l} className={`${card} !bg-white/10 !ring-white/15 text-center`}>
-                    <p className="text-[10px] text-white/65">{x.l}</p>
+                    <p className="text-[12px] text-white/65">{x.l}</p>
                     <p className="num mt-1 text-[16px] font-semibold" style={{ color: x.c }}>{x.n}</p>
                   </div>
                 ))}
@@ -3531,7 +3512,7 @@
                 {['USD', 'EUR', 'HKD'].map((c) => (
                   <div key={c} className={`${card} text-center`}>
                     <p className="font-mono text-[12px] font-semibold text-syw">{c}</p>
-                    <p className="mt-1 text-[10px] text-syw-mute">收款 ✓</p>
+                    <p className="mt-1 text-[12px] text-syw-mute">收款 ✓</p>
                   </div>
                 ))}
               </div>
@@ -3549,7 +3530,7 @@
             <div className="absolute inset-0 rounded-2xl bg-[radial-gradient(circle_at_40%_25%,rgba(0,148,255,.14),transparent_55%)]" />
             <div className="relative w-full max-w-[380px] space-y-2.5">
               <div className={`${card} mx-auto max-w-[168px] text-center`}>
-                <p className="text-[10px] text-syw-mute">总部商户 · 统管</p>
+                <p className="text-[12px] text-syw-mute">总部商户 · 统管</p>
                 <p className="text-[12px] font-semibold text-syw-ink">品牌集团总部</p>
               </div>
               <div className="mx-auto flex h-3 w-px bg-[#0094FF]/25" aria-hidden="true" />
@@ -3560,7 +3541,7 @@
                   { l: '华北区', n: '41', s: '子商户' }
                 ].map((x) => (
                   <div key={x.l} className={`${card} text-center`}>
-                    <p className="text-[10px] text-syw-mute">{x.l}</p>
+                    <p className="text-[12px] text-syw-mute">{x.l}</p>
                     <p className="num mt-1 text-[15px] font-semibold" style={{ color: accent }}>{x.n}</p>
                     <p className="text-[9px] text-syw-mute">{x.s}</p>
                   </div>
@@ -3568,17 +3549,17 @@
               </div>
               <div className={`${card} grid grid-cols-2 gap-2 px-3 py-2.5`}>
                 <div>
-                  <p className="text-[10px] text-syw-mute">今日交易汇总</p>
+                  <p className="text-[12px] text-syw-mute">今日交易汇总</p>
                   <p className="num text-[14px] font-semibold text-[#0094FF]">¥286,420</p>
                 </div>
                 <div className="border-l border-syw-line pl-3">
-                  <p className="text-[10px] text-syw-mute">对账状态</p>
+                  <p className="text-[12px] text-syw-mute">对账状态</p>
                   <p className="text-[11px] font-medium text-[#1AAE6F]">日账单已生成</p>
                 </div>
               </div>
               <div className={`${card} flex items-center justify-between px-4 py-2`}>
                 <span className="text-[11px] text-syw-mute">集团总部商户</span>
-                <span className="rounded-full bg-[#0094FF]/10 px-2 py-0.5 text-[10px] font-medium text-[#0094FF]">区域权限隔离</span>
+                <span className="rounded-full bg-[#0094FF]/10 px-2 py-0.5 text-[12px] font-medium text-[#0094FF]">区域权限隔离</span>
               </div>
             </div>
           </div>
@@ -3592,7 +3573,7 @@
               <span className="grid h-8 w-8 place-items-center rounded-lg bg-[#0094FF]/10 text-[#0094FF]"><Ico name="spark" className="h-4 w-4" /></span>
               <div>
                 <p className="text-[11px] font-medium text-syw-ink">AI 经营助手</p>
-                <p className="text-[10px] text-syw-mute">自然语言查数</p>
+                <p className="text-[12px] text-syw-mute">自然语言查数</p>
               </div>
             </div>
             <div className="rounded-lg bg-syw-mist px-3 py-2 text-[12px] text-syw-ink">「上周跨月退款匹配情况？」</div>
@@ -3680,7 +3661,7 @@
                       {item.stats.map((st) => (
                         <div key={st.l} className="rounded-lg bg-syw-mist/80 px-2.5 py-1.5">
                           <div className="num text-[15px] font-semibold leading-tight text-syw-ink">{st.n}</div>
-                          <div className="mt-0.5 text-[10px] leading-none text-syw-mute">{st.l}</div>
+                          <div className="mt-0.5 text-[12px] leading-none text-syw-mute">{st.l}</div>
                         </div>
                       ))}
                     </div>
@@ -3729,7 +3710,7 @@
             <div className="mb-8 text-center md:mb-10">
               <p className="font-mono text-[11px] uppercase tracking-[0.28em] text-syw">Partner Network</p>
               <h2 className="mt-2 text-[24px] font-semibold tracking-tight text-syw-ink md:text-[26px]">更多合作商户</h2>
-              <p className="mx-auto mt-2 max-w-lg text-[13px] leading-6 text-syw-mute">携手零售、餐饮、生活服务等业态商户，共建开放支付生态。以下为部分合作品牌展示。</p>
+              <p className="mx-auto mt-2 max-w-lg text-[13px] leading-6 text-syw-mute">携手零售、餐饮、生活服务等业态商户，共建开放支付生态。</p>
             </div>
             <div className="partner-honeycomb mx-auto max-w-[680px] sm:max-w-[760px]">
               <div className="partner-honeycomb-rows" role="list" aria-label="合作商户">
