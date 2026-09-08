@@ -2215,6 +2215,108 @@
     };
 
     const LEAD_API = (typeof window !== 'undefined' && window.LEAD_API_BASE) || '';
+    const LEAD_DEMO_QR = 'qr/wecom-livecode.png';
+    const CAPTCHA_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    const leadDemo = { live: null, captchas: {}, sms: null };
+
+    function makeLeadId() {
+      return 'demo' + Math.random().toString(36).slice(2, 10);
+    }
+
+    function makeDemoCaptcha() {
+      const code = Array.from({ length: 4 }, () => CAPTCHA_ALPHABET[Math.floor(Math.random() * CAPTCHA_ALPHABET.length)]).join('');
+      const canvas = document.createElement('canvas');
+      canvas.width = 128;
+      canvas.height = 44;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, 128, 44);
+      for (let i = 0; i < 6; i++) {
+        ctx.strokeStyle = `rgb(${160 + Math.random() * 40},${170 + Math.random() * 40},${190 + Math.random() * 30})`;
+        ctx.beginPath();
+        ctx.moveTo(Math.random() * 128, Math.random() * 44);
+        ctx.lineTo(Math.random() * 128, Math.random() * 44);
+        ctx.stroke();
+      }
+      ctx.textBaseline = 'middle';
+      ctx.font = '700 24px "Segoe UI","PingFang SC",sans-serif';
+      for (let i = 0; i < 4; i++) {
+        ctx.save();
+        ctx.fillStyle = `rgb(${20 + Math.random() * 70},${20 + Math.random() * 70},${80 + Math.random() * 80})`;
+        ctx.translate(16 + i * 28 + Math.random() * 4, 22 + (Math.random() * 6 - 3));
+        ctx.rotate((Math.random() - 0.5) * 0.35);
+        ctx.fillText(code[i], 0, 0);
+        ctx.restore();
+      }
+      const id = makeLeadId();
+      leadDemo.captchas[id] = { code, expire: Date.now() + 180000 };
+      return { captcha_id: id, image: canvas.toDataURL('image/png'), demo_code: code };
+    }
+
+    async function isLeadLive() {
+      if (leadDemo.live !== null) return leadDemo.live;
+      try {
+        const res = await fetch(`${LEAD_API}/api/health`, { cache: 'no-store' });
+        leadDemo.live = res.ok;
+      } catch (_err) {
+        leadDemo.live = false;
+      }
+      return leadDemo.live;
+    }
+
+    async function leadCaptcha() {
+      if (await isLeadLive()) {
+        try {
+          const res = await fetch(`${LEAD_API}/api/captcha`, { cache: 'no-store' });
+          if (res.ok) return await res.json();
+        } catch (_err) { /* GitHub Pages 等静态托管回落到前端演示 */ }
+        leadDemo.live = false;
+      }
+      return makeDemoCaptcha();
+    }
+
+    async function leadSendSms(payload) {
+      if (await isLeadLive()) {
+        const res = await fetch(`${LEAD_API}/api/sms`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        let data = {};
+        try { data = await res.json(); } catch (_err) { data = {}; }
+        if (!res.ok) throw new Error(data.error || '发送失败');
+        return data;
+      }
+      const item = leadDemo.captchas[payload.captcha_id];
+      const code = String(payload.captcha_code || '').trim().toUpperCase();
+      if (!item || item.expire < Date.now() || item.code !== code) {
+        throw new Error('图形验证码错误或已过期，请刷新后重试');
+      }
+      delete leadDemo.captchas[payload.captcha_id];
+      const sms = String(Math.floor(100000 + Math.random() * 900000));
+      leadDemo.sms = { phone: payload.phone, code: sms, expire: Date.now() + 300000 };
+      return { ok: true, ttl: 60, message: '验证码已发送', demo_code: sms };
+    }
+
+    async function leadSubmit(payload) {
+      if (await isLeadLive()) {
+        const res = await fetch(`${LEAD_API}/api/lead`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        let data = {};
+        try { data = await res.json(); } catch (_err) { data = {}; }
+        if (!res.ok) throw new Error(data.error || '提交失败，请稍后重试');
+        return data;
+      }
+      const sms = leadDemo.sms;
+      if (!sms || sms.phone !== payload.phone || sms.expire < Date.now() || sms.code !== payload.sms_code) {
+        throw new Error('短信验证码错误');
+      }
+      leadDemo.sms = null;
+      return { ok: true, lead_id: makeLeadId(), qr_code: LEAD_DEMO_QR, demo: true };
+    }
 
     function LeadQrModal({ open, persona, qrCode, leadId, onClose }) {
       const [connected, setConnected] = useState(false);
@@ -2232,6 +2334,10 @@
           return undefined;
         }
         if (!leadId) return undefined;
+        if (String(leadId).startsWith('demo')) {
+          const demoTimer = window.setTimeout(() => setConnected(true), 8000);
+          return () => window.clearTimeout(demoTimer);
+        }
         let stopped = false;
         const tick = async () => {
           try {
@@ -3811,13 +3917,12 @@
 
       const loadCaptcha = async () => {
         try {
-          const res = await fetch(`${LEAD_API}/api/captcha`);
-          const data = await res.json();
+          const data = await leadCaptcha();
           setCaptcha({ id: data.captcha_id || '', image: data.image || '' });
           setForm((s) => ({ ...s, captchaCode: '' }));
           if (data.demo_code) window.__LEAD_CAPTCHA_DEMO = data.demo_code;
         } catch (_err) {
-          setErr('图形验证码加载失败，请确认留资服务已启动');
+          setErr('图形验证码加载失败，请刷新页面后重试');
         }
       };
 
@@ -3838,19 +3943,12 @@
         setErr('');
         setSmsSending(true);
         try {
-          const res = await fetch(`${LEAD_API}/api/sms`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              phone: form.phone,
-              captcha_id: captcha.id,
-              captcha_code: form.captchaCode
-            })
+          const data = await leadSendSms({
+            phone: form.phone,
+            captcha_id: captcha.id,
+            captcha_code: form.captchaCode
           });
-          let data = {};
-          try { data = await res.json(); } catch (_err) { data = {}; }
           await loadCaptcha();
-          if (!res.ok) throw new Error(data.error || '发送失败');
           setSmsLeft(data.ttl || 60);
           if (toast && data.demo_code) toast(`短信验证码已发送（演示码 ${data.demo_code}）`);
           else if (toast) toast('短信验证码已发送');
@@ -3873,10 +3971,7 @@
         setErr('');
         setSubmitting(true);
         try {
-          const res = await fetch(`${LEAD_API}/api/lead`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
+          const data = await leadSubmit({
               company: form.company.trim(),
               contact_name: form.contactName.trim(),
               phone: form.phone,
@@ -3888,21 +3983,14 @@
               industry_l1: form.industryL1,
               industry_name: form.industryName,
               consent: true
-            })
           });
-          let data = {};
-          try { data = await res.json(); } catch (_err) { data = {}; }
-          if (!res.ok) throw new Error(data.error || '提交失败，请稍后重试');
-          setLeadMeta({ qrCode: data.qr_code || 'qr/wecom-livecode.png', leadId: data.lead_id || '' });
+          setLeadMeta({ qrCode: data.qr_code || LEAD_DEMO_QR, leadId: data.lead_id || '' });
           setQrOpen(true);
           setForm(emptyLeadForm(persona));
           setConsent(false);
           loadCaptcha();
         } catch (ex) {
-          const msg = String(ex && ex.message ? ex.message : '');
-          setErr((msg === 'Failed to fetch' || msg.includes('NetworkError'))
-            ? '留资服务未启动，请先运行 lead_server.py'
-            : (msg || '提交失败，请稍后重试'));
+          setErr((ex && ex.message) || '提交失败，请稍后重试');
         } finally {
           setSubmitting(false);
         }
