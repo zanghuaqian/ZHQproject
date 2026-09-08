@@ -47,16 +47,28 @@
     };
   </script>
   <style>
-    :root { --syw: #0094FF; --page-min-width: 1280px; --syw-page: 1500px; }
+    :root {
+      --syw: #0094FF;
+      --page-min-width: 1200px;
+      --syw-page: min(1500px, 100%);
+    }
     html {
       min-width: var(--page-min-width);
+      overflow-x: auto;
     }
     html, body { background: #F5F7FA; }
     body {
       min-width: var(--page-min-width);
+      max-width: 100%;
+      overflow-x: auto;
       font-family: 'Noto Sans SC', 'IBM Plex Sans', 'PingFang SC', 'Microsoft YaHei', sans-serif;
       color: #0C1B2E;
       -webkit-font-smoothing: antialiased;
+    }
+    #root, #top {
+      min-width: 0;
+      max-width: 100%;
+      overflow-x: clip;
     }
     .syw-label-tag,
     .product-footer-kicker {
@@ -489,7 +501,7 @@
       left: 50%;
       top: 50%;
       z-index: 4;
-      width: min(92vw, 420px);
+      width: min(100%, 420px);
       transform: translate(-50%, -50%);
       text-align: center;
       opacity: 0;
@@ -3709,11 +3721,11 @@
       return (
         <section id="products" className="product-matrix reveal-band-c relative py-8 md:py-9 lg:py-10">
           <div className="mx-auto max-w-[var(--syw-page)] px-6">
-            <Reveal id="products-head" delay={0} className="mb-4 flex items-end justify-between gap-4 md:mb-5">
-              <div>
+            <Reveal id="products-head" delay={0} className="mb-4 flex min-w-0 items-end justify-between gap-4 md:mb-5">
+              <div className="min-w-0">
                 <p className="font-mono text-[11px] uppercase tracking-[0.28em] text-syw">Product Matrix</p>
                 <h2 className="mt-1.5 text-[24px] font-semibold tracking-tight text-syw-ink md:text-[26px]">核心产品矩阵</h2>
-                <p className="mt-1 whitespace-nowrap text-[13px] leading-5 text-syw-mute">硬件、SaaS、开放 API、MCP 与移动端全链路产品能力</p>
+                <p className="mt-1 max-w-full text-[13px] leading-5 text-syw-mute">硬件、SaaS、开放 API、MCP 与移动端全链路产品能力</p>
               </div>
             </Reveal>
             <div className="product-bento">
@@ -3907,12 +3919,12 @@
           <div className="pointer-events-none absolute inset-0 ledger-grid opacity-40" />
           <div className="relative mx-auto max-w-[var(--syw-page)] px-6">
             <Reveal id="solutions-head" delay={0} className="mb-8 flex items-end justify-between gap-6">
-              <div>
+              <div className="min-w-0">
                 <p className="font-mono text-[11px] uppercase tracking-[0.28em] text-syw">Industry Solutions</p>
                 <h2 className="mt-2 text-[28px] font-semibold tracking-tight text-syw-ink">行业解决方案</h2>
-                <p className="mt-2 whitespace-nowrap text-sm leading-6 text-syw-mute">能源、夜生活、跨境、AI 经营与集团连锁垂直行业方案</p>
+                <p className="mt-2 max-w-full text-sm leading-6 text-syw-mute">能源、夜生活、跨境、AI 经营与集团连锁垂直行业方案</p>
               </div>
-              <button type="button" onClick={onLead} className="hidden h-10 items-center rounded-full bg-[#0094FF] px-5 text-[13px] font-medium text-white shadow-[0_8px_18px_rgba(0,148,255,.28)] transition-all duration-300 ease-in-out hover:bg-syw-deep md:inline-flex">
+              <button type="button" onClick={onLead} className="hidden h-10 shrink-0 items-center rounded-full bg-[#0094FF] px-5 text-[13px] font-medium text-white shadow-[0_8px_18px_rgba(0,148,255,.28)] transition-all duration-300 ease-in-out hover:bg-syw-deep md:inline-flex">
                 咨询行业方案
               </button>
             </Reveal>
@@ -3941,7 +3953,7 @@
               })}
             </div>
             <div className="grid grid-cols-1 items-stretch gap-6 lg:grid-cols-12 lg:min-h-[540px]">
-              <div ref={tabGroup.setContainerRef} className="hidden h-full flex-col gap-2 overflow-visible lg:col-span-4 lg:flex" role="tablist" aria-label="行业解决方案">
+              <div ref={tabGroup.setContainerRef} className="hidden h-full min-w-0 flex-col gap-2 overflow-visible lg:col-span-4 lg:flex" role="tablist" aria-label="行业解决方案">
                 {SOLUTIONS.map((s, i) => {
                   const { className: rClass, style: rStyle, ...rAttrs } = tabGroup.itemProps(i);
                   return (
@@ -3952,12 +3964,12 @@
                       aria-selected={active === i}
                       onClick={() => setActive(i)}
                       {...rAttrs}
-                      className={[rClass, 'flex w-full flex-1 flex-col justify-center rounded-2xl px-4 py-4 text-left ring-1', tabGroup.phase === 'done' ? 'transition-colors duration-300 ease-in-out' : '', active === i ? 'solution-tab-active bg-white ring-[#0094FF]/40' : 'bg-white/70 ring-syw-line hover:bg-white hover:ring-[#0094FF]/20'].filter(Boolean).join(' ')}
+                      className={[rClass, 'flex w-full min-w-0 flex-1 flex-col justify-center rounded-2xl px-4 py-4 text-left ring-1', tabGroup.phase === 'done' ? 'transition-colors duration-300 ease-in-out' : '', active === i ? 'solution-tab-active bg-white ring-[#0094FF]/40' : 'bg-white/70 ring-syw-line hover:bg-white hover:ring-[#0094FF]/20'].filter(Boolean).join(' ')}
                       style={rStyle}
                     >
-                      <p className="syw-label-tag whitespace-nowrap font-light text-syw">{s.partner}</p>
-                      <p className="mt-1 whitespace-nowrap text-[16px] font-semibold text-syw-ink">{s.title}</p>
-                      <p className="mt-1 whitespace-nowrap text-[12px] text-syw-mute">{s.industry}</p>
+                      <p className="syw-label-tag min-w-0 truncate font-light text-syw">{s.partner}</p>
+                      <p className="mt-1 min-w-0 text-[16px] font-semibold leading-snug text-syw-ink">{s.title}</p>
+                      <p className="mt-1 min-w-0 truncate text-[12px] text-syw-mute">{s.industry}</p>
                     </button>
                   );
                 })}
@@ -4027,7 +4039,7 @@
             <Reveal id="cases-head" delay={0} className="mb-8">
               <p className="font-mono text-[11px] uppercase tracking-[0.28em] text-syw">Partner Cases</p>
               <h2 className="mt-2 text-[28px] font-semibold tracking-tight text-syw-ink">合作案例</h2>
-              <p className="mt-2 whitespace-nowrap text-sm leading-6 text-syw-mute">携手生态伙伴，覆盖零售、餐饮、商超、财税与夜场</p>
+              <p className="mt-2 max-w-full text-sm leading-6 text-syw-mute">携手生态伙伴，覆盖零售、餐饮、商超、财税与夜场</p>
             </Reveal>
             <div id="partner-accordion" ref={accordionRef}>
               <div className="accordion-track" role="tablist" aria-label="合作案例" />
