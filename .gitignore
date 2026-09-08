@@ -3,3 +3,7 @@ node_modules/
 debug.log
 masked_output/
 *.log
+shengyiwang-landing/.env
+shengyiwang-landing/data/
+shengyiwang-landing/.tools/
+__pycache__/

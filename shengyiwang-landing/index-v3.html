@@ -47,7 +47,7 @@
     };
   </script>
   <style>
-    :root { --syw: #0094FF; --page-min-width: 1280px; }
+    :root { --syw: #0094FF; --page-min-width: 1280px; --syw-page: 1500px; }
     html {
       min-width: var(--page-min-width);
     }
@@ -315,10 +315,10 @@
     #payment-methods .pay-scatter-shell {
       position: relative;
       z-index: 2;
-      width: 1200px;
-      height: 600px;
-      min-height: 600px;
-      max-width: 1200px;
+      width: min(100%, var(--syw-page));
+      height: 750px;
+      min-height: 750px;
+      max-width: var(--syw-page);
       perspective: 800px;
     }
     /* 半透明毛玻璃浮层：托住图标圆环与中心文案（边缘羽化，无清晰描边） */
@@ -328,8 +328,8 @@
       left: 50%;
       top: 50%;
       z-index: 1;
-      width: min(96%, 800px);
-      height: min(94%, 560px);
+      width: min(96%, 1000px);
+      height: min(94%, 700px);
       transform: translate(-50%, -50%);
       border: none;
       border-radius: 48px;
@@ -398,6 +398,26 @@
       transform: translate3d(var(--tx), var(--ty), var(--tz)) scale(1);
       opacity: 1;
     }
+    #payment-methods .pay-scatter-node.is-spread {
+      cursor: pointer;
+      outline: none;
+    }
+    #payment-methods .pay-scatter-node.is-active {
+      z-index: 7;
+    }
+    #payment-methods .pay-scatter-node.is-active .pay-scatter-breathe.is-breathing {
+      animation-play-state: paused;
+    }
+    #payment-methods .pay-scatter-node.is-active .pay-scatter-badge {
+      transform: scale(1.08);
+      box-shadow:
+        0 12px 32px rgba(12, 27, 46, 0.12),
+        0 0 28px var(--glow),
+        inset 0 1px 0 rgba(255, 255, 255, 0.95);
+    }
+    #payment-methods .pay-scatter-node.is-active .pay-scatter-badge::after {
+      opacity: 0.5;
+    }
     #payment-methods .pay-scatter-breathe {
       display: flex;
       flex-direction: column;
@@ -433,6 +453,7 @@
         inset 0 1px 0 rgba(255, 255, 255, 0.95);
       backdrop-filter: blur(12px) saturate(1.3);
       -webkit-backdrop-filter: blur(12px) saturate(1.3);
+      transition: transform 0.28s ease, box-shadow 0.28s ease;
     }
     #payment-methods .pay-scatter-badge::after {
       content: '';
@@ -500,6 +521,185 @@
       line-height: 1.6;
       color: #5B6B7C;
     }
+    #payment-methods .pay-scatter-info {
+      --pay-info-inset: 36px;
+      --pay-info-w: 268px;
+      --pay-badge-gap: 38px;
+      --pay-badge-oy: 14px;
+      position: absolute;
+      top: calc(50% + var(--info-y, 0px) - var(--pay-badge-oy));
+      z-index: 8;
+      width: var(--pay-info-w);
+      padding: 18px 20px 16px 22px;
+      border-radius: 20px;
+      background: transparent;
+      border: none;
+      box-shadow: none;
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(-50%);
+    }
+    #payment-methods .pay-scatter-info-bg {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      border-radius: inherit;
+      background: rgba(255, 255, 255, 0.4);
+      border: 1px solid rgba(255, 255, 255, 0.58);
+      box-shadow:
+        0 16px 40px rgba(12, 27, 46, 0.05),
+        inset 0 1px 0 rgba(255, 255, 255, 0.45);
+      backdrop-filter: blur(18px) saturate(1.2);
+      -webkit-backdrop-filter: blur(18px) saturate(1.2);
+      opacity: 0;
+      transition: opacity 0.16s ease;
+    }
+    #payment-methods .pay-scatter-info-bg::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 16px;
+      bottom: 16px;
+      width: 3px;
+      border-radius: 0 3px 3px 0;
+      background: var(--glow, #0094FF);
+    }
+    #payment-methods .pay-scatter-info > :not(.pay-scatter-info-bg) {
+      position: relative;
+      z-index: 1;
+    }
+    #payment-methods .pay-scatter-info.is-left {
+      left: var(--pay-info-inset);
+    }
+    #payment-methods .pay-scatter-info.is-right {
+      right: var(--pay-info-inset);
+    }
+    #payment-methods .pay-scatter-info.is-on {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    #payment-methods .pay-scatter-info-line {
+      position: absolute;
+      z-index: 6;
+      top: calc(50% + var(--info-y, 0px) - 14px);
+      height: 1px;
+      pointer-events: none;
+    }
+    #payment-methods .pay-scatter-info-line.is-left {
+      left: calc(36px + 268px);
+      right: calc(50% - var(--info-x, 0px) + 38px);
+    }
+    #payment-methods .pay-scatter-info-line.is-right {
+      left: calc(50% + var(--info-x, 0px) + 38px);
+      right: calc(36px + 268px);
+    }
+    #payment-methods .pay-scatter-info-stroke {
+      position: absolute;
+      inset: 0;
+      display: block;
+      background: var(--glow, #0094FF);
+      box-shadow: 0 0 8px color-mix(in srgb, var(--glow, #0094FF) 55%, transparent);
+      transform: scaleX(0);
+      opacity: 0;
+      transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.2s ease;
+    }
+    #payment-methods .pay-scatter-info-line.is-left .pay-scatter-info-stroke {
+      transform-origin: right center;
+    }
+    #payment-methods .pay-scatter-info-line.is-right .pay-scatter-info-stroke {
+      transform-origin: left center;
+    }
+    #payment-methods .pay-scatter-info-line.is-on .pay-scatter-info-stroke {
+      transform: scaleX(1);
+      opacity: 0.72;
+    }
+    #payment-methods .pay-scatter-info-dot {
+      position: absolute;
+      top: 50%;
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--glow, #0094FF);
+      box-shadow: 0 0 10px var(--glow, #0094FF);
+      opacity: 0;
+      transform: translate(-50%, -50%) scale(0.35);
+      transition: opacity 0.22s ease, transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    #payment-methods .pay-scatter-info-line.is-left .pay-scatter-info-dot {
+      left: 100%;
+    }
+    #payment-methods .pay-scatter-info-line.is-right .pay-scatter-info-dot {
+      left: 0;
+    }
+    #payment-methods .pay-scatter-info-line.is-on .pay-scatter-info-dot {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1);
+    }
+    #payment-methods .pay-scatter-info.is-on .pay-scatter-info-bg {
+      opacity: 1;
+      transition: opacity 0.36s ease 0.34s;
+    }
+    #payment-methods .pay-scatter-info-reveal {
+      opacity: 0;
+      transform: translateY(12px);
+      transition:
+        opacity 0.44s cubic-bezier(0.22, 1, 0.36, 1),
+        transform 0.44s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    #payment-methods .pay-scatter-info.is-on .pay-scatter-info-reveal {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    #payment-methods .pay-scatter-info.is-on .pay-scatter-info-kicker {
+      transition-delay: 0.46s;
+    }
+    #payment-methods .pay-scatter-info.is-on .pay-scatter-info-title {
+      transition-delay: 0.57s;
+    }
+    #payment-methods .pay-scatter-info.is-on .pay-scatter-info-desc {
+      transition-delay: 0.68s;
+    }
+    #payment-methods .pay-scatter-info.is-on .pay-scatter-info-tags {
+      transition-delay: 0.79s;
+    }
+    #payment-methods .pay-scatter-info-kicker {
+      font-family: 'IBM Plex Mono', ui-monospace, monospace;
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--glow, #0094FF);
+    }
+    #payment-methods .pay-scatter-info-title {
+      margin-top: 6px;
+      font-size: 18px;
+      font-weight: 650;
+      letter-spacing: -0.02em;
+      color: #0C1B2E;
+    }
+    #payment-methods .pay-scatter-info-desc {
+      margin-top: 8px;
+      font-size: 13px;
+      line-height: 1.65;
+      color: #5B6B7C;
+    }
+    #payment-methods .pay-scatter-info-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 14px;
+    }
+    #payment-methods .pay-scatter-info-tag {
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 500;
+      line-height: 1.4;
+      color: #3D4F63;
+      background: rgba(255, 255, 255, 0.48);
+      border: 1px solid rgba(255, 255, 255, 0.7);
+    }
     @media (max-width: 0px) {
       #payment-methods .pay-scatter-shell {
         min-height: 500px;
@@ -511,7 +711,9 @@
     @media (prefers-reduced-motion: reduce) {
       #payment-methods .pay-scatter-node,
       #payment-methods .pay-scatter-face,
-      #payment-methods .pay-scatter-copy {
+      #payment-methods .pay-scatter-copy,
+      #payment-methods .pay-scatter-info,
+      #payment-methods .pay-scatter-info-line {
         transition: none !important;
       }
       #payment-methods .pay-scatter-breathe.is-breathing,
@@ -525,6 +727,16 @@
       #payment-methods .pay-scatter-copy {
         opacity: 1;
         filter: none;
+      }
+      #payment-methods .pay-scatter-info-stroke,
+      #payment-methods .pay-scatter-info-dot,
+      #payment-methods .pay-scatter-info.is-on,
+      #payment-methods .pay-scatter-info.is-on .pay-scatter-info-bg,
+      #payment-methods .pay-scatter-info.is-on .pay-scatter-info-reveal {
+        animation: none !important;
+        transition: none !important;
+        opacity: 1 !important;
+        transform: none !important;
       }
     }
 
@@ -612,6 +824,17 @@
     .lead-band > * {
       position: relative;
       z-index: 2;
+    }
+    .lead-band select option {
+      color: #0C1B2E;
+    }
+    .lead-captcha {
+      height: 48px;
+      width: 128px;
+      border-radius: 12px;
+      background: #fff;
+      cursor: pointer;
+      object-fit: cover;
     }
     .site-footer {
       position: relative;
@@ -2249,7 +2472,11 @@
       partner: ['填写接入意向', '添加商务企微', '注册开户', 'API接入/SaaS展业']
     };
 
-    function LeadQrModal({ open, persona, onClose }) {
+    const LEAD_API = (typeof window !== 'undefined' && window.LEAD_API_BASE) || '';
+
+    function LeadQrModal({ open, persona, qrCode, leadId, onClose }) {
+      const [connected, setConnected] = useState(false);
+
       useEffect(() => {
         if (!open) return undefined;
         const onKey = (e) => { if (e.key === 'Escape') onClose(); };
@@ -2257,9 +2484,34 @@
         return () => window.removeEventListener('keydown', onKey);
       }, [open, onClose]);
 
+      useEffect(() => {
+        if (!open) {
+          setConnected(false);
+          return undefined;
+        }
+        if (!leadId) return undefined;
+        let stopped = false;
+        const tick = async () => {
+          try {
+            const res = await fetch(`${LEAD_API}/api/lead/${encodeURIComponent(leadId)}/status`);
+            const data = await res.json();
+            if (!stopped && data.status === 'connected') setConnected(true);
+          } catch (_err) { /* 轮询失败时保持弹码，不打断扫码 */ }
+        };
+        tick();
+        const timer = window.setInterval(tick, 2000);
+        const stopAt = window.setTimeout(() => window.clearInterval(timer), 5 * 60 * 1000);
+        return () => {
+          stopped = true;
+          window.clearInterval(timer);
+          window.clearTimeout(stopAt);
+        };
+      }, [open, leadId]);
+
       if (!open) return null;
 
       const isPartner = persona === 'partner';
+      const qrSrc = qrCode || 'qr/wecom-livecode.png';
 
       return (
         <div
@@ -2282,17 +2534,25 @@
               <Ico name="close" className="h-4 w-4" />
             </button>
             <p id="lead-qr-title" className="pr-8 text-[17px] font-semibold text-syw-ink">
-              {isPartner ? '添加商务企微，继续对接' : '添加企微客服，继续接入'}
+              {connected
+                ? '顾问已收到您的资料'
+                : (isPartner ? '添加商务企微，继续对接' : '添加企微客服，继续接入')}
             </p>
             <p className="mt-2 text-[13px] leading-6 text-syw-mute">
-              需求已提交。请扫码添加{isPartner ? '商务企微' : '企微客服'}，顾问将协助您完成后续{isPartner ? '开户与 API/SaaS 展业' : '签约与支付开通'}。
+              {connected
+                ? '您已添加成功，顾问将尽快与您联系，协助完成后续对接。'
+                : `需求已提交。请扫码添加${isPartner ? '商务企微' : '企微客服'}，顾问将协助您完成后续${isPartner ? '开户与 API/SaaS 展业' : '签约与支付开通'}。`}
             </p>
             <div className="mx-auto mt-5 flex max-w-[220px] flex-col items-center rounded-xl bg-syw-mist p-4 ring-1 ring-syw-line">
               <div className="overflow-hidden rounded-lg bg-white p-1.5">
-                <img src="qr/wecom-cs.png" alt={isPartner ? '商务企微二维码' : '企微客服二维码'} width="176" height="176" className="h-[176px] w-[176px] object-contain" />
+                <img src={qrSrc} alt={isPartner ? '商务企微二维码' : '企微客服二维码'} width="176" height="176" className="h-[176px] w-[176px] object-contain" />
               </div>
-              <p className="mt-3 text-[13px] font-medium text-syw-ink">{isPartner ? '商务企微' : '企微专属客服'}</p>
-              <p className="mt-1 text-center text-[11px] text-syw-mute">长按识别二维码 · 1 对 1 专属服务</p>
+              <p className="mt-3 text-[13px] font-medium text-syw-ink">
+                {connected ? '添加成功' : (isPartner ? '商务企微' : '企微专属客服')}
+              </p>
+              <p className="mt-1 text-center text-[11px] text-syw-mute">
+                {connected ? '可关闭此窗口，等待顾问联系' : '长按识别二维码 · 1 对 1 专属服务'}
+              </p>
             </div>
             <button
               type="button"
@@ -2310,12 +2570,12 @@
       const steps = LEAD_STEPS[persona] || LEAD_STEPS.merchant;
 
       return (
-        <div className="mx-auto w-full max-w-[320px] rounded-2xl border border-white/50 bg-white/28 p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.78),0_18px_48px_rgba(12,27,46,0.10)] backdrop-blur-2xl lg:ml-auto lg:max-w-none">
+        <div className="flex h-full min-h-[280px] w-full flex-col rounded-2xl border border-white/50 bg-white/28 p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.78),0_18px_48px_rgba(12,27,46,0.10)] backdrop-blur-2xl lg:ml-auto">
           <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-white/75">Onboarding</p>
           <p className="mt-1 text-[15px] font-semibold text-white">接入步骤</p>
-          <ol className="mt-4 grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+          <ol className="mt-4 flex min-h-0 flex-1 flex-col justify-between gap-2.5">
             {steps.map((label, index) => (
-              <li key={label} className="flex items-center gap-3 rounded-xl bg-white/18 px-3 py-2.5 ring-1 ring-white/30">
+              <li key={label} className="flex min-h-0 flex-1 items-center gap-3 rounded-xl bg-white/18 px-3 py-2.5 ring-1 ring-white/30">
                 <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white text-[12px] font-semibold text-[#0094FF] shadow-[0_4px_10px_rgba(12,27,46,0.08)]">
                   {index + 1}
                 </span>
@@ -2581,7 +2841,7 @@
     function Header({ onLead, onOpenMenu, menuOpen, persona, setPersona }) {
       return (
         <header className="sticky top-0 z-50 border-b border-white/10 bg-white/45 backdrop-blur-xl">
-          <div className="mx-auto flex h-16 max-w-[1200px] items-center gap-4 px-6">
+          <div className="mx-auto flex h-16 max-w-[var(--syw-page)] items-center gap-4 px-6">
             <Logo />
             <div className="hidden sm:block">
               <PersonaSwitch persona={persona} setPersona={setPersona} />
@@ -2689,6 +2949,70 @@
       );
     }
 
+    function MiniPhoneQr({ app }) {
+      const [hovered, setHovered] = useState(false);
+      const [zoomed, setZoomed] = useState(false);
+      const showQr = hovered || zoomed;
+
+      return (
+        <div
+          className={`relative z-0 flex min-h-0 flex-col overflow-hidden rounded-xl bg-white ring-1 ring-syw-line hover:z-10 ${zoomed ? 'z-20' : ''}`}
+          onMouseEnter={() => setHovered(true)}
+          onMouseLeave={() => setHovered(false)}
+        >
+          <div className="flex items-center justify-between px-2 pt-2">
+            <span className="rounded-full bg-[#0094FF]/10 px-1.5 py-0.5 text-[9px] font-medium text-[#0094FF]">{app.badge}</span>
+            <span className="h-1.5 w-1.5 rounded-full bg-[#1AAE6F]" aria-hidden="true" />
+          </div>
+          <div className="relative mx-auto mt-1.5 mb-1 w-[88%] max-w-[110px] min-h-0 flex-1 overflow-hidden rounded-[14px] bg-[#F5F7FA] shadow-[0_8px_20px_rgba(12,27,46,.08)] ring-1 ring-syw-line">
+            <img
+              src={app.image}
+              alt={`${app.name}界面`}
+              className="h-full w-full object-cover object-top"
+              loading="lazy"
+              draggable="false"
+            />
+          </div>
+          <div className="px-1.5 pb-2 text-center">
+            <p className="truncate text-[10px] font-semibold leading-tight text-syw-ink">{app.name}</p>
+            <p className="truncate text-[9px] leading-tight text-syw-mute">{app.role}</p>
+          </div>
+          <div
+            className={`absolute inset-0 z-30 flex flex-col p-1.5 backdrop-blur-[2px] transition-opacity duration-200 ease-in-out ${showQr ? 'opacity-100' : 'opacity-0'}`}
+            style={{ pointerEvents: showQr ? 'auto' : 'none', touchAction: 'pan-y', background: 'rgba(72,76,84,0.58)' }}
+            data-qr-overlay={app.id}
+            data-qr-zoomed={zoomed ? '1' : '0'}
+            onClick={(e) => {
+              e.stopPropagation();
+              if (zoomed) setZoomed(false);
+            }}
+          >
+            {zoomed ? (
+              <img
+                src={app.qr}
+                alt={`${app.name}二维码`}
+                className="min-h-0 w-full flex-1 object-contain"
+                draggable="false"
+              />
+            ) : (
+              <button
+                type="button"
+                className="mx-auto mt-auto select-none rounded-lg p-1"
+                onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); setZoomed(true); }}
+                onClick={(e) => { e.stopPropagation(); setZoomed(true); }}
+                aria-label={`点击放大${app.name}二维码`}
+              >
+                <img src={app.qr} alt={`${app.name}二维码`} className="h-[64px] w-[64px] object-contain" draggable="false" />
+              </button>
+            )}
+            <span className="pointer-events-none mt-auto pb-0.5 text-center text-[9px] font-medium leading-none text-white/95">
+              {zoomed ? '点击空白处关闭' : app.qrHint}
+            </span>
+          </div>
+        </div>
+      );
+    }
+
     function MiniMobile() {
       const apps = [
         { id: 'syw-app', name: '盛意旺 APP', role: '商户移动端', badge: '商户', image: 'products/syw-app.png', qr: 'qr/syw-app.png', qrHint: '扫码下载' },
@@ -2699,35 +3023,7 @@
       return (
         <div className="grid h-full min-h-0 flex-1 grid-cols-3 gap-2 bg-gradient-to-b from-syw-mist/60 to-white p-2.5 sm:p-3">
           {apps.map((app) => (
-            <div key={app.id} className="group/app relative z-0 flex min-h-0 flex-col overflow-hidden rounded-xl bg-white ring-1 ring-syw-line hover:z-10">
-              <div className="flex items-center justify-between px-2 pt-2">
-                <span className="rounded-full bg-[#0094FF]/10 px-1.5 py-0.5 text-[9px] font-medium text-[#0094FF]">{app.badge}</span>
-                <span className="h-1.5 w-1.5 rounded-full bg-[#1AAE6F]" aria-hidden="true" />
-              </div>
-              <div className="relative mx-auto mt-1.5 mb-1 w-[88%] max-w-[110px] min-h-0 flex-1 overflow-hidden rounded-[14px] bg-[#F5F7FA] shadow-[0_8px_20px_rgba(12,27,46,.08)] ring-1 ring-syw-line">
-                <img
-                  src={app.image}
-                  alt={`${app.name}界面`}
-                  className="h-full w-full object-cover object-top"
-                  loading="lazy"
-                />
-                <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-1.5 bg-[rgba(12,27,46,0.58)] px-1.5 opacity-0 backdrop-blur-[1.5px] transition-opacity duration-200 ease-in-out group-hover/app:opacity-100">
-                  <div className="rounded-lg bg-white p-1 shadow-[0_6px_16px_rgba(12,27,46,0.18)]">
-                    <img
-                      src={app.qr}
-                      alt={`${app.name}二维码`}
-                      className="h-[72px] w-[72px] max-w-full object-contain"
-                      loading="lazy"
-                    />
-                  </div>
-                  <span className="text-[9px] font-medium leading-none text-white/95">{app.qrHint}</span>
-                </div>
-              </div>
-              <div className="px-1.5 pb-2 text-center">
-                <p className="truncate text-[10px] font-semibold leading-tight text-syw-ink">{app.name}</p>
-                <p className="truncate text-[9px] leading-tight text-syw-mute">{app.role}</p>
-              </div>
-            </div>
+            <MiniPhoneQr key={app.id} app={app} />
           ))}
         </div>
       );
@@ -2938,7 +3234,7 @@
       const copy = PERSONA[persona];
       return (
         <section className="hero-shell">
-          <div className="hero-shell-grid relative mx-auto grid max-w-[1200px] grid-cols-1 gap-10 px-6 pt-14 pb-8 lg:grid-cols-10 lg:gap-12 lg:pt-16 lg:pb-10">
+          <div className="hero-shell-grid relative mx-auto grid max-w-[var(--syw-page)] grid-cols-1 gap-10 px-6 pt-14 pb-8 lg:grid-cols-10 lg:gap-12 lg:pt-16 lg:pb-10">
             <Reveal id="hero-copy" delay={0} className="hero-copy lg:col-span-6">
               <div className="hero-copy-panel" aria-hidden="true" />
               <p className="font-mono text-[11px] uppercase tracking-[0.28em] text-syw">{copy.kicker}</p>
@@ -3033,22 +3329,22 @@
     }
 
     const PAYMENT_METHODS = [
-      { id: 'scan', label: '扫码支付', logo: 'payments/scan.svg', glow: '#0094FF' },
-      { id: 'bankcard', label: '银行卡支付', logo: 'payments/bankcard.svg', glow: '#2B6DE5' },
-      { id: 'unionpay-installment', label: '银联分期', logo: 'payments/unionpay-installment.svg', glow: '#E21836' },
-      { id: 'unionpay-pass', label: '银联无感支付', logo: 'payments/unionpay-pass.svg', glow: '#E21836' },
-      { id: 'miniprogram', label: '小程序支付', logo: 'payments/miniprogram.svg', glow: '#07C160' },
-      { id: 'app', label: 'APP支付', logo: 'payments/app.svg', glow: '#5B6BFF' },
-      { id: 'h5', label: 'H5支付', logo: 'payments/h5.svg', glow: '#FF8A00' },
-      { id: 'ecny', label: '数字人民币', logo: 'payments/ecny.svg', glow: '#E02E24' },
-      { id: 'huabei', label: '花呗', logo: 'payments/huabei.svg', glow: '#4182FA' },
-      { id: 'jd-baitiao', label: '京东白条', logo: 'payments/jd-baitiao.svg', glow: '#D12C28' },
-      { id: 'wxpay-score', label: '微信支付分', logo: 'payments/wxpay-score.svg', glow: '#07C160' }
+      { id: 'scan', label: '扫码支付', logo: 'payments/scan.png', glow: '#0094FF', desc: '出示或扫描收款码即可完成付款，到账即时播报。', tags: ['门店收银', '摊贩', '码牌'] },
+      { id: 'bankcard', label: '银行卡支付', logo: 'payments/bankcard.svg', glow: '#2B6DE5', desc: '刷卡、插卡、挥卡一笔完成，覆盖借记卡与贷记卡。', tags: ['收银台', 'POS', '大额收款'] },
+      { id: 'unionpay-installment', label: '银联分期', logo: 'payments/unionpay-installment.svg', glow: '#E21836', desc: '银联卡消费分期，降低顾客单笔支付压力。', tags: ['家电数码', '零售', '大额客单'] },
+      { id: 'unionpay-pass', label: '银联无感支付', logo: 'payments/unionpay-pass.svg', glow: '#E21836', desc: '车牌或人脸识别自动扣款，无需停顿掏手机。', tags: ['停车', '加油', '高速'] },
+      { id: 'miniprogram', label: '小程序支付', logo: 'payments/miniprogram.svg', glow: '#07C160', desc: '在微信小程序内完成下单与支付，无需跳转 App。', tags: ['点餐', '预约', '会员商城'] },
+      { id: 'app', label: 'APP支付', logo: 'payments/app.svg', glow: '#5B6BFF', desc: '在自有 App 内调起微信、支付宝等完成收款。', tags: ['电商', '出行', '生活服务'] },
+      { id: 'h5', label: 'H5支付', logo: 'payments/h5.svg', glow: '#FF8A00', desc: '手机浏览器打开链接即可付款，无需下载 App。', tags: ['公众号', '短信账单', '营销页'] },
+      { id: 'ecny', label: '数字人民币', logo: 'payments/ecny.svg', glow: '#E02E24', desc: '支持数币钱包扫码与碰一碰，资金即结即到。', tags: ['政务缴费', '商超', '交通'] },
+      { id: 'huabei', label: '花呗', logo: 'payments/huabei.svg', glow: '#4182FA', desc: '先消费后付款，提升下单转化与客单价。', tags: ['电商', '餐饮', '零售'] },
+      { id: 'jd-baitiao', label: '京东白条', logo: 'payments/jd-baitiao.svg', glow: '#D12C28', desc: '京东支付信用分期，适合中高客单成交。', tags: ['3C数码', '家电', '线上商城'] },
+      { id: 'wxpay-score', label: '微信支付分', logo: 'payments/wxpay-score.svg', glow: '#07C160', desc: '信用分达标可免密、免押，先享后付。', tags: ['共享租赁', '酒店', '免押场景'] }
     ];
 
     const PAY_SCENE_CONFIG = {
       ICON_COUNT: null,          // null = 使用全部支付方式
-      RADIUS: 210,               // 统一散开半径（等距）
+      RADIUS: 263,               // 随版心 1500 等比放大（原 210×1.25）
       Z_DEPTH: 0,
       AUTO_PLAY: true,
       DURATION_S: 2,
@@ -3087,6 +3383,42 @@
       });
     }
 
+    function PayChannelInfo({ item, side }) {
+      const [on, setOn] = useState(false);
+      useEffect(() => {
+        const t = window.setTimeout(() => setOn(true), 30);
+        return () => window.clearTimeout(t);
+      }, []);
+      if (!item) return null;
+      return (
+        <>
+          <span
+            className={`pay-scatter-info-line is-${side}${on ? ' is-on' : ''}`}
+            aria-hidden="true"
+          >
+            <i className="pay-scatter-info-stroke" />
+            <i className="pay-scatter-info-dot" />
+          </span>
+          <aside
+            className={`pay-scatter-info is-${side}${on ? ' is-on' : ''}`}
+            role="dialog"
+            aria-hidden={false}
+            aria-labelledby="pay-info-title"
+          >
+            <div className="pay-scatter-info-bg" aria-hidden="true" />
+            <p className="pay-scatter-info-kicker pay-scatter-info-reveal">渠道说明</p>
+            <h3 id="pay-info-title" className="pay-scatter-info-title pay-scatter-info-reveal">{item.label}</h3>
+            <p className="pay-scatter-info-desc pay-scatter-info-reveal">{item.desc}</p>
+            <div className="pay-scatter-info-tags pay-scatter-info-reveal">
+              {item.tags.map((tag) => (
+                <span key={tag} className="pay-scatter-info-tag">{tag}</span>
+              ))}
+            </div>
+          </aside>
+        </>
+      );
+    }
+
     function PaymentMethods() {
       const cfg = PAY_SCENE_CONFIG;
       const items = useMemo(() => {
@@ -3105,7 +3437,23 @@
       const [spread, setSpread] = useState(false);
       const [breathing, setBreathing] = useState(false);
       const [titleIn, setTitleIn] = useState(false);
+      const [activeId, setActiveId] = useState(null);
       const playedRef = useRef(false);
+      const active = items.find((item) => item.id === activeId) || null;
+      const infoSide = active && parseFloat(active.tx) >= 0 ? 'right' : 'left';
+
+      const togglePayInfo = (item) => {
+        setActiveId((id) => (id === item.id ? null : item.id));
+      };
+
+      useEffect(() => {
+        if (!activeId) return undefined;
+        const onKey = (e) => {
+          if (e.key === 'Escape') setActiveId(null);
+        };
+        window.addEventListener('keydown', onKey);
+        return () => window.removeEventListener('keydown', onKey);
+      }, [activeId]);
 
       useEffect(() => {
         const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -3143,7 +3491,14 @@
 
       return (
         <section id="payment-methods" ref={sectionRef}>
-          <div className="pay-scatter-shell mx-auto max-w-[1200px]">
+          <div
+            className="pay-scatter-shell mx-auto max-w-[var(--syw-page)]"
+            style={active ? {
+              ['--info-x']: active.tx,
+              ['--info-y']: active.ty,
+              ['--glow']: active.glow
+            } : undefined}
+          >
             <div className="pay-scatter-panel" aria-hidden="true" />
             <div className="pay-scatter-stars" aria-hidden="true">
               {stars.map((s) => (
@@ -3166,7 +3521,11 @@
               {items.map((item) => (
                 <div
                   key={item.id}
-                  className={`pay-scatter-node${spread ? ' is-spread' : ''}`}
+                  className={`pay-scatter-node${spread ? ' is-spread' : ''}${activeId === item.id ? ' is-active' : ''}`}
+                  role="button"
+                  tabIndex={0}
+                  aria-pressed={activeId === item.id}
+                  aria-label={`${item.label}，查看说明`}
                   style={{
                     ['--tx']: item.tx,
                     ['--ty']: item.ty,
@@ -3177,6 +3536,17 @@
                     ['--glow']: item.glow,
                     ['--breathe-dur']: item.breatheDur,
                     ['--breathe-delay']: item.breatheDelay
+                  }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    togglePayInfo(item);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      togglePayInfo(item);
+                    }
                   }}
                 >
                   <div className={`pay-scatter-breathe${breathing ? ' is-breathing' : ''}`}>
@@ -3190,6 +3560,8 @@
                 </div>
               ))}
             </div>
+
+            {active ? <PayChannelInfo key={active.id} item={active} side={infoSide} /> : null}
 
             <div className={`pay-scatter-copy${titleIn ? ' is-in' : ''}`}>
               <p className="pay-scatter-kicker">Payment Methods</p>
@@ -3205,7 +3577,7 @@
       const productMap = Object.fromEntries(PRODUCTS.map((p) => [p.id, p]));
       return (
         <section id="products" className="product-matrix reveal-band-c relative py-8 md:py-9 lg:py-10">
-          <div className="mx-auto max-w-[1200px] px-6">
+          <div className="mx-auto max-w-[var(--syw-page)] px-6">
             <Reveal id="products-head" delay={0} className="mb-4 flex items-end justify-between gap-4 md:mb-5">
               <div>
                 <p className="font-mono text-[11px] uppercase tracking-[0.28em] text-syw">Product Matrix</p>
@@ -3402,7 +3774,7 @@
       return (
         <section id="solutions" className="section-soft reveal-band-d relative py-16">
           <div className="pointer-events-none absolute inset-0 ledger-grid opacity-40" />
-          <div className="relative mx-auto max-w-[1200px] px-6">
+          <div className="relative mx-auto max-w-[var(--syw-page)] px-6">
             <Reveal id="solutions-head" delay={0} className="mb-8 flex items-end justify-between gap-6">
               <div>
                 <p className="font-mono text-[11px] uppercase tracking-[0.28em] text-syw">Industry Solutions</p>
@@ -3520,7 +3892,7 @@
 
       return (
         <section id="cases" className="section-soft reveal-band-b pb-16 pt-4">
-          <div className="mx-auto max-w-[1200px] px-6">
+          <div className="mx-auto max-w-[var(--syw-page)] px-6">
             <Reveal id="cases-head" delay={0} className="mb-8">
               <p className="font-mono text-[11px] uppercase tracking-[0.28em] text-syw">Partner Cases</p>
               <h2 className="mt-2 text-[28px] font-semibold tracking-tight text-syw-ink">合作案例</h2>
@@ -3541,7 +3913,7 @@
       let hexIndex = 0;
       return (
         <section id="partners" className="section-soft reveal-band-e pb-32 pt-12">
-          <div className="mx-auto max-w-[1200px] px-6">
+          <div className="mx-auto max-w-[var(--syw-page)] px-6">
             <Reveal id="partners-head" delay={0} className="mb-8 text-center md:mb-10">
               <p className="font-mono text-[11px] uppercase tracking-[0.28em] text-syw">Partner Network</p>
               <h2 className="mt-2 text-[24px] font-semibold tracking-tight text-syw-ink md:text-[26px]">更多合作商户</h2>
@@ -3598,7 +3970,7 @@
       return (
         <section className="trust-band py-16">
           <div className="pointer-events-none absolute inset-0 opacity-50" style={{ backgroundImage: 'radial-gradient(circle at 18% 48%, rgba(255,255,255,.18), transparent 44%), radial-gradient(circle at 82% 78%, rgba(0,118,204,.35), transparent 42%)' }} />
-          <div className="relative mx-auto max-w-[1200px] px-6">
+          <div className="relative mx-auto max-w-[var(--syw-page)] px-6">
             <Reveal id="trust-head" delay={0} className="mb-10 flex items-center gap-3">
               <span className="grid h-9 w-9 place-items-center rounded-lg bg-white/15 ring-1 ring-white/25 text-white">
                 <Ico name="shield" className="h-5 w-5" />
@@ -3622,36 +3994,225 @@
       );
     }
 
-    function LeadBand({ toast, persona }) {
-      const [form, setForm] = useState({
+    function emptyLeadForm(persona) {
+      return {
         company: '',
+        contactName: '',
         phone: '',
+        smsCode: '',
+        captchaCode: '',
+        province: '',
+        city: '',
+        industryL1: '',
+        industryName: '',
         demand: persona === 'partner' ? 'agent' : 'pay'
-      });
+      };
+    }
+
+    const LEAD_CTRL = 'h-12 w-full rounded-xl border border-white/25 bg-white/15 px-4 text-sm text-white placeholder:text-white/55 transition-all duration-300 ease-in-out focus:border-white focus:bg-white/20';
+
+    function CascadeSelect({ placeholder, groups, groupValue, itemValue, onChange, itemsKey = 'items', groupKey = 'name' }) {
+      const [open, setOpen] = useState(false);
+      const [activeGroup, setActiveGroup] = useState(groupValue || '');
+      const boxRef = useRef(null);
+
+      useEffect(() => {
+        if (groupValue) setActiveGroup(groupValue);
+      }, [groupValue]);
+
+      useEffect(() => {
+        const onDoc = (e) => {
+          if (boxRef.current && !boxRef.current.contains(e.target)) setOpen(false);
+        };
+        document.addEventListener('mousedown', onDoc);
+        return () => document.removeEventListener('mousedown', onDoc);
+      }, []);
+
+      const current = groups.find((g) => g[groupKey] === (activeGroup || (groups[0] && groups[0][groupKey])));
+      const items = (current && current[itemsKey]) || [];
+      const label = groupValue && itemValue ? `${groupValue} / ${itemValue}` : placeholder;
+
+      return (
+        <div className="relative" ref={boxRef}>
+          <button
+            type="button"
+            className={`${LEAD_CTRL} flex items-center justify-between gap-2 text-left`}
+            aria-haspopup="listbox"
+            aria-expanded={open}
+            onClick={() => setOpen((v) => !v)}
+          >
+            <span className={`truncate ${groupValue && itemValue ? 'text-white' : 'text-white/55'}`}>{label}</span>
+            <span className="shrink-0 text-white/70" aria-hidden="true">▾</span>
+          </button>
+          {open && (
+            <div className="absolute left-0 right-0 z-40 mt-1 grid max-h-64 grid-cols-2 overflow-hidden rounded-xl border border-white/25 bg-[#16324A] shadow-lift">
+              <ul className="overflow-y-auto border-r border-white/15 py-1" role="listbox">
+                {groups.map((g) => (
+                  <li key={g[groupKey]}>
+                    <button
+                      type="button"
+                      className={`w-full px-3 py-2 text-left text-[12px] ${activeGroup === g[groupKey] ? 'bg-white/20 text-white' : 'text-white/80 hover:bg-white/10'}`}
+                      onClick={() => setActiveGroup(g[groupKey])}
+                    >
+                      {g[groupKey]}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+              <ul className="overflow-y-auto py-1" role="listbox">
+                {items.map((item) => {
+                  const name = typeof item === 'string' ? item : item.name;
+                  return (
+                    <li key={name}>
+                      <button
+                        type="button"
+                        className={`w-full px-3 py-2 text-left text-[12px] ${itemValue === name ? 'bg-white/20 text-white' : 'text-white/80 hover:bg-white/10'}`}
+                        onClick={() => {
+                          onChange(activeGroup || (current && current[groupKey]) || '', name);
+                          setOpen(false);
+                        }}
+                      >
+                        {name}
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    function LeadBand({ toast, persona }) {
+      const [form, setForm] = useState(() => emptyLeadForm(persona));
       const [err, setErr] = useState('');
       const [qrOpen, setQrOpen] = useState(false);
+      const [leadMeta, setLeadMeta] = useState({ qrCode: '', leadId: '' });
+      const [submitting, setSubmitting] = useState(false);
+      const [consent, setConsent] = useState(false);
+      const [regions, setRegions] = useState([]);
+      const [industries, setIndustries] = useState([]);
+      const [captcha, setCaptcha] = useState({ id: '', image: '' });
+      const [smsLeft, setSmsLeft] = useState(0);
+      const [smsSending, setSmsSending] = useState(false);
 
       useEffect(() => {
         setForm((s) => ({ ...s, demand: persona === 'partner' ? 'agent' : 'pay' }));
         setErr('');
       }, [persona]);
 
-      const onSubmit = (e) => {
+      useEffect(() => {
+        fetch('lead-regions.json').then((r) => r.json()).then(setRegions).catch(() => {});
+        fetch('lead-industries.json').then((r) => r.json()).then(setIndustries).catch(() => {});
+      }, []);
+
+      const loadCaptcha = async () => {
+        try {
+          const res = await fetch(`${LEAD_API}/api/captcha`);
+          const data = await res.json();
+          setCaptcha({ id: data.captcha_id || '', image: data.image || '' });
+          setForm((s) => ({ ...s, captchaCode: '' }));
+          if (data.demo_code) window.__LEAD_CAPTCHA_DEMO = data.demo_code;
+        } catch (_err) {
+          setErr('图形验证码加载失败，请确认留资服务已启动');
+        }
+      };
+
+      useEffect(() => { loadCaptcha(); }, []);
+
+      useEffect(() => {
+        if (smsLeft <= 0) return undefined;
+        const t = window.setTimeout(() => setSmsLeft((n) => n - 1), 1000);
+        return () => window.clearTimeout(t);
+      }, [smsLeft]);
+
+      const cities = (regions.find((r) => r.name === form.province) || {}).cities || [];
+      const industryItems = (industries.find((r) => r.name === form.industryL1) || {}).items || [];
+
+      const sendSms = async () => {
+        if (!/^1[3-9]\d{9}$/.test(form.phone)) { setErr('请先输入有效的 11 位手机号'); return; }
+        if (!form.captchaCode.trim()) { setErr('请先填写图形验证码'); return; }
+        setErr('');
+        setSmsSending(true);
+        try {
+          const res = await fetch(`${LEAD_API}/api/sms`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              phone: form.phone,
+              captcha_id: captcha.id,
+              captcha_code: form.captchaCode
+            })
+          });
+          let data = {};
+          try { data = await res.json(); } catch (_err) { data = {}; }
+          await loadCaptcha();
+          if (!res.ok) throw new Error(data.error || '发送失败');
+          setSmsLeft(data.ttl || 60);
+          if (toast && data.demo_code) toast(`短信验证码已发送（演示码 ${data.demo_code}）`);
+          else if (toast) toast('短信验证码已发送');
+        } catch (ex) {
+          setErr(ex.message || '发送失败，请稍后重试');
+        } finally {
+          setSmsSending(false);
+        }
+      };
+
+      const onSubmit = async (e) => {
         e.preventDefault();
         if (!form.company.trim()) { setErr('请填写企业名称'); return; }
+        if (!form.contactName.trim()) { setErr('请填写联系人姓名'); return; }
+        if (!form.province || !form.city) { setErr('请选择所在省市'); return; }
+        if (!form.industryL1 || !form.industryName) { setErr('请选择所属行业'); return; }
         if (!/^1[3-9]\d{9}$/.test(form.phone)) { setErr('请输入有效的 11 位手机号'); return; }
+        if (!/^\d{6}$/.test(form.smsCode)) { setErr('请输入 6 位短信验证码'); return; }
+        if (!consent) { setErr('请勾选同意后再提交'); return; }
         setErr('');
-        setQrOpen(true);
-        setForm({ company: '', phone: '', demand: persona === 'partner' ? 'agent' : 'pay' });
+        setSubmitting(true);
+        try {
+          const res = await fetch(`${LEAD_API}/api/lead`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              company: form.company.trim(),
+              contact_name: form.contactName.trim(),
+              phone: form.phone,
+              sms_code: form.smsCode,
+              purpose: form.demand,
+              persona,
+              province: form.province,
+              city: form.city,
+              industry_l1: form.industryL1,
+              industry_name: form.industryName,
+              consent: true
+            })
+          });
+          let data = {};
+          try { data = await res.json(); } catch (_err) { data = {}; }
+          if (!res.ok) throw new Error(data.error || '提交失败，请稍后重试');
+          setLeadMeta({ qrCode: data.qr_code || 'qr/wecom-livecode.png', leadId: data.lead_id || '' });
+          setQrOpen(true);
+          setForm(emptyLeadForm(persona));
+          setConsent(false);
+          loadCaptcha();
+        } catch (ex) {
+          const msg = String(ex && ex.message ? ex.message : '');
+          setErr((msg === 'Failed to fetch' || msg.includes('NetworkError'))
+            ? '留资服务未启动，请先运行 lead_server.py'
+            : (msg || '提交失败，请稍后重试'));
+        } finally {
+          setSubmitting(false);
+        }
       };
 
       const isPartner = persona === 'partner';
 
       return (
         <section id="lead" className="lead-band py-16">
-          <LeadQrModal open={qrOpen} persona={persona} onClose={() => setQrOpen(false)} />
+          <LeadQrModal open={qrOpen} persona={persona} qrCode={leadMeta.qrCode} leadId={leadMeta.leadId} onClose={() => setQrOpen(false)} />
           <div className="pointer-events-none absolute inset-0 opacity-35" style={{ backgroundImage: 'radial-gradient(circle at 18% 22%, rgba(255,255,255,.16), transparent 44%), radial-gradient(circle at 82% 78%, rgba(0,118,204,.18), transparent 42%)' }} />
-          <div className="relative z-[2] mx-auto grid max-w-[1200px] grid-cols-1 items-start gap-10 px-6 lg:grid-cols-10">
+          <div className="relative z-[2] mx-auto grid max-w-[var(--syw-page)] grid-cols-1 items-stretch gap-10 px-6 lg:grid-cols-10">
             <Reveal id="lead-form" delay={0} className="lg:col-span-6">
               <p className="font-mono text-[11px] uppercase tracking-[0.28em] text-white/75">Get a proposal</p>
               <h2 className="mt-2 text-[28px] font-semibold text-white">资深顾问 30 分钟内提供专属报价</h2>
@@ -3660,35 +4221,56 @@
                   ? '留下服务商接入意向，我们将匹配 API 对接、SaaS 展业与分润政策方案。'
                   : '留下商户接入意向，我们将匹配收款、硬件与费率方案。'}
               </p>
-              <form onSubmit={onSubmit} className="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4" noValidate>
-                <input
-                  value={form.company}
-                  onChange={(e) => setForm({ ...form, company: e.target.value })}
-                  placeholder="企业名称"
-                  className="h-12 rounded-xl border border-white/25 bg-white/15 px-4 text-sm text-white placeholder:text-white/55 transition-all duration-300 ease-in-out focus:border-white focus:bg-white/20"
-                />
-                <input
-                  value={form.phone}
-                  onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                  placeholder="手机号"
-                  inputMode="numeric"
-                  maxLength={11}
-                  className="h-12 rounded-xl border border-white/25 bg-white/15 px-4 text-sm text-white placeholder:text-white/55 transition-all duration-300 ease-in-out focus:border-white focus:bg-white/20"
-                />
-                <select
-                  value={form.demand}
-                  onChange={(e) => setForm({ ...form, demand: e.target.value })}
-                  className="h-12 rounded-xl border border-white/25 bg-white/15 px-4 text-sm text-white transition-all duration-300 ease-in-out focus:border-white focus:bg-white/20"
-                >
-                  {DEMANDS.map((d) => <option key={d.value} value={d.value} className="text-syw-ink">{d.label}</option>)}
-                </select>
-                <button type="submit" className="h-12 rounded-xl bg-white text-sm font-medium text-[#0094FF] transition-all duration-300 ease-in-out hover:bg-white/90">
-                  提交需求
-                </button>
+              <form onSubmit={onSubmit} className="mt-8" noValidate>
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <input value={form.company} onChange={(e) => setForm({ ...form, company: e.target.value })} placeholder="企业名称" className={LEAD_CTRL} />
+                  <input value={form.contactName} onChange={(e) => setForm({ ...form, contactName: e.target.value })} placeholder="联系人姓名" className={LEAD_CTRL} />
+                  <CascadeSelect
+                    placeholder="所在省市"
+                    groups={regions}
+                    groupValue={form.province}
+                    itemValue={form.city}
+                    itemsKey="cities"
+                    onChange={(province, city) => setForm({ ...form, province, city })}
+                  />
+                  <CascadeSelect
+                    placeholder="所属行业"
+                    groups={industries}
+                    groupValue={form.industryL1}
+                    itemValue={form.industryName}
+                    itemsKey="items"
+                    onChange={(industryL1, industryName) => setForm({ ...form, industryL1, industryName })}
+                  />
+                  <select value={form.demand} onChange={(e) => setForm({ ...form, demand: e.target.value })} className={LEAD_CTRL}>
+                    {DEMANDS.map((d) => <option key={d.value} value={d.value} className="text-syw-ink">{d.label}</option>)}
+                  </select>
+                  <input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="手机号" inputMode="numeric" maxLength={11} className={LEAD_CTRL} />
+                  <div className="flex gap-2">
+                    <input value={form.captchaCode} onChange={(e) => setForm({ ...form, captchaCode: e.target.value })} placeholder="图形验证码" maxLength={4} className={LEAD_CTRL} />
+                    {captcha.image
+                      ? <img src={captcha.image} alt="图形验证码，点击刷新" className="lead-captcha shrink-0" onClick={loadCaptcha} />
+                      : <button type="button" onClick={loadCaptcha} className="lead-captcha shrink-0 text-[11px] text-syw-ink">刷新</button>}
+                  </div>
+                  <div className="flex gap-2">
+                    <input value={form.smsCode} onChange={(e) => setForm({ ...form, smsCode: e.target.value })} placeholder="短信验证码" inputMode="numeric" maxLength={6} className={LEAD_CTRL} />
+                    <button type="button" onClick={sendSms} disabled={smsSending || smsLeft > 0} className="h-12 shrink-0 rounded-xl border border-white/40 px-3 text-[12px] font-medium text-white disabled:opacity-50">
+                      {smsLeft > 0 ? `${smsLeft}s` : (smsSending ? '发送中' : '获取验证码')}
+                    </button>
+                  </div>
+                </div>
+                <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center">
+                  <label className="flex flex-1 cursor-pointer items-start gap-2 text-[11px] leading-5 text-white/70">
+                    <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} className="mt-0.5 h-3.5 w-3.5 accent-white" />
+                    <span>我已阅读并同意提交企业名称、联系人、手机号、所在省市与经营类目，仅用于顾问联系与合作对接。</span>
+                  </label>
+                  <button type="submit" disabled={submitting} className="h-12 shrink-0 rounded-xl bg-white px-8 text-sm font-medium text-[#0094FF] transition-all duration-300 ease-in-out hover:bg-white/90 disabled:opacity-60">
+                    {submitting ? '提交中…' : '提交需求'}
+                  </button>
+                </div>
               </form>
               {err && <p className="mt-3 text-[12px] text-[#FFE4E6]">{err}</p>}
             </Reveal>
-            <Reveal id="lead-steps" delay={1} className="lg:col-span-4">
+            <Reveal id="lead-steps" delay={1} className="lg:col-span-4 h-full min-h-0">
               <LeadSteps persona={persona} />
             </Reveal>
           </div>
@@ -3699,18 +4281,18 @@
     function Footer() {
       const qrItems = [
         { title: '盛意旺公众号', src: 'qr/wechat-oa.png', alt: '盛意旺公众号二维码' },
-        { title: '盛意旺 APP', src: 'qr/app-download.png', alt: '盛意旺 APP 下载二维码' },
         { title: '企微客服', src: 'qr/wecom-cs.png', alt: '企微客服二维码' }
       ];
       return (
         <footer id="help" className="site-footer py-10">
-          <div className="mx-auto flex max-w-[1200px] flex-col gap-8 px-6 md:flex-row md:items-end md:justify-between">
+          <div className="mx-auto flex max-w-[var(--syw-page)] flex-col gap-8 px-6 md:flex-row md:items-end md:justify-between">
             <div>
               <Logo compact />
               <p className="mt-4 max-w-md text-[12px] leading-6 text-syw-mute">
                 © 2026 盛付通电子支付服务有限公司 保留所有权利<br />
                 客服支持：400-720-8888 人工服务：9:00-22:00 自助服务：7x24小时<br />
-                沪公网备31011502001963号 沪ICP备08024653号-10
+                <a href="https://beian.mps.gov.cn/#/query/webSearch" target="_blank" rel="noopener noreferrer" className="hover:text-syw">沪公网备31011502001963号</a>{' '}
+                <a href="https://beian.miit.gov.cn/#/Integrated/index" target="_blank" rel="noopener noreferrer" className="hover:text-syw">沪ICP备08024653号-10</a>
               </p>
               <div className="mt-3 flex gap-4 text-[12px] text-syw-mute">
                 <a href="#help" className="hover:text-syw">隐私政策</a>
