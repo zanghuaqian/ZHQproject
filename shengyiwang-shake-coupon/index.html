@@ -1588,6 +1588,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
   }
 
   var WX_MCH = '8503219001';
+  var AUTH_BRAND = { id: '120344', name: '星野咖啡' };
   var BRAND_QR = 'https://pay.weixin.qq.com/xdc/partnerapply4brandweb/get-auth-code?applyId=200000212476';
   var APPLY_LABEL = {
     APPLYMENT_STATE_WAITING_VALIDATE: '待主体意愿确认',
@@ -1654,6 +1655,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     var b = DB.brand;
     if (it.n === '1' && b.step1Done) return (b.mode === 'apply' ? '申请入驻' : '绑定已有品牌') + ' · ' + (b.brandName || '—') + ' · 品牌 ID ' + (b.brandId || '—');
     if (it.n === '2' && b.step2Done) return '盛付通服务商已授权商品券、商家名片、交易连接名片、品牌门店';
+    if (it.n === '2' && b.reauth) return '授权品牌与填写不一致，请重新授权';
     if (it.n === '3' && cardConfigured()) return (CARD_LABEL[b.card.state] || b.card.state) + (b.card.applymentId ? ' · 申请单 ' + b.card.applymentId : '');
     if (it.n === '4' && b.scenes.length) return b.scenes.map(function (s) {
       return (s.type === 'PAYMENT_CODE' ? '付款码支付' : '小程序支付') + ' ' + (SCENE_STATE[s.state] || '未查询');
@@ -1669,6 +1671,20 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     return '';
   }
   function rememberBrandOwner(id) { DB.brandOwners[id] = WX_MCH; }
+  function releaseBrandOwner(id) { if (id && DB.brandOwners[id] === WX_MCH) delete DB.brandOwners[id]; }
+  function brandAuthMismatch() {
+    var b = DB.brand;
+    return b.mode === 'bind' && (b.brandId !== AUTH_BRAND.id || b.brandName !== AUTH_BRAND.name);
+  }
+  function finishBrandAuth() {
+    var b = DB.brand;
+    b.perms.coupon = b.perms.card = b.perms.trade = b.perms.store = true;
+    b.step2Done = true;
+    b.reauth = false;
+    b.provider = '盛付通服务商';
+    b.tab = 'card';
+    b.view = '';
+  }
   function inp(id, val, ph) {
     return '<input class="inp" id="' + id + '" value="' + esc(val || '') + '" placeholder="' + esc(ph || '') + '" autocomplete="off">';
   }
@@ -1774,9 +1790,12 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     var perms = ['商品券', '商家名片', '交易连接名片', '品牌门店'].map(function (text) {
       return '<span class="perm lock">' + text + '</span>';
     }).join('');
-    var side = '<div class="field"><label>授权的品牌服务商</label><select class="inp" disabled><option>盛付通服务商</option></select><div class="tip">默认盛付通服务商，本期只有这一家。</div></div>' +
+    var mismatch = !locked && b.reauth
+      ? '<div class="notice w">授权返回的品牌 ID ' + esc(AUTH_BRAND.id) + '、品牌名称「' + esc(AUTH_BRAND.name) + '」，与填写的品牌 ID ' + esc(b.brandId) + '、品牌名称「' + esc(b.brandName) + '」不一致，且未更换绑定。请使用填写的品牌重新扫码授权。</div>'
+      : '';
+    var side = mismatch + '<div class="field"><label>授权的品牌服务商</label><select class="inp" disabled><option>盛付通服务商</option></select><div class="tip">默认盛付通服务商，本期只有这一家。</div></div>' +
       '<div class="field"><label>以下产品请全部勾选授权</label><div class="btnrow">' + perms + '</div><div class="tip">扫码后需在手机上授权以上权限。这里只作告知，不用在页面上勾选。</div></div>' +
-      (locked ? '<div class="tip">授权完成后不能在这里取消。扫码记录以微信支付商家助手为准。</div>' : '<div class="btnrow mt12"><button type="button" class="btn" data-act="brand-copy-code">复制授权链接</button><button type="button" class="btn mp" data-act="brand-auth-ok">确认已扫码授权</button></div>');
+      (locked ? '<div class="tip">授权完成后不能在这里取消。扫码记录以微信支付商家助手为准。</div>' : '<div class="tip">步骤一无法核验品牌是否真实。确认授权后，会与授权返回的品牌 ID、品牌名称核对。</div><div class="tip">演示：本次授权返回品牌 ID ' + esc(AUTH_BRAND.id) + '，品牌名称「' + esc(AUTH_BRAND.name) + '」。</div><div class="btnrow mt12"><button type="button" class="btn" data-act="brand-copy-code">复制授权链接</button><button type="button" class="btn mp" data-act="brand-auth-ok">确认已扫码授权</button></div>');
     return '<div class="card"><h3>步骤二 · 授权品牌管理权限' + (locked ? ' ' + tag('已完成') : '') + '</h3><div class="steplay"><div>' + authInvite() + '</div><div>' + side + '</div></div></div>';
   }
   var CS_TYPES = [['SERVICE_PHONE', '客服电话'], ['MINI_PROGRAM', '小程序官方客服'], ['WECOM', '企业微信客服'], ['CUSTOMIZE_WEB', '自建客服（网页）'], ['CUSTOMIZE_MP', '自建客服（小程序）']];
@@ -2511,12 +2530,41 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       return;
     }
     if (name === 'brand-auth-ok') {
-      b.perms.coupon = b.perms.card = b.perms.trade = b.perms.store = true;
-      b.step2Done = true;
-      b.provider = '盛付通服务商';
-      b.tab = 'card';
-      b.view = '';
+      if (brandAuthMismatch()) {
+        modal({
+          title: '授权品牌不一致',
+          html: '<p class="pd">步骤一填写品牌时，系统无法核验是否为微信支付侧的真实品牌。本次授权返回的品牌 ID 和品牌名称，与填写内容不一致。</p><div class="kv wide"><div class="k">填写的品牌 ID</div><div class="v mono">' + esc(b.brandId) + '</div><div class="k">填写的品牌名称</div><div class="v">' + esc(b.brandName) + '</div><div class="k">授权的品牌 ID</div><div class="v mono">' + esc(AUTH_BRAND.id) + '</div><div class="k">授权的品牌名称</div><div class="v">' + esc(AUTH_BRAND.name) + '</div></div><p class="pd mt12">是否将商户号 ' + esc(WX_MCH) + ' 绑定的品牌 ID 和品牌名称，更换为授权的品牌信息？</p>',
+          actions: [
+            { label: '更换为授权品牌', primary: true, act: 'brand-auth-replace' },
+            { label: '不更换，重新授权', act: 'brand-auth-retry' }
+          ]
+        });
+        return;
+      }
+      finishBrandAuth();
       toast('品牌管理权限已授权');
+      render();
+      return;
+    }
+    if (name === 'brand-auth-replace') {
+      var conflict = brandOwnerConflict(AUTH_BRAND.id);
+      if (conflict) { b.reauth = true; b.view = '2'; toast(conflict); render(); return; }
+      if (b.brandId !== AUTH_BRAND.id) releaseBrandOwner(b.brandId);
+      b.brandId = AUTH_BRAND.id;
+      b.brandName = AUTH_BRAND.name;
+      b.brandMch = WX_MCH;
+      rememberBrandOwner(AUTH_BRAND.id);
+      finishBrandAuth();
+      toast('已更换为授权的品牌信息');
+      render();
+      return;
+    }
+    if (name === 'brand-auth-retry') {
+      b.reauth = true;
+      b.step2Done = false;
+      b.perms.coupon = b.perms.card = b.perms.trade = b.perms.store = false;
+      b.view = '2';
+      toast('请重新授权');
       render();
       return;
     }
@@ -5461,6 +5509,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       skip.brandMch = WX_MCH;
       skip.step1Done = true;
       skip.step2Done = true;
+      skip.reauth = false;
       skip.provider = '盛付通服务商';
       skip.perms.coupon = skip.perms.card = skip.perms.trade = skip.perms.store = true;
       if (!(skip.storeIds || []).length) skip.storeIds = ['ST-88213'];
